@@ -1,38 +1,42 @@
 #include "stdio.h"
 #include "common/common.h"
 
-__global__ void test(int *d_n)
+__global__ void printGPU(int dev)
 {
-    d_n[threadIdx.x]++;
+    printf("Hello from GPU %d!\n", dev);
 }
 
-
-int main(int argc, char *argv[])
+void printSmCount()
 {
+    int device = 0;
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, device);
+    printf("Number of SMs: %d\n", deviceProp.multiProcessorCount);
+}
 
-    int ngpus; // 2
-    cudaGetDeviceCount(&ngpus);
-
+void printComputeCapabilities(int ngpus)
+{
     for (int i = 0; i < ngpus; i++)
     {
         cudaDeviceProp devProp;
         cudaGetDeviceProperties(&devProp, i);
         printf("Device %d has compute capability %d.%d.\n", i, devProp.major, devProp.minor); // 7.5
     }
+}
 
-    int hCount = 10;
-    int dCount = hCount / ngpus;
-    int hSize = hCount * sizeof(int);
-    int dSize = hSize / ngpus;
 
-    int *n, *d_n;
+int main(int argc, char *argv[])
+{
+    // Fetch number of GPUs
+    int ngpus; // 2
+    cudaGetDeviceCount(&ngpus);
 
-    // Allocate host
-    n = (int *) malloc(hSize);
-
-    cudaStream_t streams[ngpus];
+    // Print GPU properties
+    printSmCount();
+    printComputeCapabilities(ngpus);
 
     // Create streams (one per GPU)
+    cudaStream_t streams[ngpus];
     for (int i = 0; i < ngpus; i++)
     {
         cudaSetDevice(i);
@@ -41,42 +45,9 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < ngpus; i++)
     {
-        int idx = i * dCount;
-        for (int j = idx; j < idx + dCount; j++)
-        {
-            n[j] = i;
-        }
-
-        // Allocate devices
-        CHECK(cudaSetDevice(i));
-        CHECK(cudaMalloc((void **) &d_n, dSize));
-        CHECK(cudaMemcpyAsync(d_n, &n[idx], dSize, cudaMemcpyHostToDevice, streams[i]));
-
-        test<<<1, dCount, 0, streams[i]>>>(d_n);
-
-        CHECK(cudaMemcpyAsync(&n[idx], d_n, dSize, cudaMemcpyDeviceToHost, streams[i]));
-        CHECK(cudaFree(d_n));
-    }
-
-    bool error = 0;
-    for (int i = 0; i < ngpus; i++)
-    {
-        int idx = i * dCount;
-        for (int j = idx; j < idx + dCount; j++)
-        {
-            if (n[j] != i + 1)
-            {
-                printf("Error!\n");
-                error = 1;
-            } else {
-                printf("%d", n[j]);
-            }
-        }
-    }
-
-    if (!error)
-    {
-        printf("\nSuccess!\n");
+        cudaSetDevice(i);
+        printGPU<<<1, 1>>>(i);
+        cudaDeviceSynchronize();
     }
     
     // Destroy streams
@@ -85,6 +56,4 @@ int main(int argc, char *argv[])
         cudaSetDevice(i);
         cudaStreamDestroy(streams[i]);
     }
-
-    free(n);
 }
