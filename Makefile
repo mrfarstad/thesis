@@ -1,8 +1,9 @@
 FLAGS := -arch=sm_75
+DEPS := common.h utils.h
 
-.PHONY: multi-gpu clean
+.PHONY: multi-gpu run clean
 
-multi-gpu: common/common.h multi-gpu.cu
+multi-gpu: $(DEPS) multi-gpu.cu
 	nvcc $(FLAGS) multi-gpu.cu -o multi-gpu
 
 run:
