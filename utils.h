@@ -18,7 +18,6 @@
     cudaGetDeviceProperties(&deviceProp, device);                                             \
     printf("Number of SMs: %d\n", deviceProp.multiProcessorCount);                            \
 }                                                                                             \
-    
 
 #define START_TIME(start, stop)                                                               \
 {                                                                                             \
@@ -42,6 +41,28 @@
 #define PRINT_TIME(time)                                                                      \
 {                                                                                             \
     printf("The kernel execution took %.4f ms \n", time);                                     \
+}                                                                                             \
+
+/*
+ * enable P2P memcopies between GPUs (all GPUs must be compute capability 2.0 or
+ * later (Fermi or later))
+ */                                                                             
+#define ENABLE_P2P(ngpus)                                                                     \
+{                                                                                             \
+    for (int i = 0; i < ngpus; i++)                                                           \
+    {                                                                                         \
+        CHECK(cudaSetDevice(i));                                                              \
+                                                                                              \
+        for (int j = 0; j < ngpus; j++)                                                       \
+        {                                                                                     \
+            if (i == j) continue;                                                             \
+                                                                                              \
+            int peer_access_available = 0;                                                    \
+            CHECK(cudaDeviceCanAccessPeer(&peer_access_available, i, j));                     \
+                                                                                              \
+            if (peer_access_available) CHECK(cudaDeviceEnablePeerAccess(j, 0));               \
+        }                                                                                     \
+    }                                                                                         \
 }                                                                                             \
 
 #endif // _UTILS_H
