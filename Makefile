@@ -1,18 +1,14 @@
 FLAGS := -arch=sm_75
 DEPS := common.h utils.h
+CU_APPS := multi-gpu simple2DFD
 
-.PHONY: multi-gpu run clean
+.PHONY: run clean
 
-multi-gpu: $(DEPS) multi-gpu.cu
-	nvcc $(FLAGS) multi-gpu.cu -o multi-gpu
+all: ${CU_APPS}
 
-run:
-	$(MAKE) --no-print-directory
-	./multi-gpu
-	$(MAKE) clean --no-print-directory
+%: %.cu
+	nvcc ${FLAGS} -o $@ $<
 
 clean:
 	rm -Rf *.o
-	rm -Rf multi-gpu 
-
-# end
+	rm -Rf ${CU_APPS}
