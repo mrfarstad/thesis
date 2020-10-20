@@ -5,6 +5,10 @@
 #include <math.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
+// To make a directory
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /*
  * This example implements a 2D stencil computation, spreading the computation
@@ -66,8 +70,14 @@ void saveSnapshotIstep(
                           cudaMemcpyDeviceToHost));
     }
 
-    char fname[20];
-    sprintf(fname, "snap_at_step_%d", istep);
+    struct stat st = {0};
+    // Create snapshots folder if not exists
+    if (stat("snapshots", &st) == -1) {
+        mkdir("snapshots", 0700);
+    }
+
+    char fname[30];
+    sprintf(fname, "snapshots/snap_at_step_%d", istep);
 
     FILE *fp_snap = fopen(fname, "w");
 
