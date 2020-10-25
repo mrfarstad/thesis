@@ -72,12 +72,12 @@ void saveSnapshotIstep(
 
     struct stat st = {0};
     // Create snapshots folder if not exists
-    if (stat("snapshots", &st) == -1) {
-        mkdir("snapshots", 0700);
+    if (stat("coop_snapshots", &st) == -1) {
+        mkdir("coop_snapshots", 0700);
     }
 
     char fname[30];
-    sprintf(fname, "snapshots/snap_at_step_%d", istep);
+    sprintf(fname, "coop_snapshots/snap_at_step_%d", istep);
 
     FILE *fp_snap = fopen(fname, "w");
 
