@@ -93,31 +93,6 @@ void saveSnapshotIstep(
     return;
 }
 
-inline bool isCapableP2P(int ngpus)
-{
-    cudaDeviceProp prop[ngpus];
-    int iCount = 0;
-
-    for (int i = 0; i < ngpus; i++)
-    {
-        CHECK(cudaGetDeviceProperties(&prop[i], i));
-
-        if (prop[i].major >= 2) iCount++;
-
-        printf("> GPU%d: %s %s capable of Peer-to-Peer access\n", i,
-                prop[i].name, (prop[i].major >= 2 ? "is" : "not"));
-        fflush(stdout);
-    }
-
-    if(iCount != ngpus)
-    {
-        printf("> no enough device to run this application\n");
-        fflush(stdout);
-    }
-
-    return (iCount == ngpus);
-}
-
 /*
  * enable P2P memcopies between GPUs (all GPUs must be compute capability 2.0 or
  * later (Fermi or later))
@@ -138,24 +113,6 @@ inline void enableP2P (int ngpus)
             if (peer_access_available) CHECK(cudaDeviceEnablePeerAccess(j, 0));
         }
     }
-}
-
-inline bool isUnifiedAddressing (int ngpus)
-{
-    cudaDeviceProp prop[ngpus];
-
-    for (int i = 0; i < ngpus; i++)
-    {
-        CHECK(cudaGetDeviceProperties(&prop[i], i));
-    }
-
-    const bool iuva = (prop[0].unifiedAddressing && prop[1].unifiedAddressing);
-    printf("> GPU%d: %s %s unified addressing\n", 0, prop[0].name,
-           (prop[0].unifiedAddressing ? "support" : "not support"));
-    printf("> GPU%d: %s %s unified addressing\n", 1, prop[1].name,
-           (prop[1].unifiedAddressing ? "support" : "not support"));
-    fflush(stdout);
-    return iuva;
 }
 
 inline void calcIndex(int *haloStart, int *haloEnd, int *bodyStart,
@@ -299,10 +256,6 @@ int main( int argc, char *argv[] )
     CHECK(cudaGetDeviceCount(&ngpus));
     printf("> CUDA-capable device count: %i\n", ngpus);
 
-    // check p2p capability
-    isCapableP2P(ngpus);
-    isUnifiedAddressing(ngpus);
-
     //  get it from command line
     if (argc > 1)
     {
@@ -320,13 +273,10 @@ int main( int argc, char *argv[] )
     printf("> run with device: %i\n", ngpus);
 
     // size
-    const int nsteps  = 1<<14;
+    const int nsteps  = atoi(argv[2]);
     const int nx      = 512;
     const int ny      = 512;
     const int iny     = ny / ngpus + NPAD * (ngpus - 1);
-
-    int iMovie = nsteps;
-    if(argc >= 3) iMovie = atoi(argv[2]);
 
     size_t isize = nx * iny;
     size_t ibyte = isize * sizeof(float);
@@ -381,31 +331,54 @@ int main( int argc, char *argv[] )
     CHECK (cudaEventCreate(&stop ));
     CHECK(cudaEventRecord( start, 0 ));
 
+    // add wavelet only onto gpu0
+    CHECK(cudaSetDevice(0));
+    kernel_add_wavelet<<<grid, block>>>(d_u2[0], 20.0, nx, iny, ngpus);
+
+
     // main loop for wave propagation
     for(int istep = 0; istep < nsteps; istep++)
     {
-        // save snap image
-        if(iMovie == istep) saveSnapshotIstep(istep, nx, ny, ngpus, d_u2);
-
-        // add wavelet only onto gpu0
-        if (istep == 0)
-        {
-            CHECK(cudaSetDevice(0));
-            kernel_add_wavelet<<<grid, block>>>(d_u2[0], 20.0, nx, iny, ngpus);
-        }
-
         // halo part
         for (int i = 0; i < ngpus; i++)
         {
             CHECK(cudaSetDevice(i));
 
+            void *grid_args[] = {
+                &d_u1[i],
+                &d_u2[i],
+                (void *) &nx,
+                &haloStart[i],
+                &haloEnd[i]
+            };
+
             // compute halo
-            kernel_2dfd<<<grid, block, 0, stream_halo[i]>>>(d_u1[i], d_u2[i],
-                    nx, haloStart[i], haloEnd[i]);
+            cudaLaunchCooperativeKernel(
+                (void *)kernel_2dfd,
+                grid,
+                block,
+                grid_args,
+                0,
+                stream_halo[i]
+            );
+
+            void *body_args[] = {
+                &d_u1[i],
+                &d_u2[i],
+                (void *) &nx,
+                &bodyStart[i],
+                &bodyEnd[i],
+            };
 
             // compute internal
-            kernel_2dfd<<<grid, block, 0, stream_body[i]>>>(d_u1[i], d_u2[i],
-                    nx, bodyStart[i], bodyEnd[i]);
+            cudaLaunchCooperativeKernel(
+                (void *)kernel_2dfd,
+                grid,
+                block,
+                body_args,
+                0,
+                stream_body[i]
+            );
         }
 
         // exchange halo
@@ -427,6 +400,9 @@ int main( int argc, char *argv[] )
             d_u2[i] = tmpu0;
         }
     }
+
+    // save snap image
+    saveSnapshotIstep(nsteps, nx, ny, ngpus, d_u2);
 
     CHECK(cudaSetDevice( 0 ));
     CHECK(cudaEventRecord( stop, 0 ));
