@@ -9,6 +9,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "cooperative_groups.h"
+
+namespace cg = cooperative_groups;
 
 /*
  * This example implements a 2D stencil computation, spreading the computation
@@ -215,6 +218,8 @@ __global__ void kernel_add_wavelet ( float *g_u2, float wavelets, const int nx,
 __global__ void kernel_2dfd(float *g_u1, float *g_u2, const int nx,
                                  const int iStart, const int iEnd)
 {
+    cg::thread_block g = cg::this_thread_block();
+
     // global to slice : global grid idx for (x,y) plane
     unsigned int ix  = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -248,7 +253,8 @@ __global__ void kernel_2dfd(float *g_u1, float *g_u2, const int nx,
         }
 
         tile[stx] = yval[4];
-        __syncthreads();
+        //__syncthreads();
+        g.sync();
 
         if ( (ix >= NPAD) && (ix < nx - NPAD) )
         {
@@ -279,7 +285,8 @@ __global__ void kernel_2dfd(float *g_u1, float *g_u2, const int nx,
 
         // advancd on global idx
         idx  += nx;
-        __syncthreads();
+        //__syncthreads();
+        g.sync();
     }
 }
 
