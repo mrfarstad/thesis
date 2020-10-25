@@ -173,7 +173,7 @@ __global__ void kernel_add_wavelet ( float *g_u2, float wavelets, const int nx,
 
 // fd kernel function
 __global__ void kernel_2dfd(float *g_u1, float *g_u2, const int nx,
-                                 const int iStart, const int iEnd)
+                                 const int iStart, const int iEnd, int ngpus, float **d_u1, float **d_u2)
 {
     cg::thread_block g = cg::this_thread_block();
 
@@ -244,6 +244,17 @@ __global__ void kernel_2dfd(float *g_u1, float *g_u2, const int nx,
         idx  += nx;
         //__syncthreads();
         g.sync();
+
+        // exchange halo
+        //if (ngpus > 1)
+        //{
+        //    // TODO: Sjekk om du får brukt memcpy mellom d_u1[1] og d_u1[0] inne i kernel.
+        //    // Jeg er litt usikker på om dette er mulig...
+        //    cudaMemcpyAsync(d_u1[1] + dst_skip[0], d_u1[0] + src_skip[0],
+        //                iexchange, cudaMemcpyDefault, stream_halo[0]);
+        //    cudaMemcpyAsync(d_u1[0] + dst_skip[1], d_u1[1] + src_skip[1],
+        //                iexchange, cudaMemcpyDefault, stream_halo[1]);
+        //}
     }
 }
 
@@ -349,7 +360,8 @@ int main( int argc, char *argv[] )
                 &d_u2[i],
                 (void *) &nx,
                 &haloStart[i],
-                &haloEnd[i]
+                &haloEnd[i],
+                (void *) &ngpus
             };
 
             // compute halo
@@ -368,6 +380,7 @@ int main( int argc, char *argv[] )
                 (void *) &nx,
                 &bodyStart[i],
                 &bodyEnd[i],
+                (void *) &ngpus
             };
 
             // compute internal
@@ -384,6 +397,8 @@ int main( int argc, char *argv[] )
         // exchange halo
         if (ngpus > 1)
         {
+            // TODO: Sjekk om du får brukt memcpy mellom d_u1[1] og d_u1[0] inne i kernel.
+            // Jeg er litt usikker på om dette er mulig...
             CHECK(cudaMemcpyAsync(d_u1[1] + dst_skip[0], d_u1[0] + src_skip[0],
                         iexchange, cudaMemcpyDefault, stream_halo[0]));
             CHECK(cudaMemcpyAsync(d_u1[0] + dst_skip[1], d_u1[1] + src_skip[1],

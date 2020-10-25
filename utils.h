@@ -49,6 +49,7 @@
  */                                                                             
 #define ENABLE_P2P(ngpus)                                                                     \
 {                                                                                             \
+    printf("Enabling P2P...\n");                                                              \
     for (int i = 0; i < ngpus; i++)                                                           \
     {                                                                                         \
         CHECK(cudaSetDevice(i));                                                              \
@@ -60,9 +61,18 @@
             int peer_access_available = 0;                                                    \
             CHECK(cudaDeviceCanAccessPeer(&peer_access_available, i, j));                     \
                                                                                               \
-            if (peer_access_available) CHECK(cudaDeviceEnablePeerAccess(j, 0));               \
+            if (peer_access_available)                                                        \
+            {                                                                                 \
+                CHECK(cudaDeviceEnablePeerAccess(j, 0));                                      \
+                printf("> GPU%d enabled direct access to GPU%d\n", i, j);                     \
+            }                                                                                 \
+            else                                                                              \
+            {                                                                                 \
+                printf("Peer access not available for: (%d, %d)\n", i, j );                   \
+            }                                                                                 \
         }                                                                                     \
     }                                                                                         \
 }                                                                                             \
+
 
 #endif // _UTILS_H
