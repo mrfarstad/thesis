@@ -1,0 +1,4 @@
+Example of how to run the application:
+```
+make BLOCK_X=32 BLOCK_Y=16
+```

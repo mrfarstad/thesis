@@ -7,7 +7,9 @@ all: 		laplace3d laplace3d_new
 
 laplace3d:	laplace3d.cu laplace3d_gold.cpp laplace3d_kernel.h Makefile
 		nvcc laplace3d.cu laplace3d_gold.cpp -o laplace3d \
-		$(INC) $(NVCCFLAGS) $(LIB)
+				       $(INC) $(NVCCFLAGS) $(LIB) \
+					    -D BLOCK_X=$(BLOCK_X) \
+					    -D BLOCK_Y=$(BLOCK_Y)
 
 laplace3d_new:	laplace3d_new.cu laplace3d_gold.cpp laplace3d_kernel_new.h Makefile
 		nvcc laplace3d_new.cu laplace3d_gold.cpp -o laplace3d_new \

@@ -14,8 +14,13 @@
 // define kernel block size
 ////////////////////////////////////////////////////////////////////////
 
+#ifndef BLOCK_X
 #define BLOCK_X 16
+#endif
+#ifndef BLOCK_Y
 #define BLOCK_Y 8
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////
 // include kernel function
@@ -95,6 +100,8 @@ int main(int argc, const char **argv){
   dim3 dimGrid(bx,by);
   dim3 dimBlock(BLOCK_X,BLOCK_Y);
 
+  printf("block (%d, %d)", dimBlock.x, dimBlock.y);
+
   // printf("\n dimGrid  = %d %d %d \n",dimGrid.x,dimGrid.y,dimGrid.z);
   // printf(" dimBlock = %d %d %d \n",dimBlock.x,dimBlock.y,dimBlock.z);
 
@@ -124,7 +131,7 @@ int main(int argc, const char **argv){
   cudaEventElapsedTime(&milli, start, stop);
   printf("\nCopy u2 to host: %.1f (ms) \n", milli);
 
-  saveResult(NX, NY, NZ, h_u2);
+  //saveResult(NX, NY, NZ, h_u2);
 
   // print out corner of array
 

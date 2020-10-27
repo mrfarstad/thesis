@@ -47,10 +47,6 @@ int main(int argc, const char **argv){
 
   printf("\nGrid dimensions: %d x %d x %d\n", NX, NY, NZ);
 
-  // initialise card
-
-  findCudaDevice(argc, argv);
-
   // initialise CUDA timing
 
   float milli;
