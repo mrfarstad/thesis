@@ -1,0 +1,2 @@
+make
+./laplace3d
