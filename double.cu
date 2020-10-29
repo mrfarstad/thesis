@@ -44,10 +44,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < ngpus; i++)
     {
         args[i][0] = &d_u1[i];
-    }
-
-    for (int i = 0; i < ngpus; i++)
-    {
         launchParams[i].func = (void*)test;
         launchParams[i].gridDim = grid;
         launchParams[i].blockDim = block;
@@ -56,29 +52,7 @@ int main(int argc, char *argv[]) {
         launchParams[i].args = args[i];
     }
 
-    for (int i = 0; i < ngpus; i++)
-    {
-        CHECK(cudaSetDevice(i));
-        //test<<<grid, block>>>(d_u1[i], isize);
-        //cudaLaunchCooperativeKernel(
-        //    launchParams[i].func,
-        //    launchParams[i].gridDim,
-        //    launchParams[i].blockDim,
-        //    launchParams[i].args,
-        //    launchParams[i].sharedMem,
-        //    launchParams[i].stream
-        //);
-        //
-
-        cudaLaunchCooperativeKernel(
-            launchParams[i].func,
-            launchParams[i].gridDim,
-            launchParams[i].blockDim,
-            launchParams[i].args,
-            launchParams[i].sharedMem,
-            launchParams[i].stream
-        );
-    }
+    cudaLaunchCooperativeKernelMultiDevice(launchParams, ngpus);
 
     for (int i = 0; i < ngpus; i++)
     {
