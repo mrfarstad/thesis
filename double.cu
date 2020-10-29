@@ -4,12 +4,13 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "cuda_runtime_api.h"
+#include "cooperative_groups.h"
 
 __global__
-void test(int *g_u1, size_t N)
+void test(int *g_u1)
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx < N) g_u1[idx] = idx;
+    g_u1[idx] = idx;
 }
 
 int main(int argc, char *argv[]) {
@@ -37,7 +38,11 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < ngpus; i++)
     {
         CHECK(cudaSetDevice(i));
-        test<<<grid, block>>>(d_u1[i], isize);
+        //test<<<grid, block>>>(d_u1[i], isize);
+        void *kernelArgs[] = { 
+            &d_u1[i]
+        };
+        cudaLaunchCooperativeKernel((void*) test, grid, block, kernelArgs);
     }
 
     for (int i = 0; i < ngpus; i++)
