@@ -8,7 +8,11 @@ CU_APPS := multi-gpu simple2DFD double
 all: ${CU_APPS}
 
 %: %.cu
+    ifeq ($(BUILD), debug)
+	nvcc -g -G ${FLAGS} -o $@ $< ${LINKER}
+    else
 	nvcc ${FLAGS} -o $@ $< ${LINKER}
+    endif
 
 clean:
 	rm -Rf *.o
