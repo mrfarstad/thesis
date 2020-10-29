@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     cudaStream_t     *streams      = (cudaStream_t*)     malloc(sizeof(cudaStream_t)     * ngpus);
 
     // set up gpu card
-    int *d_u1[ngpus];
+    int *d_u[ngpus];
 
     size_t isize = 5;
     size_t ibyte = isize * sizeof(int);
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     {
         CHECK(cudaSetDevice(i));
         CHECK(cudaStreamCreate(&streams[i]));
-        CHECK(cudaMalloc((void **) &d_u1[i], ibyte));
+        CHECK(cudaMalloc((void **) &d_u[i], ibyte));
     }
 
     dim3 block(isize);
@@ -43,11 +43,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < ngpus; i++)
     {
-        args[i][0] = &d_u1[i];
-    }
-
-    for (int i = 0; i < ngpus; i++)
-    {
+        args[i][0] = &d_u[i];
         launchParams[i].func = (void*)test;
         launchParams[i].gridDim = grid;
         launchParams[i].blockDim = block;
@@ -56,34 +52,12 @@ int main(int argc, char *argv[]) {
         launchParams[i].args = args[i];
     }
 
-    for (int i = 0; i < ngpus; i++)
-    {
-        CHECK(cudaSetDevice(i));
-        //test<<<grid, block>>>(d_u1[i], isize);
-        //cudaLaunchCooperativeKernel(
-        //    launchParams[i].func,
-        //    launchParams[i].gridDim,
-        //    launchParams[i].blockDim,
-        //    launchParams[i].args,
-        //    launchParams[i].sharedMem,
-        //    launchParams[i].stream
-        //);
-        //
-
-        cudaLaunchCooperativeKernel(
-            launchParams[i].func,
-            launchParams[i].gridDim,
-            launchParams[i].blockDim,
-            launchParams[i].args,
-            launchParams[i].sharedMem,
-            launchParams[i].stream
-        );
-    }
+    cudaLaunchCooperativeKernelMultiDevice(launchParams, ngpus);
 
     for (int i = 0; i < ngpus; i++)
     {
         CHECK(cudaSetDevice(i));
-        CHECK(cudaMemcpyAsync(&host_ref[isize * i], d_u1[i], ibyte, cudaMemcpyDeviceToHost, streams[i]));
+        CHECK(cudaMemcpyAsync(&host_ref[isize * i], d_u[i], ibyte, cudaMemcpyDeviceToHost, streams[i]));
     }
 
     for (int i = 0; i < ngpus; i++)
