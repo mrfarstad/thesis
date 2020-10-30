@@ -1,16 +1,13 @@
 #include "common.h"
 #include "utils.h"
 #include <stdio.h>
-#include "cuda.h"
-#include "cuda_runtime.h"
-#include "cuda_runtime_api.h"
 #include "cooperative_groups.h"
 
 __global__
-void test(int *g_u1)
+void test(int *u)
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    g_u1[idx] = idx;
+    //u[idx] = 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -19,6 +16,12 @@ int main(int argc, char *argv[]) {
 
     cudaLaunchParams *launchParams = (cudaLaunchParams*) malloc(sizeof(cudaLaunchParams) * ngpus);
     cudaStream_t     *streams      = (cudaStream_t*)     malloc(sizeof(cudaStream_t)     * ngpus);
+    for (int i = 0; i < ngpus; i++)
+    {
+        CHECK(cudaSetDevice(i));
+        CHECK(cudaStreamCreate(&streams[i]));
+    }
+    CHECK(cudaSetDevice(0));
 
     // set up gpu card
     int *d_u[ngpus];
@@ -27,17 +30,36 @@ int main(int argc, char *argv[]) {
     size_t ibyte = isize * sizeof(int);
 
     int *host_ref = (int *) calloc(isize * ngpus, sizeof(int));
+    int *gpu_ref = (int *) calloc(isize * ngpus, sizeof(int));
 
     for (int i = 0; i < ngpus; i++)
     {
-        CHECK(cudaSetDevice(i));
-        CHECK(cudaStreamCreate(&streams[i]));
-        CHECK(cudaMalloc((void **) &d_u[i], ibyte));
+        for (int j = 0; j < isize; j++)
+        {
+            int idx = i * isize + j;
+            host_ref[idx] = idx;
+        }
+    }
+
+    printf("HOST:\n");
+    for (int d = 0; d < ngpus; d++) {
+        for (int i = 0; i < isize; i++) {
+            printf("%d ", host_ref[d * isize + i]);
+        }
+        printf("\n");
     }
 
     dim3 block(isize);
     dim3 grid(1);
 
+    // TODO: parallelize
+    for (int i = 0; i < ngpus; i++)
+    {
+        CHECK(cudaSetDevice(i));
+        CHECK(cudaMalloc((void **) &d_u[i], ibyte));
+        CHECK(cudaMemcpyAsync(d_u[i], &host_ref[i * isize], ibyte, cudaMemcpyHostToDevice, streams[i]));
+    }
+    CHECK(cudaSetDevice(0));
 
     void *args[ngpus][1];
 
@@ -57,25 +79,33 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < ngpus; i++)
     {
         CHECK(cudaSetDevice(i));
-        CHECK(cudaMemcpyAsync(&host_ref[isize * i], d_u[i], ibyte, cudaMemcpyDeviceToHost, streams[i]));
+        CHECK(cudaMemcpyAsync(&gpu_ref[isize * i], d_u[i], ibyte, cudaMemcpyDeviceToHost, streams[i]));
     }
 
     for (int i = 0; i < ngpus; i++)
     {
         CHECK(cudaSetDevice(i));
         CHECK(cudaStreamDestroy(streams[i]));
+        CHECK(cudaFree(d_u[i]));
     }
 
+    printf("DEVICE:\n");
     for (int d = 0; d < ngpus; d++) {
         for (int i = 0; i < isize; i++) {
-            printf("%d ", host_ref[i]);
+            printf("%d ", gpu_ref[d * isize + i]);
         }
         printf("\n");
     }
 
-    CHECK(cudaDeviceReset());
+    for (int i = 0; i < ngpus; i++)
+    {
+        CHECK(cudaSetDevice(i));
+        CHECK(cudaDeviceReset());
+    }
 
     free(launchParams);
     free(streams);
+
     free(host_ref);
+    free(gpu_ref);
 }

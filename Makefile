@@ -1,4 +1,4 @@
-FLAGS := -arch=sm_75 -rdc=true --ptxas-options=-v 
+FLAGS := -arch=sm_75 -rdc=true --ptxas-options=-v
 LINKER := -lcudadevrt
 DEPS := common.h utils.h
 CU_APPS := multi-gpu simple2DFD double
