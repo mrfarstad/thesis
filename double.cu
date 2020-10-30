@@ -9,14 +9,10 @@
 using namespace cooperative_groups;
 
 __global__
-void test(int *d1, int *d2, int device)
+void test(int *src, int *dest, int device)
 {
-    multi_grid_group mgg = this_multi_grid();
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    d1[idx] = idx * device;
-    mgg.sync();
-    memcpy(d2, d1, 5 * sizeof(int));//, cudaMemcpyDeviceToDevice);
-    // Race-condition faktisk...
+    src[idx] = idx * device;
 }
 
 int main(int argc, char *argv[]) {
@@ -24,6 +20,7 @@ int main(int argc, char *argv[]) {
     int ngpus = 4;
 
     ENABLE_P2P(ngpus);
+    CHECK(cudaSetDevice(0));
 
     cudaLaunchParams *launchParams = (cudaLaunchParams*) malloc(sizeof(cudaLaunchParams) * ngpus);
     cudaStream_t     *streams      = (cudaStream_t*)     malloc(sizeof(cudaStream_t)     * ngpus);
@@ -41,14 +38,7 @@ int main(int argc, char *argv[]) {
     {
         CHECK(cudaSetDevice(i));
         CHECK(cudaStreamCreate(&streams[i]));
-        //CHECK(cudaMemcpyToSymbol(device, &i, sizeof(int)));
-        //int d;
-        //cudaGetDevice(&d);
-        //CHECK(cudaMemcpyToSymbol(device, &i, sizeof(int)));
-        //CHECK(cudaMemcpyToSymbolAsync(device, &i, sizeof(int), 0, cudaMemcpyHostToDevice, streams[i]));
     }
-
-
 
     for (int i = 0; i < ngpus; i++)
     {
@@ -59,7 +49,6 @@ int main(int argc, char *argv[]) {
     CHECK(cudaSetDevice(0));
     dim3 block(isize);
     dim3 grid(1);
-
 
     void *args[ngpus][3];
     int devices[ngpus];
@@ -104,9 +93,15 @@ int main(int argc, char *argv[]) {
         printf("\n");
     }
 
-    CHECK(cudaDeviceReset());
+    CHECK(cudaSetDevice(0));
+    CHECK(cudaFreeHost(host_ref));
 
-    cudaFree(host_ref);
+    for (int i = 0; i < ngpus; i++)
+    {
+        CHECK(cudaSetDevice(i));
+        CHECK(cudaDeviceReset());
+    }
+
     free(launchParams);
     free(streams);
 }
