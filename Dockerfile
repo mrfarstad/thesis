@@ -1,10 +1,10 @@
 FROM nvidia/cuda:11.1-devel
 
-RUN apt-get update -y && DEBIAN_FRONTEND="noninteractive" apt-get install python lsof gnuplot build-essential -y --no-install-recommends
+RUN apt-get update -y
+RUN apt-get install build-essential -y --no-install-recommends
 
 WORKDIR /usr/src/laplace3d
 
-COPY Autotuning ./Autotuning
-COPY *.sh *.cu *.conf Makefile ./
+COPY *.sh *.cu *.cpp *.h Makefile ./
 
-CMD ./autotune.sh laplace3d
+CMD ./run.sh 32 16 2
