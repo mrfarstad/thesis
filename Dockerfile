@@ -1,9 +1,10 @@
 FROM nvidia/cuda:11.1-devel
 
-RUN apt-get update && apt-get install build-essential -y --no-install-recommends
+RUN apt-get update -y && DEBIAN_FRONTEND="noninteractive" apt-get install python lsof gnuplot build-essential -y --no-install-recommends
 
 WORKDIR /usr/src/laplace3d
 
-COPY simple2DFD.sh simple2DFD.cu Makefile common.h utils.h ./
+COPY Autotuning ./Autotuning
+COPY *.sh *.cu *.conf Makefile ./
 
-CMD ./simple2DFD.sh
+CMD ./autotune.sh laplace3d

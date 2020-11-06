@@ -1,5 +1,3 @@
-#! /bin/sh
-# rebuild prog if necessary
-make simple2DFD
-# run prog with some arguments
-./simple2DFD "$@"
+make BLOCK_X="$1" BLOCK_Y="$2" BLOCK_Z="$3"
+./laplace3d
+make clean
