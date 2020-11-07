@@ -5,7 +5,7 @@ ifeq ($(BUILD), debug)
     DEBUG := -g -G
 endif
 
-NVCCFLAGS	:= -lineinfo -arch=sm_75 -rdc=true --ptxas-options=-v --use_fast_math
+NVCCFLAGS	:= -lineinfo -arch=$(ARCH) -rdc=true --ptxas-options=-v --use_fast_math
 
 all: 		laplace3d_$(ID)
 
