@@ -21,3 +21,6 @@ profile:
 		
 clean:
 		rm -f bin/laplace3d_*
+
+results_clean:
+		rm -f results/*
