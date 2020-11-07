@@ -26,7 +26,7 @@
 
 #include "helper_cuda.h"
 #include "laplace3d_timer.h"
-#include "laplace3d_kernel.h"
+#include "laplace3d_kernel.cu"
 #include "laplace3d_initializer.h"
 #include "laplace3d_error_checker.h"
 
@@ -34,7 +34,6 @@
 void Gold_laplace3d(int nx, int ny, int nz, float* h_u1, float* h_u2);
 
 int main(int argc, const char **argv){
-
     int    i,
            ibyte = NX*NY*NZ * sizeof(float);
     float  *h_u1, *h_u2, *h_u3, *h_swap,
@@ -66,7 +65,7 @@ int main(int argc, const char **argv){
 
     start_timer(start);
     for (i = 1; i <= ITERATIONS; ++i) {
-      GPU_laplace3d<<<dimGrid, dimBlock>>>(d_u1, d_u2);
+      GPU_laplace3d<<<dimGrid, dimBlock>>>(d_u1, d_u2, BLOCK_X, BLOCK_Y, BLOCK_Z, NX, NY, NZ);
       getLastCudaError("GPU_laplace3d execution failed\n");
 
       d_foo = d_u1; d_u1 = d_u2; d_u2 = d_foo;   // swap d_u1 and d_u2

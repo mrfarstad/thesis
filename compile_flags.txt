@@ -1,1 +1,2 @@
---cuda-gpu-arch=sm_72
+--cuda-gpu-arch=sm_75
+
