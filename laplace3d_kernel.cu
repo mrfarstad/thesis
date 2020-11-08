@@ -36,9 +36,21 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
       u2 = d_u1[indg];  // Dirichlet b.c.'s
     }
     else {
-      u2 = ( d_u1[indg-ioff] + d_u1[indg+ioff]
-           + d_u1[indg-joff] + d_u1[indg+joff]
-           + d_u1[indg-koff] + d_u1[indg+koff] ) * sixth;
+      float ival[] ={
+        d_u1[indg-ioff],
+        d_u1[indg+ioff]
+      };
+      float jval[] ={
+        d_u1[indg-joff],
+        d_u1[indg+joff]
+      };
+      float kval[] ={
+        d_u1[indg-koff],
+        d_u1[indg+koff]
+      };
+      float tmp = 0.0f;
+      for (int d=0; d<2; d++) tmp += ival[d] + jval[d] + kval[d];
+      u2 = tmp * sixth;
     }
     d_u2[indg] = u2;
   }
