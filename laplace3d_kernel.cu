@@ -13,7 +13,7 @@
 #endif
 
 #ifndef BLOCK_Z
-#define BLOCK_Z 1
+#define BLOCK_Z 2
 #endif
 
 
@@ -30,7 +30,6 @@
 #endif
 
 #include "cooperative_groups.h"
-
 using namespace cooperative_groups;
 
 __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
@@ -93,7 +92,7 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 
   smem[sz][sy][sx] = d_u1[idx];
 
-  __syncthreads();
+  tb.sync();
 
   if (idx < NX*NY*NZ) {
       if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==0 || k==NZ-1) {
