@@ -57,8 +57,15 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
   idx = i + j*joff + k*koff;
   sdx = threadIdx.x + 1;
 
-  __shared__ float xval[BLOCK_X];
-  xval[threadIdx.x] = d_u1[idx];
+  __shared__ float xval[BLOCK_X+2];
+  if (threadIdx.x == 0) {
+    if (blockIdx.x != 0) {
+        xval[threadIdx.x] = d_u1[idx-1];
+    } else if (blockIdx.x != gridDim.x-1) {
+        xval[sdx+BLOCK_X] = d_u1[idx+BLOCK_X];
+    }
+  }
+  xval[sdx] = d_u1[idx];
   __syncthreads();
 
   if (idx < NX*NY*NZ) {
@@ -67,15 +74,17 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
         u2 = d_u1[idx];
       }
       else {
-        float ival[2];
-        if (threadIdx.x > 0 && threadIdx.x < BLOCK_X-1) {
-          ival[0] = xval[threadIdx.x-ioff];
-          ival[1] = xval[threadIdx.x+ioff];
+        float tmp = 0.0f;
+        if (threadIdx.x == 0 && blockIdx.x == 0) {
+          tmp += d_u1[idx-ioff];
         } else {
-          ival[0] = d_u1[idx-ioff];
-          ival[1] = d_u1[idx+ioff];
+          tmp += xval[sdx-ioff];
         }
-
+        if (threadIdx.x == BLOCK_X-1 && blockIdx.x == gridDim.x-1) {
+          tmp += d_u1[idx+ioff];
+        } else {
+          tmp += xval[sdx+ioff];
+        }
         float jval[] ={
           d_u1[idx-joff],
           d_u1[idx+joff]
@@ -84,8 +93,7 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
           d_u1[idx-koff],
           d_u1[idx+koff]
         };
-        float tmp = 0.0f;
-        for (int d=0; d<2; d++) tmp += ival[d] + jval[d] + kval[d];
+        for (int d=0; d<2; d++) tmp += jval[d] + kval[d];
         u2 = tmp * sixth;
       }
       d_u2[idx] = u2;
