@@ -1,6 +1,7 @@
 snapshots
 coop_snapshots
-results
-*.txt
+results/
+bin/
 *.ncu-rep
+*.txt
 *.png
