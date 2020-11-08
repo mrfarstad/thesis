@@ -1,12 +1,12 @@
-INC	:= -I$(CUDA_HOME)/include -I.
-LIB	:= -L$(CUDA_HOME)/lib64
-LIBS 	:= -lcudart -lcudadevrt
+#INC	:= -I$(CUDA_HOME)/include -I.
+#LIB	:= -L$(CUDA_HOME)/lib64
+#LIBS 	:= -lcudart -lcudadevrt
 ARCH    := sm_75
 ifeq ($(BUILD), debug)
     DEBUG := -g -G
 endif
 
-NVCCFLAGS	:= -lineinfo -arch=$(ARCH) -rdc=true --ptxas-options=-v --use_fast_math
+#NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARCH) 
 
 all: 		laplace3d_$(ID)
 
