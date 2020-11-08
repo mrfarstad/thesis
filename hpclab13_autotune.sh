@@ -1,1 +1,1 @@
-./autotune.sh hpclab13 laplace3d
+./autotune.sh hpclab13 laplace3d | tee results/out.txt

@@ -3,3 +3,5 @@ coop_snapshots
 results/
 bin/
 *.ncu-rep
+*.txt
+*.png
