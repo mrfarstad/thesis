@@ -82,14 +82,20 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 
   __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
 
-  if (tx == 0 && bx != 0)           smem[sz][sy][tx]   = d_u1[idx-ioff];
-  if (tx == blockx-1 && bx != gx-1) smem[sz][sy][sx+1] = d_u1[idx+ioff];
+  if (tx == 0) {
+      if (bx != 0)    smem[sz][sy][tx]   = d_u1[idx-ioff];
+      if (bx != gx-1) smem[sz][sy][sx+blockx] = d_u1[idx+blockx];
+  }
 
-  if (ty == 0 && by != 0)           smem[sz][ty][sx]   = d_u1[idx-joff];
-  if (ty == blocky-1 && by != gy-1) smem[sz][sy+1][sx] = d_u1[idx+joff];
+  if (ty == 0) {
+      if (by != 0)    smem[sz][ty][sx]   = d_u1[idx-joff];
+      if (by != gy-1) smem[sz][sy+blocky][sx] = d_u1[idx+joff*blocky];
+  }
 
-  if (tz == 0 && bz != 0)           smem[tz][sy][sx]   = d_u1[idx-koff];
-  if (tz == blockz-1 && bz != gz-1) smem[sz+1][sy][sx] = d_u1[idx+koff];
+  if (tz == 0) {
+      if (bz != 0)    smem[tz][sy][sx]   = d_u1[idx-koff];
+      if (bz != gz-1) smem[sz+blockz][sy][sx] = d_u1[idx+koff*blockz];
+  }
 
   smem[sz][sy][sx] = d_u1[idx];
 
