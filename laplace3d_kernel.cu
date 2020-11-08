@@ -72,20 +72,41 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
       else {
         float tmp = 0.0f;
         if (tx > 0) {
-          tmp += smem[tz][ty][tx-ioff];
+          tmp += smem[tz][ty][tx-1];
         } else {
           tmp += d_u1[idx-ioff];
         }
         if (tx < BLOCK_X-1) {
-          tmp += smem[tz][ty][tx+ioff];
+          tmp += smem[tz][ty][tx+1];
         } else {
           tmp += d_u1[idx+ioff];
         }
 
-        u2 = (d_u1[idx-joff]  +
-              d_u1[idx+joff]  +
-              d_u1[idx-koff]  +
-              d_u1[idx+koff]  + tmp) * sixth;
+        if (ty > 0) {
+          tmp += smem[tz][ty-1][tx];
+        } else {
+          tmp += d_u1[idx-joff];
+        }
+
+        if (ty < BLOCK_Y-1) {
+          tmp += smem[tz][ty+1][tx];
+        } else {
+          tmp += d_u1[idx+joff];
+        }
+
+        if (tz > 0) {
+          tmp += smem[tz-1][ty][tx];
+        } else {
+          tmp += d_u1[idx-koff];
+        }
+
+        if (tz < BLOCK_Z-1) {
+          tmp += smem[tz+1][ty][tx];
+        } else {
+          tmp += d_u1[idx+koff];
+        }
+
+        u2 = tmp * sixth;
       }
       d_u2[idx] = u2;
   }
