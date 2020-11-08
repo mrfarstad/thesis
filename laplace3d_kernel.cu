@@ -36,7 +36,12 @@ using namespace cooperative_groups;
 __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
-  int   i, j, k, tx, ty, tz, idx, ioff, joff, koff;
+  int   i, j, k,
+        tx, ty, tz,
+        bx, by, bz,
+        gx, gy, gz,
+        blockx, blocky, blockz,
+        idx, sx, sy, sz, ioff, joff, koff;
   float u2, sixth=1.0f/6.0f;
 
   thread_block tb = this_thread_block();
@@ -52,7 +57,22 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
   tx   = threadIdx.x;
   ty   = threadIdx.y;
   tz   = threadIdx.z;
-  
+
+  bx   = blockIdx.x;
+  by   = blockIdx.y;
+  bz   = blockIdx.z;
+
+  gx   = gridDim.x;
+  gy   = gridDim.y;
+  gz   = gridDim.z;
+
+  sx = tx+1;
+  sy = ty+1;
+  sz = tz+1;
+
+  blockx = BLOCK_X;
+  blocky = BLOCK_Y;
+  blockz = BLOCK_Z;
 
   ioff = 1;
   joff = NX;
@@ -60,8 +80,19 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 
   idx = i + j*joff + k*koff;
 
-  __shared__ float smem[BLOCK_Z][BLOCK_Y][BLOCK_X];
-  smem[tz][ty][tx] = d_u1[idx];
+  __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
+
+  if (tx == 0 && bx != 0)           smem[sz][sy][tx]   = d_u1[idx-ioff];
+  if (tx == blockx-1 && bx != gx-1) smem[sz][sy][sx+1] = d_u1[idx+ioff];
+
+  if (ty == 0 && by != 0)           smem[sz][ty][sx]   = d_u1[idx-joff];
+  if (ty == blocky-1 && by != gy-1) smem[sz][sy+1][sx] = d_u1[idx+joff];
+
+  if (tz == 0 && bz != 0)           smem[tz][sy][sx]   = d_u1[idx-koff];
+  if (tz == blockz-1 && bz != gz-1) smem[sz+1][sy][sx] = d_u1[idx+koff];
+
+  smem[sz][sy][sx] = d_u1[idx];
+
   __syncthreads();
 
   if (idx < NX*NY*NZ) {
@@ -70,43 +101,12 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
         u2 = d_u1[idx];
       }
       else {
-        float tmp = 0.0f;
-        if (tx > 0) {
-          tmp += smem[tz][ty][tx-1];
-        } else {
-          tmp += d_u1[idx-ioff];
-        }
-        if (tx < BLOCK_X-1) {
-          tmp += smem[tz][ty][tx+1];
-        } else {
-          tmp += d_u1[idx+ioff];
-        }
-
-        if (ty > 0) {
-          tmp += smem[tz][ty-1][tx];
-        } else {
-          tmp += d_u1[idx-joff];
-        }
-
-        if (ty < BLOCK_Y-1) {
-          tmp += smem[tz][ty+1][tx];
-        } else {
-          tmp += d_u1[idx+joff];
-        }
-
-        if (tz > 0) {
-          tmp += smem[tz-1][ty][tx];
-        } else {
-          tmp += d_u1[idx-koff];
-        }
-
-        if (tz < BLOCK_Z-1) {
-          tmp += smem[tz+1][ty][tx];
-        } else {
-          tmp += d_u1[idx+koff];
-        }
-
-        u2 = tmp * sixth;
+        u2 = (smem[sz][sy][sx-1]  +
+              smem[sz][sy][sx+1]  +
+              smem[sz][sy-1][sx]  +
+              smem[sz][sy+1][sx]  +
+              smem[sz-1][sy][sx]  +
+              smem[sz+1][sy][sx]) * sixth;
       }
       d_u2[idx] = u2;
   }
