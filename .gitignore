@@ -1,2 +1,6 @@
 snapshots
 coop_snapshots
+results
+*.txt
+*.ncu-rep
+*.png
