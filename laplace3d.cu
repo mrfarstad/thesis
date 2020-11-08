@@ -8,11 +8,11 @@
 #define start_timer cudaEventRecord
 
 #ifndef BLOCK_X
-#define BLOCK_X 64
+#define BLOCK_X 128
 #endif
 
 #ifndef BLOCK_Y
-#define BLOCK_Y 2
+#define BLOCK_Y 1
 #endif
 
 #ifndef BLOCK_Z
@@ -65,7 +65,10 @@ int main(int argc, const char **argv){
 
     start_timer(start);
     for (i = 1; i <= ITERATIONS; ++i) {
-      GPU_laplace3d<<<dimGrid, dimBlock>>>(d_u1, d_u2, BLOCK_X, BLOCK_Y, BLOCK_Z, NX, NY, NZ);
+      GPU_laplace3d<<<dimGrid, dimBlock>>>(
+              d_u1,
+              d_u2
+      );
       getLastCudaError("GPU_laplace3d execution failed\n");
 
       d_foo = d_u1; d_u1 = d_u2; d_u2 = d_foo;   // swap d_u1 and d_u2
