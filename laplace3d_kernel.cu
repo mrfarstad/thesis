@@ -14,7 +14,7 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
                               const int ny,
                               const int nz)
 {
-  int   i, j, k, indg, ioff, joff, koff;
+  int   i, j, k, idx, stx, ioff, joff, koff;
   float u2, sixth=1.0f/6.0f;
 
   //
@@ -29,29 +29,41 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
   joff = nx;
   koff = nx*ny;
 
-  indg = i + j*joff + k*koff;
+  idx = i + j*joff + k*koff;
+  stx = threadIdx.x + xpad;
+
+  __shared__ float xval[blockx + 2];
+  if (threadIdx.x == 0)
+  {
+      int tmp = idx - 1;
+      if (tmp > 0);
+      xval[threadIdx.x] = d_u1[idx - 1];
+      xval[blockx] = d_u1[idx + blockx];
+  }
+  __synchthreads();
 
   if (i>=0 && i<=nx-1 && j>=0 && j<=ny-1 && k>=0 && k<=nz-1) {
     if (i==0 || i==nx-1 || j==0 || j==ny-1 || k==0 || k==nz-1) {
-      u2 = d_u1[indg];  // Dirichlet b.c.'s
+      u2 = d_u1[idx];  // Dirichlet b.c.'s
     }
     else {
-      float ival[] ={
-        d_u1[indg-ioff],
-        d_u1[indg+ioff]
-      };
+        
+      float ival[2];
+      ival[0]=d_u1[idx-ioff];
+      ival[1]=d_u1[idx+ioff];
+
       float jval[] ={
-        d_u1[indg-joff],
-        d_u1[indg+joff]
+        d_u1[idx-joff],
+        d_u1[idx+joff]
       };
       float kval[] ={
-        d_u1[indg-koff],
-        d_u1[indg+koff]
+        d_u1[idx-koff],
+        d_u1[idx+koff]
       };
       float tmp = 0.0f;
       for (int d=0; d<2; d++) tmp += ival[d] + jval[d] + kval[d];
       u2 = tmp * sixth;
     }
-    d_u2[indg] = u2;
+    d_u2[idx] = u2;
   }
 }

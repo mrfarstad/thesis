@@ -8,15 +8,15 @@
 #define start_timer cudaEventRecord
 
 #ifndef BLOCK_X
-#define BLOCK_X 16
+#define BLOCK_X 64
 #endif
 
 #ifndef BLOCK_Y
-#define BLOCK_Y 4
+#define BLOCK_Y 2
 #endif
 
 #ifndef BLOCK_Z
-#define BLOCK_Z 4
+#define BLOCK_Z 1
 #endif
 
 #define NX 256
