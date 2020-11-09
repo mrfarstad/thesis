@@ -10,8 +10,8 @@ NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARC
 
 all: 		laplace2d_$(ID)
 
-laplace2d_$(ID): laplace2d.cu laplace2d_gold.cpp laplace2d_kernel.cu Makefile
-		 nvcc laplace2d.cu laplace2d_gold.cpp -o bin/laplace2d_$(ID) \
+laplace2d_$(ID): laplace2d.cu laplace2d_cpu.cpp laplace2d_kernel.cu Makefile
+		 nvcc laplace2d.cu laplace2d_cpu.cpp -o bin/laplace2d_$(ID) \
 		      $(DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)            \
 		 			    -D BLOCK_X=$(BLOCK_X)            \
 		 			    -D BLOCK_Y=$(BLOCK_Y)            

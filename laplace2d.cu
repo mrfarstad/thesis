@@ -1,8 +1,4 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
 
 #define CU checkCudaErrors 
 #define start_timer cudaEventRecord
@@ -12,7 +8,7 @@
 #endif
 
 #ifndef BLOCK_Y
-#define BLOCK_Y 128
+#define BLOCK_Y 4
 #endif
 
 #define NX 256
@@ -21,27 +17,12 @@
 
 #include "helper_cuda.h"
 #include "laplace2d_timer.h"
+#include "laplace2d_utils.cu"
 #include "laplace2d_kernel.cu"
 #include "laplace2d_initializer.h"
 #include "laplace2d_error_checker.h"
 
-void saveResult(float *d_u)
-{
-    char fname[15];
-    sprintf(fname, "result");
-
-    FILE *fp_snap = fopen(fname, "w");
-
-    fwrite(d_u, sizeof(float), NX * NY, fp_snap);
-    printf("Saving %s: nx = %d ny = %d\n", fname, NX, NY);
-    fflush(stdout);
-    fclose(fp_snap);
-
-    return;
-}
-
-
-void Gold_laplace3d(int nx, int ny, float* h_u1, float* h_u2);
+void cpu_laplace2d(int nx, int ny, float* h_u1, float* h_u2);
 
 int main(int argc, const char **argv){
     int    i, j, ind,
@@ -91,7 +72,7 @@ int main(int argc, const char **argv){
 
     start_timer(start);
     for (i = 1; i <= ITERATIONS; ++i) {
-        Gold_laplace3d(NX, NY, h_u1, h_u3);
+        cpu_laplace2d(NX, NY, h_u1, h_u3);
         h_swap = h_u1; h_u1 = h_u3; h_u3 = h_swap;   // swap h_u1 and h_u3
     }
     stop_timer(&start, &stop, &milli, "\nCPU_laplace3d: %.1f (ms) \n");
@@ -99,7 +80,6 @@ int main(int argc, const char **argv){
     check_domain_errors(h_u1, h_u2);
 
     // print out corner of array
-
     for (j=0; j<8; j++) {
       for (i=0; i<8; i++) {
         ind = i + j*NX;

@@ -1,6 +1,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
-void Gold_laplace3d(int NX, int NY, float* u1, float* u2) 
+void cpu_laplace2d(int NX, int NY, float* u1, float* u2) 
 {
   int   i, j, ind;
   float fourth=1.0f/4.0f;  // predefining this improves performance more than 10%
