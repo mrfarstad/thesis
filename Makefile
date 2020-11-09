@@ -14,8 +14,7 @@ laplace3d_$(ID): laplace3d.cu laplace3d_gold.cpp laplace3d_kernel.cu Makefile
 		 nvcc laplace3d.cu laplace3d_gold.cpp -o bin/laplace3d_$(ID) \
 		      $(DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)            \
 		 			    -D BLOCK_X=$(BLOCK_X)            \
-		 			    -D BLOCK_Y=$(BLOCK_Y)            \
-		 			    -D BLOCK_Z=$(BLOCK_Z)
+		 			    -D BLOCK_Y=$(BLOCK_Y)            
 profile:
 	sudo ncu -f -o profile bin/laplace3d_$(ID)
 		
