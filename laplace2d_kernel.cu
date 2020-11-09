@@ -47,15 +47,18 @@ __global__ void gpu_laplace2d(float* __restrict__ d_u1,
     grid_group g = this_grid();
     thread_block tb = this_thread_block();
 
-    __shared__ float smem[BLOCK_Y][BLOCK_X];
+    __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
 
     for (q = 1; q <= iter; q++) {
         for (int y=j; y<ny; y+=yskip) {
             for (int x=i; x<nx; x+=xskip) {
                 idx = x + y*joff;
-
                 tb.sync();
-                smem[ty][tx] = d_u1[idx];
+                if (x != 0)           smem[sy][sx-1]   = d_u1[idx-ioff];
+                if (x != nx-1)        smem[sy][sx+1]   = d_u1[idx+ioff];
+                if (y != 0)           smem[sy-1][sx]   = d_u1[idx-joff];
+                if (y != ny-1)        smem[sy+1][sx]   = d_u1[idx+joff];
+                smem[sy][sx] = d_u1[idx];
                 tb.sync();
 
                 if (idx < nx*ny) {
@@ -63,29 +66,10 @@ __global__ void gpu_laplace2d(float* __restrict__ d_u1,
                       u2 = d_u1[idx]; // Dirichlet b.c.'s
                     }
                     else {
-                      float tmp = 0.0f;
-                      if (tx > 0) {
-                        tmp += smem[ty][tx-1];
-                      } else {
-                          tmp += d_u1[idx-ioff];
-                      }
-                      if (tx < BLOCK_X-1) {
-                        tmp += smem[ty][tx+1];
-                      } else {
-                        tmp += d_u1[idx+ioff];
-                      }
-
-                      if (ty > 0) {
-                        tmp += smem[ty-1][tx];
-                      } else {
-                        tmp += d_u1[idx-joff];
-                      }
-                      if (ty < BLOCK_Y-1) {
-                        tmp += smem[ty+1][tx];
-                      } else {
-                        tmp += d_u1[idx+joff];
-                      }
-                      u2 = tmp * fourth;
+                      u2 = (smem[sy][sx-1]  +
+                            smem[sy][sx+1]  +
+                            smem[sy-1][sx]  +
+                            smem[sy+1][sx]) * fourth;
                     }
                     d_u2[idx] = u2;
                 }
