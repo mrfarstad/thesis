@@ -1,9 +1,13 @@
 INC	:= -I$(CUDA_HOME)/include -I.
 LIB	:= -L$(CUDA_HOME)/lib64
 LIBS 	:= -lcudart -lcudadevrt
-ARCH    := sm_75
 ifeq ($(BUILD), debug)
     DEBUG := -g -G
+endif
+ifeq ($(HOST), yme)
+    ARCH := sm_70
+else
+    ARCH := sm_75
 endif
 
 NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARCH) 
@@ -11,10 +15,10 @@ NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARC
 all: 		laplace2d_$(ID)
 
 laplace2d_$(ID): laplace2d.cu laplace2d_cpu.cpp laplace2d_kernel.cu Makefile
-		 nvcc laplace2d.cu laplace2d_cpu.cpp -o bin/laplace2d_$(ID) \
-		      $(DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)            \
-		 			    -D BLOCK_X=$(BLOCK_X)            \
-		 			    -D BLOCK_Y=$(BLOCK_Y)            
+		 nvcc laplace2d.cu laplace2d_cpu.cpp -o bin/laplace2d_$(ID) -arch $(ARCH)   \
+					      $(DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
+								    -D BLOCK_X=$(BLOCK_X)   \
+							   	    -D BLOCK_Y=$(BLOCK_Y)            
 profile:
 	sudo ncu -f -o profile bin/laplace2d_$(ID)
 		
