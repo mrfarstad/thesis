@@ -20,10 +20,10 @@
 #define ITERATIONS 8192 
 
 #include "helper_cuda.h"
-#include "laplace3d_timer.h"
-#include "laplace3d_kernel.cu"
-#include "laplace3d_initializer.h"
-#include "laplace3d_error_checker.h"
+#include "laplace2d_timer.h"
+#include "laplace2d_kernel.cu"
+#include "laplace2d_initializer.h"
+#include "laplace2d_error_checker.h"
 
 void saveResult(float *d_u)
 {

@@ -5,7 +5,7 @@ python ${PWD}/Autotuning/tuner/tune.py "$1".conf
 # Create plt from csv
 ${PWD}/Autotuning/utilities/output_gnuplot.py results/"$2".csv results/"$2".plt
 # Create image from plt
-gnuplot -e "set terminal png large size 1500, 1800; set output 'results/$2.png'; load 'results/laplace3d.plt'; exit;"
+gnuplot -e "set terminal png large size 1500, 1800; set output 'results/$2.png'; load 'results/laplace2d.plt'; exit;"
 
 # If nothing is running on port 8080, then start a local server
 # so that you can see the images on the host using

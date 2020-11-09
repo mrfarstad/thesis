@@ -4,5 +4,5 @@ ssh yme -t "
     docker build . -t nvidia-test;
     "
 
-    #docker create -it --gpus all --name laplace3d nvidia-test bash;
-    #docker cp laplace3d:/usr/src/laplace3d/results/laplace3d.png .
+    #docker create -it --gpus all --name laplace2d nvidia-test bash;
+    #docker cp laplace2d:/usr/src/laplace2d/results/laplace2d.png .

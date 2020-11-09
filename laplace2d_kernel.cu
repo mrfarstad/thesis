@@ -27,12 +27,8 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
   int   i, j,
-        tx, ty,
-        bx, by,
-        gx, gy,
-        blockx, blocky,
         idx, ioff, joff;
-  float u2, fourth=1.0f/4.0f, fifth=1.0f/5.0f;
+  float u2, fourth=1.0f/4.0f;
 
   thread_block tb = this_thread_block();
 
@@ -42,9 +38,6 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
 
   i    = threadIdx.x + blockIdx.x*BLOCK_X;
   j    = threadIdx.y + blockIdx.y*BLOCK_Y;
-
-  blockx = BLOCK_X;
-  blocky = BLOCK_Y;
 
   ioff = 1;
   joff = NX;
@@ -57,15 +50,10 @@ __global__ void GPU_laplace3d(const float* __restrict__ d_u1,
         u2 = d_u1[idx];
       }
       else {
-        u2 = (
-           //   (d_u1[idx - ioff + joff]
-           //+   d_u1[idx + ioff + joff]
-           //+   d_u1[idx - ioff - joff]
-           //+   d_u1[idx + ioff - joff]) * fifth 
-               d_u1[idx - ioff]
-           +   d_u1[idx + ioff]
-           +   d_u1[idx - joff]
-           +   d_u1[idx + joff]) * fourth;
+        u2 = (d_u1[idx - ioff]
+           +  d_u1[idx + ioff]
+           +  d_u1[idx - joff]
+           +  d_u1[idx + joff]) * fourth;
       }
       d_u2[idx] = u2;
   }
