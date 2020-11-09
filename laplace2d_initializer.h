@@ -1,6 +1,6 @@
 void initialize_host_region(float *h_u)
 {
-    int i, j, k, idx;
+    int i, j, idx;
     for (j=0; j<NY; j++) {
         for (i=0; i<NX; i++) {
             idx = i + j*NX;
