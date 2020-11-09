@@ -5,8 +5,8 @@
 #include "laplace2d_kernel.cu"
 #include "laplace2d_initializer.h"
 #include "laplace2d_error_checker.h"
-//#include "cooperative_groups.h"
-//using namespace cooperative_groups;
+#include "cooperative_groups.h"
+using namespace cooperative_groups;
 
 #define CU checkCudaErrors 
 #define start_timer cudaEventRecord
@@ -22,7 +22,7 @@
 #define NX 256
 #define NY 256
 
-#define ITERATIONS 8096
+#define ITERATIONS 16192 
 
 void cpu_laplace2d(int nx, int ny, float* h_u1, float* h_u2);
 
@@ -30,7 +30,7 @@ int main(int argc, const char **argv){
     int    i, j, ind,
            ibyte = NX*NY * sizeof(float);
     float  *h_u1, *h_u2, *h_u3, *h_swap,
-           *d_u1, *d_u2, *d_tmp,
+           *d_u1, *d_u2,
            milli;
 
     cudaEvent_t start, stop;
@@ -43,17 +43,18 @@ int main(int argc, const char **argv){
     CU(cudaMalloc((void **)&d_u1, ibyte));
     CU(cudaMalloc((void **)&d_u2, ibyte));
 
-    initialize_host_region(h_u1);
+    initialize_host_region(h_u1, NX, NY);
 
     start_timer(start);
     CU(cudaMemcpy(d_u1, h_u1, ibyte, cudaMemcpyHostToDevice));
     stop_timer(&start, &stop, &milli, "\ncudaMemcpyHostToDevice: %.1f (ms) \n");
 
+    int device = 0;
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, device);
+
     dim3 dimBlock(BLOCK_X,BLOCK_Y);
-    dim3 dimGrid(
-        1 + (NX-1)/BLOCK_X,
-        1 + (NY-1)/BLOCK_Y
-    );
+    dim3 dimGrid(deviceProp.multiProcessorCount, 1);
 
     int nx = NX;
     int ny = NY;
@@ -67,20 +68,17 @@ int main(int argc, const char **argv){
         (void *)&iter
     };
 
-    int device = 0;
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, device);
     // initialize, then launch
     printf("Multiprocessorcount: %d, Grid: x: %d y: %d\n", deviceProp.multiProcessorCount, dimGrid.x, dimGrid.y);
 
     start_timer(start);
-    cudaLaunchCooperativeKernel((void*)gpu_laplace2d, deviceProp.multiProcessorCount, dimBlock, args);
+    cudaLaunchCooperativeKernel((void*)gpu_laplace2d, dimGrid, dimBlock, args);
+    getLastCudaError("gpu_laplace2d execution failed\n");
     stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (cooperative groups): %.1f (ms) \n");
     
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
     stop_timer(&start, &stop, &milli, "\ncudaMemcpyDeviceToHost: %.1f (ms) \n");
-
 
     start_timer(start);
     for (i = 1; i <= ITERATIONS; ++i) {
@@ -89,7 +87,7 @@ int main(int argc, const char **argv){
     }
     stop_timer(&start, &stop, &milli, "\ncpu_laplace2d: %.1f (ms) \n");
 
-    check_domain_errors(h_u1, h_u2);
+    check_domain_errors(h_u1, h_u2, NX, NY);
 
     // print out corner of array
     for (j=0; j<8; j++) {
@@ -100,7 +98,7 @@ int main(int argc, const char **argv){
       printf("\n");
     }
 
-    saveResult(h_u1);
+    saveResult(h_u2, NX, NY);
 
     CU(cudaFree(d_u1));
     CU(cudaFree(d_u2));
