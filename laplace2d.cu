@@ -12,17 +12,17 @@ using namespace cooperative_groups;
 #define start_timer cudaEventRecord
 
 #ifndef BLOCK_X
-#define BLOCK_X 128
+#define BLOCK_X 32
 #endif
 
 #ifndef BLOCK_Y
-#define BLOCK_Y 4
+#define BLOCK_Y 32
 #endif
 
 #define NX 256
 #define NY 256
 
-#define ITERATIONS 16192 
+#define ITERATIONS 10
 
 void cpu_laplace2d(int nx, int ny, float* h_u1, float* h_u2);
 
@@ -75,6 +75,8 @@ int main(int argc, const char **argv){
     cudaLaunchCooperativeKernel((void*)gpu_laplace2d, dimGrid, dimBlock, args);
     getLastCudaError("gpu_laplace2d execution failed\n");
     stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (cooperative groups): %.1f (ms) \n");
+
+    cudaDeviceSynchronize();
     
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
@@ -94,6 +96,17 @@ int main(int argc, const char **argv){
       for (i=0; i<8; i++) {
         ind = i + j*NX;
         printf(" %5.2f ", h_u2[ind]);
+      }
+      printf("\n");
+    }
+
+   printf("\n");
+
+    // print out corner of array
+    for (j=0; j<8; j++) {
+      for (i=0; i<8; i++) {
+        ind = i + j*NX;
+        printf(" %5.2f ", h_u1[ind]);
       }
       printf("\n");
     }
