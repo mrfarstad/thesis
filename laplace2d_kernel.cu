@@ -23,7 +23,7 @@
 #include "cooperative_groups.h"
 using namespace cooperative_groups;
 
-__global__ void GPU_laplace3d(const float* __restrict__ d_u1,
+__global__ void gpu_laplace2d(const float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
   int   i, j, k,
