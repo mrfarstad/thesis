@@ -1,6 +1,7 @@
 snapshots
 coop_snapshots
 results/
+result
 bin/
 *.ncu-rep
 *.txt

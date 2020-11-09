@@ -17,7 +17,7 @@
 
 #define NX 256
 #define NY 256
-#define ITERATIONS 10
+#define ITERATIONS 8192 
 
 #include "helper_cuda.h"
 #include "laplace3d_timer.h"

@@ -14,11 +14,11 @@ void Gold_laplace3d(int NX, int NY, float* u1, float* u2)
         }
         else {
             u2[ind] = (
-                    //(u1[ind - 1 + NX]
+                    //    (u1[ind - 1 + NX]
                     //+   u1[ind + 1 + NX]
                     //+   u1[ind - 1 - NX]
                     //+   u1[ind + 1 - NX]) * fifth 
-                        u1[ind - 1]
+                    +   u1[ind - 1]
                     +   u1[ind + 1]
                     +   u1[ind - NX]
                     +   u1[ind + NX]) * fourth;
