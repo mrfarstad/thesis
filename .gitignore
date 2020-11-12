@@ -6,3 +6,4 @@ bin/
 *.ncu-rep
 *.txt
 *.png
+*.pyc
