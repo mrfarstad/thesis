@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <math.h>
+
 void check_domain_errors(float *h_u1, float *h_u2, const int nx, const int ny)
 {
     int   i, j, idx;
