@@ -51,7 +51,7 @@ int main(int argc, const char **argv){
     start_timer(start);
     cudaLaunchCooperativeKernel((void*)gpu_laplace2d, dimGrid, dimBlock, args);
     getLastCudaError("gpu_laplace2d execution failed\n");
-    stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (cooperative groups): %.1f (ms) \n");
+    stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (coop_smem_base): %.1f (ms) \n");
     
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
