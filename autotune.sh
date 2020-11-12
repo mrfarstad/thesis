@@ -1,5 +1,6 @@
 #!/bin/bash
-
+make laplace2d_cpu
+./bin/laplace2d_cpu
 # Run auto tune framework
 python ${PWD}/Autotuning/tuner/tune.py "$1".conf
 # Create plt from csv
