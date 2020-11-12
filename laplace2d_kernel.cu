@@ -11,7 +11,7 @@ __global__ void gpu_laplace2d(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
     int   i, j, q, x, y,
-          tx, ty, sx, sy,
+          tx, ty,
           xskip, yskip, 
           idx, ioff, joff;
     float u2, *d_tmp, fourth=1.0f/4.0f;
@@ -21,9 +21,6 @@ __global__ void gpu_laplace2d(float* __restrict__ d_u1,
     //
     tx = threadIdx.x;
     ty = threadIdx.y;
-
-    sx = tx+1;
-    sy = ty+1;
 
     i  = tx + blockIdx.x*BLOCK_X;
     j  = ty + blockIdx.y*BLOCK_Y;
@@ -36,28 +33,30 @@ __global__ void gpu_laplace2d(float* __restrict__ d_u1,
     grid_group g = this_grid();
     thread_block tb = this_thread_block();
 
-    __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
+    __shared__ float smem[BLOCK_Y][BLOCK_X];
 
     for (q = 1; q <= ITERATIONS; q++) {
         for (y=j; y<NY; y+=yskip) {
             for (x=i; x<NX; x+=xskip) {
                 idx = x + y*joff;
                 tb.sync();
-                if (x != 0)           smem[sy][sx-1]   = d_u1[idx-ioff];
-                if (x != NX-1)        smem[sy][sx+1]   = d_u1[idx+ioff];
-                if (y != 0)           smem[sy-1][sx]   = d_u1[idx-joff];
-                if (y != NY-1)        smem[sy+1][sx]   = d_u1[idx+joff];
-                smem[sy][sx] = d_u1[idx];
+                smem[ty][tx] = d_u1[idx];
                 tb.sync();
 
                 if (x==0 || x==NX-1 || y==0 || y==NY-1) {
                   u2 = d_u1[idx]; // Dirichlet b.c.'s
                 }
                 else {
-                  u2 = (smem[sy][sx-1]  +
-                        smem[sy][sx+1]  +
-                        smem[sy-1][sx]  +
-                        smem[sy+1][sx]) * fourth;
+                  float tmp = 0.0f;
+                  if (tx > 0)         tmp += smem[ty][tx-1];
+                  else                tmp += d_u1[idx-ioff];
+                  if (tx < BLOCK_X-1) tmp += smem[ty][tx+1];
+                  else                tmp += d_u2[idx+ioff];
+                  if (ty > 0)         tmp += smem[ty-1][tx];
+                  else                tmp += d_u1[idx-joff];
+                  if (ty < BLOCK_Y-1) tmp += smem[ty+1][tx];
+                  else                tmp += d_u1[idx+joff];
+                  u2 = tmp * fourth;
                 }
                 d_u2[idx] = u2;
             }
