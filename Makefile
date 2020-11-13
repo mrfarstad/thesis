@@ -2,7 +2,11 @@ INC	:= -I$(CUDA_HOME)/include -I.
 LIB	:= -L$(CUDA_HOME)/lib64
 LIBS 	:= -lcudart -lcudadevrt
 ifeq ($(BUILD), debug)
-    DEBUG := -g -G
+    NVCC_DEBUG := -g -G
+    DEBUG := -D DEBUG=true
+endif
+ifeq ($(BUILD), test)
+    TEST := -D TEST=true
 endif
 ifeq ($(HOST), yme)
     ARCH := sm_70
@@ -16,9 +20,12 @@ all: 		laplace2d_$(ID)
 
 laplace2d_$(ID): solution laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h Makefile
 		 nvcc laplace2d.cu -o bin/laplace2d_$(ID) -arch $(ARCH)   \
-			    $(DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
+		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
-						  -D BLOCK_Y=$(BLOCK_Y)            
+						  -D BLOCK_Y=$(BLOCK_Y)   \
+						       $(DEBUG) $(TEST)  
+							     
+
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
 		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu
 
