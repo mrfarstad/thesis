@@ -16,7 +16,7 @@ int main(int argc, const char **argv){
     int    i, j, ind,
            ibyte = NX*NY * sizeof(float);
     float  *h_u1, *h_u2,
-           *d_u1, *d_u2,
+           *d_u1, *d_u2, *d_tmp,
            milli;
 
     cudaEvent_t start, stop;
@@ -36,22 +36,17 @@ int main(int argc, const char **argv){
 
     readSolution(h_u1);
 
-    int device = 0;
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, device);
-
     dim3 dimBlock(BLOCK_X,BLOCK_Y);
-    dim3 dimGrid(deviceProp.multiProcessorCount, 1);
-    
-    void *args[] = {
-        &d_u1,
-        &d_u2
-    };
+    dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
 
     start_timer(start);
-    cudaLaunchCooperativeKernel((void*)gpu_laplace2d, dimGrid, dimBlock, args);
-    getLastCudaError("gpu_laplace2d execution failed\n");
+    for (i=0; i<ITERATIONS; i++) {
+        gpu_laplace2d<<<dimGrid, dimBlock>>>(d_u1, d_u2);
+        getLastCudaError("gpu_laplace2d execution failed\n");
+        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+    }
     stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (cooperative groups): %.1f (ms) \n");
+
     
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
