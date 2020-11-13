@@ -49,3 +49,38 @@ void readSolution(float *h_u)
 {
     read(h_u, SOLUTION);
 }
+
+
+void print_corners(float *h_u1, float *h_u2) {
+    int i, j, ind;
+    printf("DEVICE\n");
+    for (j=0; j<8; j++) {
+      for (i=0; i<8; i++) {
+        ind = i + j*NX;
+        printf(" %5.2f ", h_u2[ind]);
+      }
+      printf("\n");
+    }
+
+    printf("\n");
+
+    printf("HOST\n");
+    for (j=0; j<8; j++) {
+      for (i=0; i<8; i++) {
+        ind = i + j*NX;
+        printf(" %5.2f ", h_u1[ind]);
+      }
+      printf("\n");
+    }
+}
+
+
+void print_program_info() {
+    printf("\nVersion: ");
+    if      (COOP && SMEM) printf("coop_smem");
+    else if (SMEM)         printf("smem");
+    else if (COOP)         printf("coop_base");
+    else                   printf("base");
+    printf("\n");
+}
+

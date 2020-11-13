@@ -18,3 +18,11 @@
 #ifndef TEST
 #define TEST false
 #endif
+
+#ifndef SMEM
+#define SMEM false
+#endif
+
+#ifndef COOP
+#define COOP false
+#endif

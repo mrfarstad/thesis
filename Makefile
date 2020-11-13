@@ -13,7 +13,12 @@ ifeq ($(HOST), yme)
 else
     ARCH := sm_75
 endif
-
+ifeq ($(SMEM), true)
+    _SMEM := -D SMEM=true
+endif
+ifeq ($(COOP), true)
+    _COOP := -D COOP=true
+endif
 NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v #--use_fast_math #-arch=$(ARCH) 
 
 all: 		laplace2d_$(ID)
@@ -23,7 +28,7 @@ laplace2d_$(ID): solution laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h lap
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
-						       $(DEBUG) $(TEST)  
+				     $(_SMEM) $(_COOP) $(DEBUG) $(TEST)  
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
