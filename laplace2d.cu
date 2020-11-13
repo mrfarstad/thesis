@@ -45,7 +45,7 @@ int main(int argc, const char **argv){
         getLastCudaError("gpu_laplace2d execution failed\n");
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }
-    stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (cooperative groups): %.1f (ms) \n");
+    stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (smem_opt): %.1f (ms) \n");
 
     
     start_timer(start);
