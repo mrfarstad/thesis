@@ -12,29 +12,6 @@ using namespace cooperative_groups;
 #define CU checkCudaErrors 
 #define start_timer cudaEventRecord
 
-void print_corners(float *h_u1, float *h_u2) {
-    int i, j, ind;
-    printf("DEVICE\n");
-    for (j=0; j<8; j++) {
-      for (i=0; i<8; i++) {
-        ind = i + j*NX;
-        printf(" %5.2f ", h_u2[ind]);
-      }
-      printf("\n");
-    }
-
-    printf("\n");
-
-    printf("HOST\n");
-    for (j=0; j<8; j++) {
-      for (i=0; i<8; i++) {
-        ind = i + j*NX;
-        printf(" %5.2f ", h_u1[ind]);
-      }
-      printf("\n");
-    }
-}
-
 int main(int argc, const char **argv){
     int    ibyte = NX*NY * sizeof(float);
     float  *h_u1, *h_u2,
@@ -50,6 +27,9 @@ int main(int argc, const char **argv){
     CU(cudaMalloc((void **)&d_u1, ibyte));
     CU(cudaMalloc((void **)&d_u2, ibyte));
 
+
+    print_program_info();
+
     initialize_host_region(h_u1);
 
     start_timer(start);
@@ -59,8 +39,9 @@ int main(int argc, const char **argv){
     readSolution(h_u1);
 
     start_timer(start);
-    dispatch_kernels(d_u1, d_u2);
-    stop_timer(&start, &stop, &milli, "\ngpu_laplace2d (base): %.1f (ms) \n");
+    if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
+    else      dispatch_kernels(d_u1, d_u2);
+    stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
     
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
@@ -69,9 +50,7 @@ int main(int argc, const char **argv){
     check_domain_errors(h_u1, h_u2, NX, NY);
 
     if (DEBUG) print_corners(h_u1, h_u2);
-
     if (TEST) saveResult(h_u2);
-
 
     CU(cudaFree(d_u1));
     CU(cudaFree(d_u2));
