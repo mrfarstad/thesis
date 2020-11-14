@@ -1,12 +1,17 @@
 #!/bin/bash
 make laplace2d_cpu
 ./bin/laplace2d_cpu
+mv solution configs/$1
+wait
+
 # Run auto tune framework
-python ${PWD}/Autotuning/tuner/tune.py "$1".conf
+python ${PWD}/Autotuning/tuner/tune.py configs/$1/$2.conf
+#python ${PWD}/Autotuning/tuner/tune.py configs/$1.conf
+#python ${PWD}/Autotuning/tuner/tune.py configs/hpclab13/base.conf
 # Create plt from csv
-${PWD}/Autotuning/utilities/output_gnuplot.py results/"$2".csv results/"$2".plt
+${PWD}/Autotuning/utilities/output_gnuplot.py results/"$3".csv results/"$3".plt
 # Create image from plt
-gnuplot -e "set terminal png large size 1500, 1800; set output 'results/$2.png'; load 'results/laplace2d.plt'; exit;"
+gnuplot -e "set terminal png large size 1500, 1800; set output 'results/$3.png'; load 'results/laplace2d.plt'; exit;"
 
 # If nothing is running on port 8080, then start a local server
 # so that you can see the images on the host using

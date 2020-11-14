@@ -27,7 +27,6 @@ int main(int argc, const char **argv){
     CU(cudaMalloc((void **)&d_u1, ibyte));
     CU(cudaMalloc((void **)&d_u2, ibyte));
 
-
     print_program_info();
 
     initialize_host_region(h_u1);
