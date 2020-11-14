@@ -75,7 +75,7 @@ __global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,
 __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
-    int   i, j, q,
+    int   i, j, q, x, y,
           bx, by,
           gx, gy,
           xskip, yskip, 
@@ -97,21 +97,18 @@ __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
     grid_group g = this_grid();
     
     for (q = 1; q <= ITERATIONS; q++) {
-        for (int y=j; y<NY; y+=yskip) {
-            for (int x=i; x<NX; x+=xskip) {
+        for (y=j; y<NY; y+=yskip) {
+            for (x=i; x<NX; x+=xskip) {
                 idx = x + y*joff;
-        
-                if (i>=0 && i<=NX-1 && j>=0 && j<=NY-1) {
-                    if (i==0 || i==NX-1 || j==0 || j==NY-1)
-                      u2 = d_u1[idx]; // Dirichlet b.c.'s
-                    else {
-                      u2 = (d_u1[idx-ioff]  +
-                            d_u1[idx+ioff]  +
-                            d_u1[idx-joff]  +
-                            d_u1[idx+joff]) * fourth;    
-                    }
-                    d_u2[idx] = u2;
+                if (x==0 || x==NX-1 || y==0 || y==NY-1)
+                  u2 = d_u1[idx]; // Dirichlet b.c.'s
+                else {
+                  u2 = (d_u1[idx-ioff]  +
+                        d_u1[idx+ioff]  +
+                        d_u1[idx-joff]  +
+                        d_u1[idx+joff]) * fourth;    
                 }
+                d_u2[idx] = u2;
             }
         }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2

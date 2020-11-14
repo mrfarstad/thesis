@@ -23,7 +23,7 @@ NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v #--use_fast_math #-arch=$(AR
 
 all: 		laplace2d_$(ID)
 
-laplace2d_$(ID): solution laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h Makefile
+laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h Makefile #solution
 		 nvcc laplace2d.cu -o bin/laplace2d_$(ID) -arch $(ARCH)   \
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
