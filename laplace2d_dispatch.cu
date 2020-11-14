@@ -13,7 +13,7 @@ void dispatch_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
         for (s=0; s<NGPUS; s++) {
             //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
             cudaSetDevice(s);
-            gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s]);
+            gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(&d_u1[s][NX], &d_u2[s][NX], 0, NY/NGPUS-1);
             getLastCudaError("gpu_laplace2d execution failed\n");
         }
         //

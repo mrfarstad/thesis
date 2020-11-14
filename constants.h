@@ -12,8 +12,9 @@
 #define NY 256
 #define SIZE          (NX*NY)
 #define OFFSET        (SIZE/NGPUS)
-#define BYTES         (SIZE * sizeof(float))
+#define BYTES         (SIZE*sizeof(float))
 #define BYTES_PER_GPU (BYTES/NGPUS)
+#define BYTES_BORDER  (2*NX*sizeof(float))
 
 #define ITERATIONS 8192
 //#define ITERATIONS 1
