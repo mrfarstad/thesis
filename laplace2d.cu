@@ -9,7 +9,6 @@
 #include "cooperative_groups.h"
 using namespace cooperative_groups;
 
-
 /*
  * enable P2P memcopies between GPUs (all GPUs must be compute capability 2.0 or
  * later (Fermi or later))
@@ -73,8 +72,8 @@ int main(int argc, const char **argv){
 
     //start_timer(start);
     //stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
-    ////if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
-    ////else
+    //if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
+    //else
     dispatch_kernels(d_u1, d_u2, streams);
     
     for (int i = 0; i < NGPUS; i++)
