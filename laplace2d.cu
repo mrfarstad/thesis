@@ -21,8 +21,13 @@ int main(int argc, const char **argv){
     h_u1 = (float *)malloc(BYTES);
     h_u2 = (float *)malloc(BYTES);
 
+    print_program_info();
+
+    initialize_host_region(h_u1);
+
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         CU(cudaMalloc((void **)&d_u1[i], BYTES_PER_GPU));
         CU(cudaMalloc((void **)&d_u2[i], BYTES_PER_GPU));
     }
@@ -31,33 +36,33 @@ int main(int argc, const char **argv){
 
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         CU(cudaStreamCreate( &streams[i] ));
     }
 
-    print_program_info();
-
-    initialize_host_region(h_u1);
-
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         CU(cudaMemcpyAsync(d_u1[i], &h_u1[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
     }
 
     readSolution(h_u1);
 
-    start_timer(start);
-    //if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
-    //else
+    //start_timer(start);
+    //stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
+    ////if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
+    ////else
     dispatch_kernels(d_u1, d_u2, streams);
-    stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
     
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         CU(cudaMemcpyAsync(&h_u2[i * OFFSET], d_u1[i], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
     }
     
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         cudaDeviceSynchronize();
     }
 
@@ -68,6 +73,7 @@ int main(int argc, const char **argv){
 
     for (int i = 0; i < NGPUS; i++)
     {
+        cudaSetDevice(i);
         CU(cudaStreamDestroy(streams[i]));
         CU(cudaFree(d_u1[i]));
         CU(cudaFree(d_u2[i]));

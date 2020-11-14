@@ -8,10 +8,11 @@ void dispatch_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
     dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
 
     float *d_tmp;
-    int i, s, jskip = NY/NGPUS;
+    int i, s;
     for (i=0; i<ITERATIONS; i++) {
         for (s=0; s<NGPUS; s++) {
-        //    //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
+            //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
+            cudaSetDevice(s);
             gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s]);
             getLastCudaError("gpu_laplace2d execution failed\n");
         }
@@ -21,6 +22,7 @@ void dispatch_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
         //gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[1]>>>(d_u1[1], d_u2[1], 1*jskip, 2*jskip);
         //gpu_laplace2d_base<<<dimGrid, dimBlock>>>(d_u1, d_u2);
         for (s=0; s<NGPUS; s++) {
+            cudaSetDevice(s);
             cudaStreamSynchronize(streams[s]);
             d_tmp = d_u1[s]; d_u1[s] = d_u2[s]; d_u2[s] = d_tmp; // swap d_u1 and d_u2
         }
