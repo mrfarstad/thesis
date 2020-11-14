@@ -6,10 +6,13 @@
 #define BLOCK_Y 4
 #endif
 
+#define STREAMS 2
+
 #define NX 256
 #define NY 256
 
 #define ITERATIONS 8192
+//#define ITERATIONS 1
 
 #ifndef DEBUG
 #define DEBUG false
@@ -26,3 +29,6 @@
 #ifndef COOP
 #define COOP false
 #endif
+
+#define CU checkCudaErrors 
+#define start_timer cudaEventRecord

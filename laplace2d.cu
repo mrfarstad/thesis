@@ -9,9 +9,6 @@
 #include "cooperative_groups.h"
 using namespace cooperative_groups;
 
-#define CU checkCudaErrors 
-#define start_timer cudaEventRecord
-
 int main(int argc, const char **argv){
     int    ibyte = NX*NY * sizeof(float);
     float  *h_u1, *h_u2,
@@ -27,6 +24,13 @@ int main(int argc, const char **argv){
     CU(cudaMalloc((void **)&d_u1, ibyte));
     CU(cudaMalloc((void **)&d_u2, ibyte));
 
+    cudaStream_t streams[STREAMS];
+
+    for (int i = 0; i < STREAMS; i++)
+    {
+        CU(cudaStreamCreate( &streams[i] ));
+    }
+
     print_program_info();
 
     initialize_host_region(h_u1);
@@ -38,10 +42,13 @@ int main(int argc, const char **argv){
     readSolution(h_u1);
 
     start_timer(start);
-    if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
-    else      dispatch_kernels(d_u1, d_u2);
+    //if (COOP) dispatch_cooperative_groups_kernels(d_u1, d_u2);
+    //else
+    dispatch_kernels(d_u1, d_u2, streams);
     stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
     
+    // TODO: Trenger async memcpy, ettersom det er bare stream 0 som copies tilbake
+    // Dette burde vel ikke være noe problem, ettersom det er på samme device...
     start_timer(start);
     CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
     stop_timer(&start, &stop, &milli, "\ncudaMemcpyDeviceToHost: %.1f (ms) \n");
@@ -49,7 +56,12 @@ int main(int argc, const char **argv){
     check_domain_errors(h_u1, h_u2, NX, NY);
 
     if (DEBUG) print_corners(h_u1, h_u2);
-    if (TEST) saveResult(h_u2);
+    if (TEST || DEBUG) saveResult(h_u2);
+
+    for (int i = 0; i < STREAMS; i++)
+    {
+        CU(cudaStreamDestroy(streams[i]));
+    }
 
     CU(cudaFree(d_u1));
     CU(cudaFree(d_u2));
