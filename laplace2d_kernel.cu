@@ -3,23 +3,30 @@
 using namespace cooperative_groups;
 
 __global__ void gpu_laplace2d_base(float* __restrict__ d_u1,
-			      float* __restrict__ d_u2)
+			           float* __restrict__ d_u2,
+                                   const int jstart,
+                                   const int jend)
 {
     int   i, j,
           tx, ty,
           idx, ioff, joff;
     float u2 = 0.0f, fourth=1.0f/4.0f;
+
     
     tx = threadIdx.x;
     ty = threadIdx.y;
     i  = tx + blockIdx.x*BLOCK_X;
-    j  = ty + blockIdx.y*BLOCK_Y;
+    j  = ty + blockIdx.y*BLOCK_Y + jstart;
     ioff = 1;
     joff = NX;
 
-    idx = i + j*joff;
-    if (i>=0 && i<=NX-1 && j>=0 && j<=NY-1) {
-        if (i==0 || i==NX-1 || j==0 || j==NY-1)
+    //if (i==0&&j==0) printf("jstart: %d, jend: %d\n", jstart, jend);
+
+    // Spør du meg, så virker det som at stream 1 gjør all jobben først, så kommer stream to og gjør resten av jobben fra jstart og oppover. Correct!
+
+    idx = i + j *joff;
+    if (i>=0 && i<=NX-1 && j>=jstart && j<=jend-1) {
+        if (i==0 || i==NX-1 || j==jstart || j==jend-1)
           u2 = d_u1[idx]; // Dirichlet b.c.'s
         else {
           u2 = (d_u1[idx-ioff]  +

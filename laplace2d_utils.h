@@ -11,9 +11,8 @@ static void save(float *d_u, char const *format)
     sprintf(fname, "%s", format);
 
     FILE *fp_snap = fopen(fname, "w");
-
-    fwrite(d_u, sizeof(float), NX * NY, fp_snap);
     printf("saving %s: nx = %d ny = %d\n", fname, NX, NY);
+    fwrite(d_u, sizeof(float), NX * NY, fp_snap);
     fflush(stdout);
     fclose(fp_snap);
     return;
