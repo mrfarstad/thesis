@@ -10,13 +10,6 @@ void dispatch_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
     float *d_tmp;
     int i, s;
     for (i=0; i<ITERATIONS; i++) {
-        // Ganske sikker på at dersom gpu 1 er src, så burde stream 1 håndtere transfer.
-        // Dermed vil ikke kernel launches før gpu 1 har mottatt halo.
-        //CU(cudaMemcpyAsync(d_u1[1], d_u1[0] + (NY/NGPUS) * NX,
-        //                NX*sizeof(float), cudaMemcpyDefault, streams[1]));
-        //CU(cudaMemcpyAsync(d_u1[0] + (NY/NGPUS + 1) * NX, d_u1[1] + NX,
-        //                NX*sizeof(float), cudaMemcpyDefault, streams[0]));
-
         for (s=0; s<NGPUS; s++) {
             if (s==0)
                 CU(cudaMemcpyAsync(d_u1[s+1], d_u1[s] + (NY/NGPUS) * NX,
@@ -31,52 +24,33 @@ void dispatch_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
                                    NX*sizeof(float), cudaMemcpyDefault, streams[s-1]));
             }
         }
-
+        int jstart, jend;
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
-            if (s==0)
-                gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s], 1, NY/NGPUS+1);
-            else if (s==NGPUS-1)
-                gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s], 0, NY/NGPUS);
-            else
-                gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s], 0, NY/NGPUS+1);
+            if (s==0) {
+                jstart = 1;
+                jend = NY/NGPUS+1;
+            } else if (s==NGPUS-1) {
+                jstart = 0;
+                jend = NY/NGPUS;
+            } else {
+                jstart = 0;
+                jend = NY/NGPUS+1;
+            }
+            if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s], jstart, jend);
+            else      gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1[s], d_u2[s], jstart, jend);
             getLastCudaError("gpu_laplace2d execution failed\n");
         }
-
-        //cudaSetDevice(0);
-        //gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[0]>>>(d_u1[0], d_u2[0], 1, NY/NGPUS+1);
-        //getLastCudaError("gpu_laplace2d (dev 0) execution failed\n");
-
-        //cudaSetDevice(1);
-        //gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[1]>>>(d_u1[1], d_u2[1], 0, NY/NGPUS);
-        //getLastCudaError("gpu_laplace2d (dev 1) execution failed\n");
-
-        //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
-
-        //CU(cudaMemcpyAsync(d_u1[1], d_u1[0] + (NY/NGPUS) * NX,
-        //                NX*sizeof(float), cudaMemcpyDefault, streams[1]));
-        //CU(cudaMemcpyAsync(d_u1[0] + (NY/NGPUS + 1) * NX, d_u1[1] + NX,
-        //                NX*sizeof(float), cudaMemcpyDefault, streams[0]));
-
-        //cudaSetDevice(0);
-        //gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[0]>>>(d_u1[s], d_u2[s], 1, NY/NGPUS);
-        //getLastCudaError("gpu_laplace2d execution failed\n");
-        //cudaSetDevice(1);
-        //gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[1]>>>(d_u1[s], d_u2[s], 0, NY/NGPUS);
-        //getLastCudaError("gpu_laplace2d execution failed\n");
 
         //for (s=0; s<NGPUS; s++) {
             //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
         //}
-        //CU(cudaMemcpyAsync(d_u1[0] + dst_skip[1], d_u1[1] + src_skip[1],
-        //            iexchange, cudaMemcpyDefault, stream_halo[1]));
-        // TODO: Communicate border
+        
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             cudaStreamSynchronize(streams[s]);
             d_tmp = d_u1[s]; d_u1[s] = d_u2[s]; d_u2[s] = d_tmp; // swap d_u1 and d_u2
         }
-        // TODO (multi-gpu): Exchange borders before continuing
     }
 }
 
