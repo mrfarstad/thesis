@@ -10,11 +10,9 @@
 using namespace cooperative_groups;
 
 int main(int argc, const char **argv){
-    int offset;
     float  *h_u1, *h_u2,
-           *d_u1, *d_u2,
+           *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
-
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -22,12 +20,16 @@ int main(int argc, const char **argv){
 
     h_u1 = (float *)malloc(BYTES);
     h_u2 = (float *)malloc(BYTES);
-    CU(cudaMalloc((void **)&d_u1, BYTES));
-    CU(cudaMalloc((void **)&d_u2, BYTES));
 
-    cudaStream_t streams[STREAMS];
+    for (int i = 0; i < NGPUS; i++)
+    {
+        CU(cudaMalloc((void **)&d_u1[i], BYTES_PER_GPU));
+        CU(cudaMalloc((void **)&d_u2[i], BYTES_PER_GPU));
+    }
 
-    for (int i = 0; i < STREAMS; i++)
+    cudaStream_t streams[NGPUS];
+
+    for (int i = 0; i < NGPUS; i++)
     {
         CU(cudaStreamCreate( &streams[i] ));
     }
@@ -36,10 +38,9 @@ int main(int argc, const char **argv){
 
     initialize_host_region(h_u1);
 
-    for (int i = 0; i < STREAMS; i++)
+    for (int i = 0; i < NGPUS; i++)
     {
-        offset = i * OFFSET;
-        CU(cudaMemcpyAsync(&d_u1[offset], &h_u1[offset], BYTES_PER_STREAM, cudaMemcpyHostToDevice, streams[i]));
+        CU(cudaMemcpyAsync(d_u1[i], &h_u1[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
     }
 
     readSolution(h_u1);
@@ -50,13 +51,12 @@ int main(int argc, const char **argv){
     dispatch_kernels(d_u1, d_u2, streams);
     stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
     
-    for (int i = 0; i < STREAMS; i++)
+    for (int i = 0; i < NGPUS; i++)
     {
-        offset = i * OFFSET;
-        CU(cudaMemcpyAsync(&h_u2[offset], &d_u1[offset], BYTES_PER_STREAM, cudaMemcpyDeviceToHost, streams[i]));
+        CU(cudaMemcpyAsync(&h_u2[i * OFFSET], d_u1[i], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
     }
     
-    for (int i = 0; i < STREAMS; i++)
+    for (int i = 0; i < NGPUS; i++)
     {
         cudaDeviceSynchronize();
     }
@@ -66,13 +66,13 @@ int main(int argc, const char **argv){
     if (DEBUG) print_corners(h_u1, h_u2);
     if (TEST || DEBUG) saveResult(h_u2);
 
-    for (int i = 0; i < STREAMS; i++)
+    for (int i = 0; i < NGPUS; i++)
     {
         CU(cudaStreamDestroy(streams[i]));
+        CU(cudaFree(d_u1[i]));
+        CU(cudaFree(d_u2[i]));
     }
 
-    CU(cudaFree(d_u1));
-    CU(cudaFree(d_u2));
     free(h_u1);
     free(h_u2);
 

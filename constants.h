@@ -6,14 +6,14 @@
 #define BLOCK_Y 4
 #endif
 
-#define STREAMS 2
+#define NGPUS 2
 
 #define NX 256
 #define NY 256
-#define SIZE             (NX*NY)
-#define OFFSET           (SIZE/STREAMS)
-#define BYTES            (SIZE * sizeof(float))
-#define BYTES_PER_STREAM (BYTES/STREAMS)
+#define SIZE          (NX*NY)
+#define OFFSET        (SIZE/NGPUS)
+#define BYTES         (SIZE * sizeof(float))
+#define BYTES_PER_GPU (BYTES/NGPUS)
 
 #define ITERATIONS 8192
 //#define ITERATIONS 1
