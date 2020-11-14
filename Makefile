@@ -28,7 +28,8 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
-				     $(_SMEM) $(_COOP) $(DEBUG) $(TEST)  
+						      $(_SMEM) $(_COOP)   \
+						       $(DEBUG) $(TEST)  
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
