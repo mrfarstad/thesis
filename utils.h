@@ -21,21 +21,21 @@
 
 #define START_TIME(start, stop)                                                               \
 {                                                                                             \
-    CHECK(cudaEventCreate(&start));                                                           \
-    CHECK(cudaEventCreate(&stop));                                                            \
-    CHECK(cudaEventRecord(start, 0));                                                         \
+    CU(cudaEventCreate(&start));                                                           \
+    CU(cudaEventCreate(&stop));                                                            \
+    CU(cudaEventRecord(start, 0));                                                         \
 }                                                                                             \
 
 #define STOP_TIME(time, start, stop)                                                          \
 {                                                                                             \
     /* record stop event on the default stream */                                             \
-    CHECK(cudaEventRecord(stop));                                                             \
+    CU(cudaEventRecord(stop));                                                             \
     /* wait until the stop event completes */                                                 \
-    CHECK(cudaEventSynchronize(stop));                                                        \
+    CU(cudaEventSynchronize(stop));                                                        \
     /* calculate the elapsed time between two events float time */                            \
-    CHECK(cudaEventElapsedTime(&time, start, stop));                                          \
+    CU(cudaEventElapsedTime(&time, start, stop));                                          \
     /* clean up the two events */                                                             \
-    CHECK(cudaEventDestroy(start); cudaEventDestroy(stop));                                   \
+    CU(cudaEventDestroy(start); cudaEventDestroy(stop));                                   \
 }                                                                                             \
 
 #define PRINT_TIME(time)                                                                      \
@@ -51,16 +51,16 @@
 {                                                                                             \
     for (int i = 0; i < ngpus; i++)                                                           \
     {                                                                                         \
-        CHECK(cudaSetDevice(i));                                                              \
+        CU(cudaSetDevice(i));                                                              \
                                                                                               \
         for (int j = 0; j < ngpus; j++)                                                       \
         {                                                                                     \
             if (i == j) continue;                                                             \
                                                                                               \
             int peer_access_available = 0;                                                    \
-            CHECK(cudaDeviceCanAccessPeer(&peer_access_available, i, j));                     \
+            CU(cudaDeviceCanAccessPeer(&peer_access_available, i, j));                     \
                                                                                               \
-            if (peer_access_available) CHECK(cudaDeviceEnablePeerAccess(j, 0));               \
+            if (peer_access_available) CU(cudaDeviceEnablePeerAccess(j, 0));               \
         }                                                                                     \
     }                                                                                         \
 }                                                                                             \
