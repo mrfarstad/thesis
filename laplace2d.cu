@@ -43,6 +43,8 @@ int main(int argc, const char **argv){
     h_u1 = (float *)malloc(BYTES);
     h_u2 = (float *)malloc(BYTES);
 
+    //enableP2P(NGPUS);
+
     print_program_info();
 
     initialize_host_region(h_u1);
