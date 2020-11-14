@@ -83,3 +83,26 @@ void print_program_info() {
     printf("\n");
 }
 
+
+/*
+ * enable P2P memcopies between GPUs (all GPUs must be compute capability 2.0 or
+ * later (Fermi or later))
+ */                                                                             
+#define ENABLE_P2P(ngpus)                                                    \
+{                                                                            \
+    for (int i = 0; i < ngpus; i++)                                          \
+    {                                                                        \
+        CU(cudaSetDevice(i));                                                \
+                                                                             \
+        for (int j = 0; j < ngpus; j++)                                      \
+        {                                                                    \
+            if (i == j) continue;                                            \
+                                                                             \
+            int peer_access_available = 0;                                   \
+            CU(cudaDeviceCanAccessPeer(&peer_access_available, i, j));       \
+                                                                             \
+            if (peer_access_available) CU(cudaDeviceEnablePeerAccess(j, 0)); \
+        }                                                                    \
+    }                                                                        \
+}                                                                            \
+
