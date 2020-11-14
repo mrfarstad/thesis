@@ -6,7 +6,7 @@
 #define BLOCK_Y 4
 #endif
 
-#define NGPUS 2
+#define NGPUS 4
 
 #define NX 256
 #define NY 256
