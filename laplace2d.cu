@@ -32,7 +32,7 @@ inline void enableP2P (int ngpus)
 }
 
 int main(int argc, const char **argv){
-    float  *h_u1, *h_u2,
+    float  *h_ref, *d_ref,
            *d_u1[NGPUS], *d_u2[NGPUS];//,
            //milli;
 
@@ -40,14 +40,17 @@ int main(int argc, const char **argv){
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    h_u1 = (float *)malloc(BYTES);
-    h_u2 = (float *)malloc(BYTES);
+    h_ref = (float *)malloc(BYTES);
+    if (cudaMallocHost((void**)&d_ref, BYTES) != cudaSuccess) {
+        fprintf(stderr, "Error returned from pinned host memory allocation\n");
+        exit(1);
+    }
 
     //enableP2P(NGPUS);
 
     print_program_info();
 
-    initialize_host_region(h_u1);
+    initialize_host_region(d_ref);
 
     for (int i = 0; i < NGPUS; i++)
     {
@@ -67,10 +70,10 @@ int main(int argc, const char **argv){
     for (int i = 0; i < NGPUS; i++)
     {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_u1[i][NX], &h_u1[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
+        CU(cudaMemcpyAsync(&d_u1[i][NX], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
     }
 
-    readSolution(h_u1);
+    readSolution(h_ref);
 
     //start_timer(start);
     //stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
@@ -81,7 +84,7 @@ int main(int argc, const char **argv){
     for (int i = 0; i < NGPUS; i++)
     {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&h_u2[i * OFFSET], &d_u1[i][NX], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
+        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][NX], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
     }
     
     for (int i = 0; i < NGPUS; i++)
@@ -90,10 +93,10 @@ int main(int argc, const char **argv){
         cudaDeviceSynchronize();
     }
 
-    check_domain_errors(h_u1, h_u2, NX, NY);
+    check_domain_errors(h_ref, d_ref, NX, NY);
 
-    if (DEBUG) print_corners(h_u1, h_u2);
-    if (TEST || DEBUG) saveResult(h_u2);
+    if (DEBUG) print_corners(h_ref, d_ref);
+    if (TEST || DEBUG) saveResult(d_ref);
 
     for (int i = 0; i < NGPUS; i++)
     {
@@ -103,8 +106,8 @@ int main(int argc, const char **argv){
         CU(cudaFree(d_u2[i]));
     }
 
-    free(h_u1);
-    free(h_u2);
+    cudaFreeHost(d_ref);
+    free(h_ref);
 
     cudaDeviceReset();
 }
