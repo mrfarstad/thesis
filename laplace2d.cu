@@ -10,19 +10,20 @@
 using namespace cooperative_groups;
 
 int main(int argc, const char **argv){
-    int    ibyte = NX*NY * sizeof(float);
+    int offset;
     float  *h_u1, *h_u2,
            *d_u1, *d_u2,
            milli;
+
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    h_u1 = (float *)malloc(ibyte);
-    h_u2 = (float *)malloc(ibyte);
-    CU(cudaMalloc((void **)&d_u1, ibyte));
-    CU(cudaMalloc((void **)&d_u2, ibyte));
+    h_u1 = (float *)malloc(BYTES);
+    h_u2 = (float *)malloc(BYTES);
+    CU(cudaMalloc((void **)&d_u1, BYTES));
+    CU(cudaMalloc((void **)&d_u2, BYTES));
 
     cudaStream_t streams[STREAMS];
 
@@ -35,9 +36,11 @@ int main(int argc, const char **argv){
 
     initialize_host_region(h_u1);
 
-    start_timer(start);
-    CU(cudaMemcpy(d_u1, h_u1, ibyte, cudaMemcpyHostToDevice));
-    stop_timer(&start, &stop, &milli, "\ncudaMemcpyHostToDevice: %.1f (ms) \n");
+    for (int i = 0; i < STREAMS; i++)
+    {
+        offset = i * OFFSET;
+        CU(cudaMemcpyAsync(&d_u1[offset], &h_u1[offset], BYTES_PER_STREAM, cudaMemcpyHostToDevice, streams[i]));
+    }
 
     readSolution(h_u1);
 
@@ -47,11 +50,16 @@ int main(int argc, const char **argv){
     dispatch_kernels(d_u1, d_u2, streams);
     stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
     
-    // TODO: Trenger async memcpy, ettersom det er bare stream 0 som copies tilbake
-    // Dette burde vel ikke være noe problem, ettersom det er på samme device...
-    start_timer(start);
-    CU(cudaMemcpy(h_u2, d_u1, ibyte, cudaMemcpyDeviceToHost));
-    stop_timer(&start, &stop, &milli, "\ncudaMemcpyDeviceToHost: %.1f (ms) \n");
+    for (int i = 0; i < STREAMS; i++)
+    {
+        offset = i * OFFSET;
+        CU(cudaMemcpyAsync(&h_u2[offset], &d_u1[offset], BYTES_PER_STREAM, cudaMemcpyDeviceToHost, streams[i]));
+    }
+    
+    for (int i = 0; i < STREAMS; i++)
+    {
+        cudaDeviceSynchronize();
+    }
 
     check_domain_errors(h_u1, h_u2, NX, NY);
 

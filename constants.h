@@ -10,6 +10,10 @@
 
 #define NX 256
 #define NY 256
+#define SIZE             (NX*NY)
+#define OFFSET           (SIZE/STREAMS)
+#define BYTES            (SIZE * sizeof(float))
+#define BYTES_PER_STREAM (BYTES/STREAMS)
 
 #define ITERATIONS 8192
 //#define ITERATIONS 1
