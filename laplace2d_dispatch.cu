@@ -8,8 +8,7 @@ void dispatch_kernels(float *d_u1, float *d_u2, cudaStream_t *streams) {
     dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
 
     float *d_tmp;
-    //int i, s, jskip = NY/STREAMS;
-    int i, s, jskip = NY/2;
+    int i, s, jskip = NY/STREAMS;
     for (i=0; i<ITERATIONS; i++) {
         //for (s=0; s<STREAMS; s++) {
         ////    //if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock, 0, streams[s]>>>(d_u1, d_u2, start, end);
@@ -18,7 +17,8 @@ void dispatch_kernels(float *d_u1, float *d_u2, cudaStream_t *streams) {
         //}
         //
         // TODO: Fix -> Denne jobber ikke på y: 128 -> 256
-        gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[0]>>>(d_u1, d_u2, 1*jskip, 2*jskip);
+        gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[0]>>>(d_u1, d_u2, 0*jskip, 1*jskip);
+        gpu_laplace2d_base<<<dimGrid, dimBlock, 0, streams[1]>>>(d_u1, d_u2, 1*jskip, 2*jskip);
         //gpu_laplace2d_base<<<dimGrid, dimBlock>>>(d_u1, d_u2);
         for (s=0; s<STREAMS; s++) {
             cudaStreamSynchronize(streams[s]);
