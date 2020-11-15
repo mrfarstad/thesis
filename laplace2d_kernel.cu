@@ -133,31 +133,20 @@ __global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
           idx;
     float u2, *d_tmp, fourth=1.0f/4.0f;
     
-    i  = threadIdx.x + blockIdx.x*BLOCK_X;
-    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    x  = threadIdx.x + blockIdx.x*BLOCK_X;
+    y  = threadIdx.y + blockIdx.y*BLOCK_Y;
 
-        //;
-
-    //if(i==0&&j==0) {
-    //    printf("d_u1 (this device [%d]) %.2f\n", dev, d_u1[NX]);
-    //    printf("d_u1 (next device [%d]) %.2f\n", dev, d_u3[NX]);
-    //}
-
-    //grid_group mg = this_grid();
     multi_grid_group mg = this_multi_grid();
-
-    // TODO: Inter-grid syncronization with async memcpy!
     
     for (q = 1; q <= ITERATIONS; q++) {
-        mg.sync();
         if (dev==0) memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
         else if (dev==NGPUS-1) memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
         else {
             memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
             memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
         }
-        for (y=j; y<NY; y+=BLOCK_Y * gridDim.y) {
-            for (x=i; x<NX; x+=BLOCK_X * gridDim.x) {
+        //for (y=j; y<NY; y+=BLOCK_Y * gridDim.y) {
+        //    for (x=i; x<NX; x+=BLOCK_X * gridDim.x) {
                 if (x>=0 && x<=NX-1 && y>=jstart && y<=jend) {
                     idx = x + y*NX;
                     if (x==0 || x==NX-1 || y==jstart || y==jend)
@@ -170,9 +159,10 @@ __global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
                     }
                     d_u2[idx] = u2;
                 }
-            }
-        }
+        //    }
+        //}
         //mg.sync();
+        mg.sync();
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }
 }

@@ -19,7 +19,7 @@ endif
 ifeq ($(COOP), true)
     _COOP := -D COOP=true
 endif
-NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARCH) 
+NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v #--use_fast_math #-arch=$(ARCH) 
 
 all: 		laplace2d_$(ID)
 

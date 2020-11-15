@@ -40,8 +40,9 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
     dim3 dimBlock(BLOCK_X,BLOCK_Y);
+    dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
     // TODO: Hvor stort kan et grid være med multi-kernel launch?
-    dim3 dimGrid(deviceProp.multiProcessorCount, 1);
+    //dim3 dimGrid(deviceProp.multiProcessorCount, 1);
     //void *args[] = {
     //    &d_u1,
     //    &d_u2
