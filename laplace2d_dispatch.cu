@@ -59,6 +59,7 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
     int jends[NGPUS];
     int jstart = 1;
     int jend = NY/NGPUS;
+    int devs[NGPUS];
     for (int s = 0; s < NGPUS; s++)
     {
         //if (s==0) {
@@ -73,10 +74,14 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
         //}
         args[s][0] = &d_u1[s];
         args[s][1] = &d_u2[s];
+        devs[s] = s;
+        args[s][2] = (void *)&devs[s];
+        args[s][3] = &d_u1[s];
+        //args[s][3] = &d_u1[(s+1)%NGPUS];
         //args[s][2] = (void *)&jstarts[s];
         //args[s][3] = (void *)&jends[s];
-        args[s][2] = (void *)&jstart;
-        args[s][3] = (void *)&jend;
+        //args[s][2] = (void *)&jstart;
+        //args[s][3] = (void *)&jend;
         //if (SMEM) launchParams[s].func = (void*)gpu_laplace2d_coop_smem_multi_gpu;
         //else
         launchParams[s].func = (void*)gpu_laplace2d_coop_multi_gpu;
@@ -88,6 +93,7 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
     }
 
     cudaLaunchCooperativeKernelMultiDevice(launchParams, NGPUS);
+    getLastCudaError("gpu_laplace2d execution failed\n");
 }
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {

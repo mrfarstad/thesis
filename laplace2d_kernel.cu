@@ -121,31 +121,23 @@ __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_laplace2d_coop_multi_gpu(float* __restrict__ d_u1,
-			                     float* __restrict__ d_u2,
-                                             int jstart,
-                                             int jend)
+__global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
+			                     float* d_u2,
+                                             int dev,
+			                     float* d_u3
+                                             )
 {
     int   i, j, q, x, y,
-          bx, by,
-          gx, gy,
           xskip, yskip, 
-          idx, ioff, joff;
+          idx;
     float u2, *d_tmp, fourth=1.0f/4.0f;
     
-    bx = blockDim.x;
-    by = blockDim.y;
-    i  = threadIdx.x + blockIdx.x*bx;
-    j  = threadIdx.y + blockIdx.y*by;
-    gx = gridDim.x;
-    gy = gridDim.y;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
 
-    xskip = bx * gx;
-    yskip = by * gy;
-    
-    ioff = 1;
-    joff = NX;
-    //grid_group mg = this_grid();
+    xskip = BLOCK_X * gridDim.x;
+    yskip = BLOCK_Y * gridDim.y;
+
     multi_grid_group mg = this_multi_grid();
 
     // TODO: Inter-grid syncronization with async memcpy!
@@ -153,15 +145,15 @@ __global__ void gpu_laplace2d_coop_multi_gpu(float* __restrict__ d_u1,
     for (q = 1; q <= ITERATIONS; q++) {
         for (y=j; y<NY; y+=yskip) {
             for (x=i; x<NX; x+=xskip) {
-                if (x>=0 && x<=NX-1 && y>=jstart && y<=jend) {
-                    idx = x + y*joff;
-                    if (x==0 || x==NX-1 || y==jstart || y==jend)
+                if (x>=0 && x<=NX-1 && y>=1 && y<=NY/NGPUS) {
+                    idx = x + y*NX;
+                    if (x==0 || x==NX-1 || y==1 || y==NY/NGPUS)
                       u2 = d_u1[idx]; // Dirichlet b.c.'s
                     else {
-                      u2 = (d_u1[idx-ioff]  +
-                            d_u1[idx+ioff]  +
-                            d_u1[idx-joff]  +
-                            d_u1[idx+joff]) * fourth;    
+                      u2 = (d_u1[idx-1]  +
+                            d_u1[idx+1]  +
+                            d_u1[idx-NX]  +
+                            d_u1[idx+NX]) * fourth;    
                     }
                     d_u2[idx] = u2;
                 }
