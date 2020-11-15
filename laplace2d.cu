@@ -18,6 +18,8 @@ int main(int argc, const char **argv){
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
+    cudaLaunchParams *launchParams = (cudaLaunchParams*) malloc(sizeof(cudaLaunchParams) * NGPUS);
+
     h_ref = (float *)malloc(BYTES);
     if (cudaMallocHost((void**)&d_ref, BYTES) != cudaSuccess) {
         fprintf(stderr, "Error returned from pinned host memory allocation\n");
@@ -63,7 +65,10 @@ int main(int argc, const char **argv){
     if(NGPUS==1) {
         if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
         else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
+    } else {
+        if (COOP) dispatch_multi_gpu_cooperative_groups_kernels(d_u1, d_u2, streams, launchParams);
+        else      dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
+    }
     
     for (int i = 0; i < NGPUS; i++)
     {
@@ -90,6 +95,7 @@ int main(int argc, const char **argv){
         CU(cudaFree(d_u2[i]));
     }
 
+    free(launchParams);
     cudaFreeHost(d_ref);
     free(h_ref);
 

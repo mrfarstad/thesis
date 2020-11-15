@@ -14,6 +14,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     }
 }
 
+
 void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
     int device = 0;
     cudaDeviceProp deviceProp;
@@ -27,6 +28,66 @@ void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
     if (SMEM) cudaLaunchCooperativeKernel((void*)gpu_laplace2d_coop_smem, dimGrid, dimBlock, args);
     else cudaLaunchCooperativeKernel((void*)gpu_laplace2d_coop, dimGrid, dimBlock, args);
     getLastCudaError("gpu_laplace2d execution failed\n");
+}
+
+void dispatch_multi_gpu_cooperative_groups_kernels(
+        float **d_u1,
+        float **d_u2,
+        cudaStream_t *streams,
+        cudaLaunchParams *launchParams
+) {
+    int device = 0;
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, device);
+    dim3 dimBlock(BLOCK_X,BLOCK_Y);
+    // TODO: Hvor stort kan et grid være med multi-kernel launch?
+    dim3 dimGrid(deviceProp.multiProcessorCount, 1);
+    //void *args[] = {
+    //    &d_u1,
+    //    &d_u2
+    //};
+    //if (SMEM) cudaLaunchCooperativeKernel((void*)gpu_laplace2d_coop_smem, dimGrid, dimBlock, args);
+    //else cudaLaunchCooperativeKernel((void*)gpu_laplace2d_coop, dimGrid, dimBlock, args);
+    //getLastCudaError("gpu_laplace2d execution failed\n");
+    
+    // TODO: Receive buffers can be used for inter-kernel communication
+    //args[i][1] = &r_u[(i+1)%ngpus];
+    //args[i][2] = &r_u[i];
+
+    void *args[NGPUS][4];
+    int jstarts[NGPUS];
+    int jends[NGPUS];
+    int jstart = 1;
+    int jend = NY/NGPUS;
+    for (int s = 0; s < NGPUS; s++)
+    {
+        //if (s==0) {
+        //    jstarts[s] = 1;
+        //    jends[s] = NY/NGPUS+1;
+        //} else if (s==NGPUS-1) {
+        //    jstarts[s] = 0;
+        //    jends[s] = NY/NGPUS;
+        //} else {
+        //    jstarts[s] = 0;
+        //    jends[s] = NY/NGPUS+1;
+        //}
+        args[s][0] = &d_u1[s];
+        args[s][1] = &d_u2[s];
+        //args[s][2] = (void *)&jstarts[s];
+        //args[s][3] = (void *)&jends[s];
+        args[s][2] = (void *)&jstart;
+        args[s][3] = (void *)&jend;
+        //if (SMEM) launchParams[s].func = (void*)gpu_laplace2d_coop_smem_multi_gpu;
+        //else
+        launchParams[s].func = (void*)gpu_laplace2d_coop_multi_gpu;
+        launchParams[s].gridDim = dimGrid;
+        launchParams[s].blockDim = dimBlock;
+        launchParams[s].sharedMem = 0;
+        launchParams[s].stream = streams[s];
+        launchParams[s].args = args[s];
+    }
+
+    cudaLaunchCooperativeKernelMultiDevice(launchParams, NGPUS);
 }
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {

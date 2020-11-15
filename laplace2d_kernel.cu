@@ -121,6 +121,53 @@ __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
     }
 }
 
+__global__ void gpu_laplace2d_coop_multi_gpu(float* __restrict__ d_u1,
+			                     float* __restrict__ d_u2)
+{
+    int   i, j, q, x, y,
+          bx, by,
+          gx, gy,
+          xskip, yskip, 
+          idx, ioff, joff;
+    float u2, *d_tmp, fourth=1.0f/4.0f;
+    
+    bx = blockDim.x;
+    by = blockDim.y;
+    i  = threadIdx.x + blockIdx.x*bx;
+    j  = threadIdx.y + blockIdx.y*by;
+    gx = gridDim.x;
+    gy = gridDim.y;
+
+    xskip = bx * gx;
+    yskip = by * gy;
+    
+    ioff = 1;
+    joff = NX;
+    //grid_group mg = this_grid();
+    multi_grid_group mg = this_multi_grid();
+
+    // TODO: Inter-grid syncronization with async memcpy!
+    
+    for (q = 1; q <= ITERATIONS; q++) {
+        for (y=j; y<NY; y+=yskip) {
+            for (x=i; x<NX; x+=xskip) {
+                idx = x + y*joff;
+                if (x==0 || x==NX-1 || y==0 || y==NY-1)
+                  u2 = d_u1[idx]; // Dirichlet b.c.'s
+                else {
+                  u2 = (d_u1[idx-ioff]  +
+                        d_u1[idx+ioff]  +
+                        d_u1[idx-joff]  +
+                        d_u1[idx+joff]) * fourth;    
+                }
+                d_u2[idx] = u2;
+            }
+        }
+        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+        mg.sync();
+    }
+}
+
 __global__ void gpu_laplace2d_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
