@@ -54,7 +54,7 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
     //args[i][1] = &r_u[(i+1)%ngpus];
     //args[i][2] = &r_u[i];
 
-    void *args[NGPUS][4];
+    void *args[NGPUS][6];
     int jstarts[NGPUS];
     int jends[NGPUS];
     int jstart = 1;
@@ -62,24 +62,24 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
     int devs[NGPUS];
     for (int s = 0; s < NGPUS; s++)
     {
-        //if (s==0) {
-        //    jstarts[s] = 1;
-        //    jends[s] = NY/NGPUS+1;
-        //} else if (s==NGPUS-1) {
-        //    jstarts[s] = 0;
-        //    jends[s] = NY/NGPUS;
-        //} else {
-        //    jstarts[s] = 0;
-        //    jends[s] = NY/NGPUS+1;
-        //}
         args[s][0] = &d_u1[s];
         args[s][1] = &d_u2[s];
+        args[s][2] = &d_u1[(s+1)%NGPUS];
         devs[s] = s;
-        args[s][2] = (void *)&devs[s];
+        args[s][3] = (void *)&devs[s];
         //args[s][3] = &d_u1[s];
-        args[s][3] = &d_u1[(s+1)%NGPUS];
-        //args[s][2] = (void *)&jstarts[s];
-        //args[s][3] = (void *)&jends[s];
+        if (s==0) {
+            jstarts[s] = 1;
+            jends[s] = NY/NGPUS+1;
+        } else if (s==NGPUS-1) {
+            jstarts[s] = 0;
+            jends[s] = NY/NGPUS;
+        } else {
+            jstarts[s] = 0;
+            jends[s] = NY/NGPUS+1;
+        }
+        args[s][4] = &jstarts[s];
+        args[s][5] = &jends[s];
         //args[s][2] = (void *)&jstart;
         //args[s][3] = (void *)&jend;
         //if (SMEM) launchParams[s].func = (void*)gpu_laplace2d_coop_smem_multi_gpu;
