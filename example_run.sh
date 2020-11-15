@@ -1,1 +1,1 @@
-./run.sh base debug 32 32 hpclab13
+./run.sh base prod 32 32 256 hpclab13
