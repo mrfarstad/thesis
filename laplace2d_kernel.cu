@@ -124,30 +124,31 @@ __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
 __global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
 			                     float* d_u2,
 			                     float* d_u3,
-                                             int dev,
                                              int jstart,
-                                             int jend
-                                             )
+                                             int jend,
+                                             int dev)
 {
     int   i, j, q, x, y,
           idx;
     float u2, *d_tmp, fourth=1.0f/4.0f;
     
-    x  = threadIdx.x + blockIdx.x*BLOCK_X;
-    y  = threadIdx.y + blockIdx.y*BLOCK_Y;
-
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    
     multi_grid_group mg = this_multi_grid();
     
     for (q = 1; q <= ITERATIONS; q++) {
-        if (dev==0) memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
-        else if (dev==NGPUS-1) memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
-        else {
-            memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
-            memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+        if (NGPUS>1) {
+            if (dev==0) memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
+            else if (dev==NGPUS-1) memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+            else {
+                memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
+                memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+            }
         }
-        //for (y=j; y<NY; y+=BLOCK_Y * gridDim.y) {
-        //    for (x=i; x<NX; x+=BLOCK_X * gridDim.x) {
-                if (x>=0 && x<=NX-1 && y>=jstart && y<=jend) {
+        for (y=j; y<=NY; y+=blockDim.y * gridDim.y) {
+            for (x=i; x<NX; x+=blockDim.x * gridDim.x) {
+                if (y>=jstart && y<=jend) {
                     idx = x + y*NX;
                     if (x==0 || x==NX-1 || y==jstart || y==jend)
                       u2 = d_u1[idx]; // Dirichlet b.c.'s
@@ -159,13 +160,50 @@ __global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
                     }
                     d_u2[idx] = u2;
                 }
-        //    }
-        //}
-        //mg.sync();
-        mg.sync();
+            }
+        }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+        mg.sync();
     }
 }
+//{
+//    int   i, j, q, x, y,
+//          idx;
+//    float u2, *d_tmp, fourth=1.0f/4.0f;
+//    
+//    x  = threadIdx.x + blockIdx.x*BLOCK_X;
+//    y  = threadIdx.y + blockIdx.y*BLOCK_Y;
+//
+//    multi_grid_group mg = this_multi_grid();
+//    
+//    for (q = 1; q <= ITERATIONS; q++) {
+//        //if (dev==0) memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
+//        //else if (dev==NGPUS-1) memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+//        //else {
+//        //    memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX, NX*sizeof(float));
+//        //    memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+//        //}
+//        //for (y=j; y<NY; y+=BLOCK_Y * gridDim.y) {
+//        //    for (x=i; x<NX; x+=BLOCK_X * gridDim.x) {
+//        if (x>=0 && x<=NX-1 && y>=jstart && y<=jend) {
+//            idx = x + y*NX;
+//            if (x==0 || x==NX-1 || y==jstart || y==jend)
+//              u2 = d_u1[idx]; // Dirichlet b.c.'s
+//            else {
+//              u2 = (d_u1[idx-1]  +
+//                    d_u1[idx+1]  +
+//                    d_u1[idx-NX]  +
+//                    d_u1[idx+NX]) * fourth;    
+//            }
+//            d_u2[idx] = u2;
+//        }
+//        //    }
+//        //}
+//        //mg.sync();
+//        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+//        mg.sync();
+//    }
+//}
 
 __global__ void gpu_laplace2d_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)

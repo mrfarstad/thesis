@@ -62,13 +62,15 @@ int main(int argc, const char **argv){
 
     //start_timer(start);
     //stop_timer(&start, &stop, &milli, "\nKernel execution time: %.1f (ms) \n");
-    if(NGPUS==1) {
-        if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
-        else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else {
-        if (COOP) dispatch_multi_gpu_cooperative_groups_kernels(d_u1, d_u2, streams, launchParams);
-        else      dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
-    }
+    //if(NGPUS==1) {
+    //    if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
+    //    else      dispatch_kernels(d_u1[0], d_u2[0]);
+    //} else {
+    //    if (COOP) dispatch_multi_gpu_cooperative_groups_kernels(d_u1, d_u2, streams, launchParams);
+    //    else      dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
+    //}
+    //    if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
+    dispatch_multi_gpu_cooperative_groups_kernels(d_u1, d_u2, streams, launchParams);
     
     for (int i = 0; i < NGPUS; i++)
     {
