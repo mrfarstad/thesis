@@ -8,8 +8,11 @@
 
 #define NGPUS 1
 
-#define NX 256
-#define NY 256
+#ifndef DIM
+#define DIM 256
+#endif
+#define NX DIM
+#define NY DIM
 #define SIZE          (NX*NY)
 #define OFFSET        (SIZE/NGPUS)
 #define BYTES         (SIZE*sizeof(float))
@@ -21,10 +24,6 @@
 
 #ifndef DEBUG
 #define DEBUG false
-#endif
-
-#ifndef TEST
-#define TEST false
 #endif
 
 #ifndef SMEM

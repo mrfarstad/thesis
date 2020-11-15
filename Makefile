@@ -6,7 +6,7 @@ ifeq ($(BUILD), debug)
     DEBUG := -D DEBUG=true
 endif
 ifeq ($(BUILD), test)
-    TEST := -D TEST=true
+    DEBUG := -D DEBUG=true
 endif
 ifeq ($(HOST), yme)
     ARCH := sm_70
@@ -19,7 +19,7 @@ endif
 ifeq ($(COOP), true)
     _COOP := -D COOP=true
 endif
-NVCCFLAGS	:= -lineinfo -rdc=true --ptxas-options=-v --use_fast_math #-arch=$(ARCH) 
+NVCCFLAGS	:= -lineinfo -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH) 
 
 all: 		laplace2d_$(ID)
 
@@ -28,8 +28,9 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
+						  -D DIM=$(DIM)           \
 						      $(_SMEM) $(_COOP)   \
-						       $(DEBUG) $(TEST)  
+							       $(DEBUG)  
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
