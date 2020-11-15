@@ -138,30 +138,55 @@ __global__ void gpu_laplace2d_coop_multi_gpu(float* d_u1,
     xskip = BLOCK_X * gridDim.x;
     yskip = BLOCK_Y * gridDim.y;
 
-    multi_grid_group mg = this_multi_grid();
-
-    // TODO: Inter-grid syncronization with async memcpy!
-    
-    for (q = 1; q <= ITERATIONS; q++) {
-        for (y=j; y<NY; y+=yskip) {
-            for (x=i; x<NX; x+=xskip) {
-                if (x>=0 && x<=NX-1 && y>=1 && y<=NY/NGPUS) {
-                    idx = x + y*NX;
-                    if (x==0 || x==NX-1 || y==1 || y==NY/NGPUS)
-                      u2 = d_u1[idx]; // Dirichlet b.c.'s
-                    else {
-                      u2 = (d_u1[idx-1]  +
-                            d_u1[idx+1]  +
-                            d_u1[idx-NX]  +
-                            d_u1[idx+NX]) * fourth;    
-                    }
-                    d_u2[idx] = u2;
-                }
-            }
-        }
-        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
-        mg.sync();
+    if(i==0&&j==0) {
+        printf("d_u1 (this device [%d]) %.2f\n", dev, d_u1[NX]);
+        printf("d_u1 (next device [%d]) %.2f\n", dev, d_u3[NX]);
     }
+
+    if (dev==0)
+        memcpy(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX,
+                           NX*sizeof(float));
+        //cudaMemcpyAsync(d_u1 + (NY/NGPUS + 1) * NX, d_u3 + NX,
+        //                   NX*sizeof(float), cudaMemcpyDefault);
+        //
+    else
+        memcpy(d_u1, d_u3 + (NY/NGPUS) * NX, NX*sizeof(float));
+        //cudaMemcpyAsync(d_u1, d_u3 + (NY/NGPUS) * NX,
+        //                   NX*sizeof(float), cudaMemcpyDefault);
+    //else if (s==NGPUS-1)
+    //    CU(cudaMemcpyAsync(d_u1[s-1] + (NY/NGPUS + 1) * NX, d_u1[s] + NX,
+    //                       NX*sizeof(float), cudaMemcpyDefault, streams[s-1]));
+    //else {
+    //    CU(cudaMemcpyAsync(d_u1[s+1], d_u1[s] + (NY/NGPUS) * NX,
+    //                       NX*sizeof(float), cudaMemcpyDefault, streams[s+1]));
+    //    CU(cudaMemcpyAsync(d_u1[s-1] + (NY/NGPUS + 1) * NX, d_u1[s] + NX,
+    //                       NX*sizeof(float), cudaMemcpyDefault, streams[s-1]));
+    //}
+
+    //multi_grid_group mg = this_multi_grid();
+
+    //// TODO: Inter-grid syncronization with async memcpy!
+    //
+    //for (q = 1; q <= ITERATIONS; q++) {
+    //    for (y=j; y<NY; y+=yskip) {
+    //        for (x=i; x<NX; x+=xskip) {
+    //            if (x>=0 && x<=NX-1 && y>=1 && y<=NY/NGPUS) {
+    //                idx = x + y*NX;
+    //                if (x==0 || x==NX-1 || y==1 || y==NY/NGPUS)
+    //                  u2 = d_u1[idx]; // Dirichlet b.c.'s
+    //                else {
+    //                  u2 = (d_u1[idx-1]  +
+    //                        d_u1[idx+1]  +
+    //                        d_u1[idx-NX]  +
+    //                        d_u1[idx+NX]) * fourth;    
+    //                }
+    //                d_u2[idx] = u2;
+    //            }
+    //        }
+    //    }
+    //    d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+    //    mg.sync();
+    //}
 }
 
 __global__ void gpu_laplace2d_coop_smem(float* __restrict__ d_u1,

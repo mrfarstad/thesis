@@ -76,8 +76,8 @@ void dispatch_multi_gpu_cooperative_groups_kernels(
         args[s][1] = &d_u2[s];
         devs[s] = s;
         args[s][2] = (void *)&devs[s];
-        args[s][3] = &d_u1[s];
-        //args[s][3] = &d_u1[(s+1)%NGPUS];
+        //args[s][3] = &d_u1[s];
+        args[s][3] = &d_u1[(s+1)%NGPUS];
         //args[s][2] = (void *)&jstarts[s];
         //args[s][3] = (void *)&jends[s];
         //args[s][2] = (void *)&jstart;
