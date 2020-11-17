@@ -78,7 +78,7 @@ int main(int argc, const char **argv) {
 
     cudaSetDevice(0);
     //stop_timer(&start, &stop, &milli, "\nTotal execution time: %.1f (ms) \n");
-    stop_timer(&start, &stop, &milli, "%.1f\n");
+    stop_timer(&start, &stop, &milli, "%.4f\n");
 
     if (DEBUG) {
         print_corners(h_ref, d_ref);
