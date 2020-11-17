@@ -1,18 +1,25 @@
 #!/bin/bash
-#sizes=(256 512 1024 2048 4096, 8192, 16384, 32768)
-#versions=(base smem coop coop_smem)
-sizes=(256 512)
-versions=(base smem)
 
-for i in "${versions[@]}"
+#sizes=(256 512 1024 2048 4096, 8192, 16384, 32768)
+#sizes=(256 512)
+#versions=(base smem)
+#sizes=(256 512 1024 2048 4096 8192)
+versions=(base smem coop coop_smem)
+sizes=(32 64)
+#versions=(base smem coop coop_smem)
+rm -f tst.txt
+for v in "${versions[@]}"
 do
   :
     for s in "${sizes[@]}"
     do
       :
-      echo "$i (NX=NY=$s)" >> tst.txt
-      perl -i -pe"s/DIM=\d*/DIM=$s/g" configs/hpclab13/$i.conf
-      ./hpclab13_autotune.sh $i
+      echo "$v (NX=NY=$s)" >> tst.txt
+      #perl -i -pe"s/DIM=\d*/DIM=$s/g" configs/hpclab13/$i.conf
+      #sed -i -re 's/(DIM=)[0-9]+/\1'$s'/' configs/yme/$v.conf
+      sed -i -re 's/(DIM=)[0-9]+/\1'$s'/' configs/hpclab13/$v.conf
+      ./hpclab13_autotune.sh $v
+      #./yme_autotune.sh $v
       awk '/Minimal valuation/{x=NR+3}(NR<=x){print}' results/out.txt >> tst.txt
     done
 done

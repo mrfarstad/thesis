@@ -19,8 +19,8 @@
 #define BYTES_PER_GPU (BYTES/NGPUS)
 #define BYTES_HALO    (2*NX*sizeof(float))
 
-#define ITERATIONS 8192
-//#define ITERATIONS 1
+//#define ITERATIONS 8192
+#define ITERATIONS 10
 
 #ifndef DEBUG
 #define DEBUG false
