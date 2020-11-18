@@ -8,9 +8,14 @@
 
 #define NGPUS 1
 
+#ifndef ITERATIONS
+#define ITERATIONS 1024
+#endif
+
 #ifndef DIM
 #define DIM 256
 #endif
+
 #define NX DIM
 #define NY DIM
 #define SIZE          (NX*NY)
@@ -18,9 +23,6 @@
 #define BYTES         (SIZE*sizeof(float))
 #define BYTES_PER_GPU (BYTES/NGPUS)
 #define BYTES_HALO    (2*NX*sizeof(float))
-
-//#define ITERATIONS 8192
-#define ITERATIONS 10
 
 #ifndef DEBUG
 #define DEBUG false

@@ -1,6 +1,7 @@
-INC	:= -I$(CUDA_HOME)/include -I.
-LIB	:= -L$(CUDA_HOME)/lib64
-LIBS 	:= -lcudart -lcudadevrt
+INC       := -I$(CUDA_HOME)/include -I.
+LIB       := -L$(CUDA_HOME)/lib64
+LIBS      := -lcudart -lcudadevrt
+NVCCFLAGS := -lineinfo -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH)
 ifeq ($(BUILD), debug)
     NVCC_DEBUG := -g -G
     DEBUG := -D DEBUG=true
@@ -19,7 +20,12 @@ endif
 ifeq ($(COOP), true)
     _COOP := -D COOP=true
 endif
-NVCCFLAGS	:= -lineinfo -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH) 
+ifneq ($(DIM),)
+    _DIM := -D DIM=$(DIM)
+endif
+ifneq ($(ITERATIONS),)
+    _ITERATIONS := -D ITERATIONS=$(ITERATIONS)
+endif
 
 all: 		laplace2d_$(ID)
 
@@ -34,7 +40,7 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
-		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu
+		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu $(_DIM) $(_ITERATIONS)
 
 profile:
 	sudo ncu -f -o profile bin/laplace2d_$(ID)
