@@ -106,6 +106,7 @@ void print_program_info() {
             CU(cudaDeviceCanAccessPeer(&peer_access_available, i, j));       \
                                                                              \
             if (peer_access_available) CU(cudaDeviceEnablePeerAccess(j, 0)); \
+            else  printf("P2P is not available for (%d, %d)\n", i, j);       \
         }                                                                    \
     }                                                                        \
 }                                                                            \
