@@ -1,7 +1,7 @@
 INC       := -I$(CUDA_HOME)/include -I.
-LIB       := -L$(CUDA_HOME)/lib64
-LIBS      := -lcudart -lcudadevrt
-NVCCFLAGS := -lineinfo -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH)
+LIB       := -L$(CUDA_HOME)/lib64  
+LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
+NVCCFLAGS := -lineinfo -lgomp -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH)
 ifeq ($(BUILD), debug)
     NVCC_DEBUG := -g -G
     DEBUG := -D DEBUG=true

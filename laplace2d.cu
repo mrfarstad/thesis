@@ -7,6 +7,7 @@
 #include "laplace2d_timer.cu"
 #include "laplace2d_dispatch.cu"
 #include "cooperative_groups.h"
+#include "omp.h"
 using namespace cooperative_groups;
 
 int main(int argc, const char **argv) {
@@ -33,6 +34,7 @@ int main(int argc, const char **argv) {
 
     int size = BYTES_PER_GPU;
     if (NGPUS>1) size+=BYTES_HALO;
+#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMalloc((void **)&d_u1[i], size));
@@ -45,6 +47,7 @@ int main(int argc, const char **argv) {
     int offset;
     if (NGPUS==1) offset=0;
     else          offset=NX;
+#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpy(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice));
@@ -59,6 +62,7 @@ int main(int argc, const char **argv) {
         else      dispatch_kernels(d_u1[0], d_u2[0]);
     } else dispatch_multi_gpu_kernels(d_u1, d_u2);
     
+#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpy(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost));
