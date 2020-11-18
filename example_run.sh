@@ -1,1 +1,1 @@
-./run.sh base prod 32 32 256 hpclab13
+./run.sh coop_smem prod 32 32 4096 hpclab13

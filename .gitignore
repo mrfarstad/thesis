@@ -1,10 +1,13 @@
 snapshots
 coop_snapshots
+dimensions/
 results/
-result
 bin/
 *.ncu-rep
 *.txt
 *.png
 *.pyc
+result
+result_*
 solution
+solution_*

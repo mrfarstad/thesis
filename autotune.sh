@@ -1,8 +1,4 @@
 #!/bin/bash
-make laplace2d_cpu
-./bin/laplace2d_cpu
-mv solution configs/$1
-wait
 
 # Run auto tune framework
 python ${PWD}/Autotuning/tuner/tune.py configs/$1/$2.conf
