@@ -56,9 +56,7 @@ __global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,
     grid_group g = this_grid();
     thread_block tb = this_thread_block();
     __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
-
     idx = i + j*joff;
-
     if (i>=0 && i<=NX-1 && j>=jstart && j<=jend) {
         if (i != 0)           smem[sy][sx-1]   = d_u1[idx-ioff];
         if (i != NX-1)        smem[sy][sx+1]   = d_u1[idx+ioff];
