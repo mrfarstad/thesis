@@ -39,13 +39,6 @@ int main(int argc, const char **argv) {
         CU(cudaMalloc((void **)&d_u2[i], size));
     }
 
-    cudaStream_t streams[NGPUS];
-
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaStreamCreate( &streams[i] ));
-    }
-
     cudaSetDevice(0);
     start_timer(start);
 
@@ -54,7 +47,7 @@ int main(int argc, const char **argv) {
     else          offset=NX;
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
+        CU(cudaMemcpy(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice));
     }
 
     if (DEBUG) {
@@ -64,11 +57,11 @@ int main(int argc, const char **argv) {
     if(NGPUS==1) {
         if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
         else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
+    } else dispatch_multi_gpu_kernels(d_u1, d_u2);
     
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
+        CU(cudaMemcpy(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost));
     }
     
     for (int i = 0; i < NGPUS; i++) {
@@ -77,7 +70,6 @@ int main(int argc, const char **argv) {
     }
 
     cudaSetDevice(0);
-    //stop_timer(&start, &stop, &milli, "\nTotal execution time: %.1f (ms) \n");
     stop_timer(&start, &stop, &milli, "%.4f\n");
 
     if (DEBUG) {
@@ -88,7 +80,6 @@ int main(int argc, const char **argv) {
 
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaStreamDestroy(streams[i]));
         CU(cudaFree(d_u1[i]));
         CU(cudaFree(d_u2[i]));
     }
