@@ -58,11 +58,14 @@ __global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,
     __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
 
     idx = i + j*joff;
-    if (i != 0)           smem[sy][sx-1]   = d_u1[idx-ioff];
-    if (i != NX-1)        smem[sy][sx+1]   = d_u1[idx+ioff];
-    if (j != 0)           smem[sy-1][sx]   = d_u1[idx-joff];
-    if (j != NY-1)        smem[sy+1][sx]   = d_u1[idx+joff];
-    smem[sy][sx] = d_u1[idx];
+
+    if (i>=0 && i<=NX-1 && j>=jstart && j<=jend) {
+        if (i != 0)           smem[sy][sx-1]   = d_u1[idx-ioff];
+        if (i != NX-1)        smem[sy][sx+1]   = d_u1[idx+ioff];
+        if (j != jstart)      smem[sy-1][sx]   = d_u1[idx-joff];
+        if (j != jend)        smem[sy+1][sx]   = d_u1[idx+joff];
+        smem[sy][sx] = d_u1[idx];
+    }
     tb.sync();
     if (i>=0 && i<=NX-1 && j>=jstart && j<=jend) {
         if (i==0 || i==NX-1 || j==jstart || j==jend)
