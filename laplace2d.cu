@@ -19,7 +19,12 @@ int main(int argc, const char **argv) {
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    h_ref = (float *)malloc(BYTES);
+    if (DEBUG) {
+        print_program_info();
+        h_ref = (float *)malloc(BYTES);
+        readSolution(h_ref);
+    }
+
     if (cudaMallocHost((void**)&d_ref, BYTES) != cudaSuccess) {
         fprintf(stderr, "Error returned from pinned host memory allocation\n");
         exit(1);
@@ -27,10 +32,7 @@ int main(int argc, const char **argv) {
 
     if (NGPUS>1) ENABLE_P2P(NGPUS);
 
-    if (DEBUG) {
-        print_program_info();
-        initialize_host_region(d_ref);
-    }
+    initialize_host_region(d_ref);
 
     int size = BYTES_PER_GPU;
     if (NGPUS>1) size+=BYTES_HALO;
@@ -42,7 +44,7 @@ int main(int argc, const char **argv) {
     }
 
     cudaSetDevice(0);
-    start_timer(start);
+    cudaEventRecord(start);
 
     int offset;
     if (NGPUS==1) offset=0;
@@ -51,10 +53,6 @@ int main(int argc, const char **argv) {
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpy(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice));
-    }
-
-    if (DEBUG) {
-        readSolution(h_ref);
     }
 
     if(NGPUS==1) {
@@ -72,24 +70,26 @@ int main(int argc, const char **argv) {
         cudaSetDevice(i);
         cudaDeviceSynchronize();
     }
-
+    
     cudaSetDevice(0);
-    stop_timer(&start, &stop, &milli, "%.4f\n");
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&milli, start, stop);
 
     if (DEBUG) {
-        print_corners(h_ref, d_ref);
+        //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref, NX, NY);
-        saveResult(d_ref);
+        //saveResult(d_ref);
+        free(h_ref);
     }
+
+    printf("%.4f\n", milli); // Print time spent in ms
 
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaFree(d_u1[i]));
         CU(cudaFree(d_u2[i]));
+        cudaDeviceReset();
     }
-
     cudaFreeHost(d_ref);
-    free(h_ref);
-
-    cudaDeviceReset();
 }
