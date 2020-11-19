@@ -34,7 +34,9 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
     dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
     float *d_tmp;
     int i, s;
+    int jstart, jend;
     for (i=0; i<ITERATIONS; i++) {
+#pragma omp parallel for
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0)
@@ -49,20 +51,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
                 CU(cudaMemcpy(d_u1[s] + (NY/NGPUS + 1) * NX, d_u1[s+1] + NX,
                                    NX*sizeof(float), cudaMemcpyDeviceToDevice));
             }
-            //if (s==0)
-            //    CU(cudaMemcpy(d_u1[s+1], d_u1[s] + (NY/NGPUS) * NX,
-            //                       NX*sizeof(float), cudaMemcpyDeviceToDevice));
-            //else if (s==NGPUS-1)
-            //    CU(cudaMemcpy(d_u1[s-1] + (NY/NGPUS + 1) * NX, d_u1[s] + NX,
-            //                       NX*sizeof(float), cudaMemcpyDeviceToDevice));
-            //else {
-            //    CU(cudaMemcpy(d_u1[s+1], d_u1[s] + (NY/NGPUS) * NX,
-            //                       NX*sizeof(float), cudaMemcpyDeviceToDevice));
-            //    CU(cudaMemcpy(d_u1[s-1] + (NY/NGPUS + 1) * NX, d_u1[s] + NX,
-            //                       NX*sizeof(float), cudaMemcpyDeviceToDevice));
-            //}
         }
-        int jstart, jend;
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0) {
