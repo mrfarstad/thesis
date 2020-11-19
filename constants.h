@@ -25,7 +25,7 @@
 #define BYTES_HALO    (2*NX*sizeof(float))
 
 #ifndef DEBUG
-#define DEBUG false
+#define DEBUG true
 #endif
 
 #ifndef SMEM
@@ -37,4 +37,3 @@
 #endif
 
 #define CU checkCudaErrors 
-#define start_timer cudaEventRecord
