@@ -1,16 +1,19 @@
 #!/bin/bash
-#sizes=(256 512 1024 2048 4096, 8192, 16384, 32768)
-sizes=(256 512) #1024 2048 4096, 8192, 16384, 32768)
 
-for i in "${sizes[@]}"
-do
-  :
-  echo "$1 (NX=NY=$i)"
-  #perl -i -pe's/DIM=\d*/DIM=512/g' configs/hpclab13/$1.conf
-  ./hpclab13_autotune.sh $1
-  awk '/Minimal valuation/{x=NR+3}(NR<=x){print}' out.txt >> tst.txt
-done
+######## THOUGHTS ##########
+#This script should take the domain dim and the block dims as parameters.
+#This is because it is the python script who has generated the optimal parameters, and therefore the script will provide them.
 
+if [[ $# -lt 3 ]] ; then
+    echo 'arg: DIM BLOCK_X BLOCK_Y'
+    exit 0
+fi
 
-#stdbuf -o 0 -e 0 ./autotune.sh hpclab13 $1 laplace2d | tee results/out.txt
-#awk '{if ($1=="rms" && $2=="error") print}' results/out.txt | tee results/errors.txt
+config=smem.conf
+iter=1024
+[ ! -f solutions/solution\_$1\_$iter ] && ./create_solutions.sh $1
+wait
+sed -i -re 's/(DIM = )[0-9]+/\1'$1'/' $config
+sed -i -re 's/(BLOCK_X = )[0-9]+/\1'$2'/' $config
+sed -i -re 's/(BLOCK_Y = )[0-9]+/\1'$3'/' $config
+python ${PWD}/Autotuning/tuner/tune.py $config
