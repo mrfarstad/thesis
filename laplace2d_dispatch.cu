@@ -32,7 +32,6 @@ void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
     dim3 dimBlock(BLOCK_X,BLOCK_Y);
     dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
-
     float *d_tmp;
     int i, s;
     for (i=0; i<ITERATIONS; i++) {
@@ -80,7 +79,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
             else      gpu_laplace2d_base<<<dimGrid, dimBlock>>>(d_u1[s], d_u2[s], jstart, jend);
             getLastCudaError("gpu_laplace2d execution failed\n");
         }
-        
+
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             cudaDeviceSynchronize();
