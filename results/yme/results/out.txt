@@ -1,0 +1,11 @@
+gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu  
+
+cpu_laplace2d: 1.460 (ms) 
+saving ../../solutions/solution_256_1024: nx = 256 ny = 256 iterations: 1024
+nvcc laplace2d.cu -o bin/laplace2d_32 -arch sm_75   \
+	        -I/include -I. -L/lib64   -lineinfo -lgomp -rdc=true --use_fast_math  -lcudart -lcudadevrt -Xcompiler -fopenmp   \
+					  -D BLOCK_X=32   \
+					  -D BLOCK_Y=yme   \
+					  -D DIM=           \
+					          \
+						         
