@@ -1,0 +1,81 @@
+base (NX=NY=32 4 GPUs)
+base (NX=NY=32 4 GPUs)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 64
+Minimal Score:
+412.9905
+base (NX=NY=64 4 GPUs)
+Minimal valuation:
+BLOCK_X = 1, BLOCK_Y = 512
+Minimal Score:
+391.1657
+base (NX=NY=128 4 GPUs)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 1
+Minimal Score:
+426.35635
+base (NX=NY=256 4 GPUs)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 32
+Minimal Score:
+428.88955
+base (NX=NY=512 4 GPUs)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 4
+Minimal Score:
+419.5086
+base (NX=NY=1024 4 GPUs)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 8
+Minimal Score:
+400.8915
+base (NX=NY=2048 4 GPUs)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 32
+Minimal Score:
+424.30705
+base (NX=NY=4096 4 GPUs)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 32
+Minimal Score:
+584.44335
+smem (NX=NY=32 4 GPUs)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 128
+Minimal Score:
+429.86505
+smem (NX=NY=64 4 GPUs)
+Minimal valuation:
+BLOCK_X = 512, BLOCK_Y = 2
+Minimal Score:
+346.37385
+smem (NX=NY=128 4 GPUs)
+Minimal valuation:
+BLOCK_X = 256, BLOCK_Y = 1
+Minimal Score:
+408.83845
+smem (NX=NY=256 4 GPUs)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+430.7886
+smem (NX=NY=512 4 GPUs)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 32
+Minimal Score:
+452.6639
+smem (NX=NY=1024 4 GPUs)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 16
+Minimal Score:
+382.8205
+smem (NX=NY=2048 4 GPUs)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 16
+Minimal Score:
+896.43905
+smem (NX=NY=4096 4 GPUs)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 4
+Minimal Score:
+2404.65495

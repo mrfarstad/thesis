@@ -1,0 +1,68 @@
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 4
+Minimal Score:
+439.72265
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 512
+Minimal Score:
+481.1163
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 16
+Minimal Score:
+417.8794
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 4
+Minimal Score:
+420.1288
+Minimal valuation:
+BLOCK_X = 64, BLOCK_Y = 1
+Minimal Score:
+418.53255
+Minimal valuation:
+BLOCK_X = 1, BLOCK_Y = 128
+Minimal Score:
+429.2771
+Minimal valuation:
+BLOCK_X = 128, BLOCK_Y = 1
+Minimal Score:
+577.86625
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 32
+Minimal Score:
+679.2033
+Minimal valuation:
+BLOCK_X = 512, BLOCK_Y = 2
+Minimal Score:
+1437.7089
+Minimal valuation:
+BLOCK_X = 128, BLOCK_Y = 8
+Minimal Score:
+450.61215
+Minimal valuation:
+BLOCK_X = 256, BLOCK_Y = 2
+Minimal Score:
+494.013
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 4
+Minimal Score:
+426.50965
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 8
+Minimal Score:
+436.21955
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 32
+Minimal Score:
+396.23655
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 128
+Minimal Score:
+628.4033
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 16
+Minimal Score:
+909.47055
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 4
+Minimal Score:
+2467.27955

@@ -1,0 +1,152 @@
+
+                               Autotuning System                                
+                                     v0.16                                      
+
+Retrieved settings from config file:
+
+Variables:
+{BLOCK_X, BLOCK_Y}
+
+Displayed as a tree:
+
+ {BLOCK_X, BLOCK_Y} 
+
+Possible values:
+BLOCK_X = ['1', '2', '4', '8', '16', '32', '64', '128', '256', '512', '1024']
+BLOCK_Y = ['1', '2', '4', '8', '16', '32', '64', '128', '256', '512', '1024']
+
+compile: 
+cd ../../ && make -B SMEM=true HOST=yme ARCH=sm_70 ID=%%ID%% BLOCK_X=%BLOCK_X% BLOCK_Y=%BLOCK_Y% BLOCK_Z=%BLOCK_Z% DIM=8192
+
+test: 
+../../bin/laplace2d_%%ID%%
+
+clean: 
+rm ../../bin/laplace2d_%%ID%%
+
+Number of tests to be run: 121
+(with 10 repetitions each)
+
+
+Test 1:
+BLOCK_X = 1, BLOCK_Y = 1
+Compiling test 1
+nvcc laplace2d.cu -o bin/laplace2d_1 -arch sm_70   \
+	        -I/include -I. -L/lib64   -lineinfo -lgomp -rdc=true --use_fast_math  -lcudart -lcudadevrt -Xcompiler -fopenmp   \
+					  -D BLOCK_X=1   \
+					  -D BLOCK_Y=1   \
+					  -D DIM=8192           \
+					      -D SMEM=true    \
+						         
+
+Running test 1 (1st run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+400962.0312
+
+Result of test 1, 1st run: 400962.0312
+Running test 1 (2nd run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+372474.2188
+
+Result of test 1, 2nd run: 372474.2188
+Running test 1 (3rd run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+400590.1250
+
+Result of test 1, 3rd run: 400590.125
+Running test 1 (4th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+373082.0625
+
+Result of test 1, 4th run: 373082.0625
+Running test 1 (5th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+400817.2500
+
+Result of test 1, 5th run: 400817.25
+Running test 1 (6th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+372732.8125
+
+Result of test 1, 6th run: 372732.8125
+Running test 1 (7th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+401246.4375
+
+Result of test 1, 7th run: 401246.4375
+Running test 1 (8th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+373046.3125
+
+Result of test 1, 8th run: 373046.3125
+Running test 1 (9th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+401073.6562
+
+Result of test 1, 9th run: 401073.6562
+Running test 1 (10th run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+373261.8125
+
+Result of test 1, 10th run: 373261.8125
+Results of test 1:
+Average Result: 386928.67187
+Minimum Result: 372474.2188
+Maximum Result: 401246.4375
+Median Result:  386925.96875
+Variance:       196322724.708
+Std. Deviation: 14011.5211418
+Coeff. of Var.: 0.036212155264
+Cleaning test 1
+
+
+Test 2:
+BLOCK_X = 2, BLOCK_Y = 1
+Compiling test 2
+nvcc laplace2d.cu -o bin/laplace2d_2 -arch sm_70   \
+	        -I/include -I. -L/lib64   -lineinfo -lgomp -rdc=true --use_fast_math  -lcudart -lcudadevrt -Xcompiler -fopenmp   \
+					  -D BLOCK_X=2   \
+					  -D BLOCK_Y=1   \
+					  -D DIM=8192           \
+					      -D SMEM=true    \
+						         
+
+Running test 2 (1st run)
+
+Version: smem
+reading ../../solutions/solution_8192_1024: nx = 8192 ny = 8192
+rms error = 0.000000 
+201839.7344
+
+Result of test 2, 1st run: 201839.7344
+Running test 2 (2nd run)
