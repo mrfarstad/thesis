@@ -6,7 +6,9 @@
 #define BLOCK_Y 4
 #endif
 
+#ifndef NGPUS
 #define NGPUS 1
+#endif
 
 #ifndef ITERATIONS
 #define ITERATIONS 1024
