@@ -8,7 +8,7 @@
 #define STR_INDIR(x) #x
 #define STR(x) STR_INDIR(x)
 #define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS)
-#define SOLUTION "../../solutions/solution" SUFFIX
+#define SOLUTION "solutions/solution" SUFFIX
 #define RESULT "result" SUFFIX
 
 static void save(float *d_u, char const *format)

@@ -1,7 +1,7 @@
 INC       := -I$(CUDA_HOME)/include -I.
 LIB       := -L$(CUDA_HOME)/lib64  
 LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
-NVCCFLAGS := -lineinfo -lgomp -rdc=true --use_fast_math #--ptxas-options=-v #-arch=$(ARCH)
+NVCCFLAGS := -lineinfo -rdc=true --use_fast_math #-lgomp  #--ptxas-options=-v #-arch=$(ARCH)
 ifeq ($(BUILD), debug)
     NVCC_DEBUG := -g -G
     DEBUG := -D DEBUG=true
@@ -26,6 +26,9 @@ endif
 ifneq ($(ITERATIONS),)
     _ITERATIONS := -D ITERATIONS=$(ITERATIONS)
 endif
+ifneq ($(NGPUS),)
+    _NGPUS := -D NGPUS=$(NGPUS)
+endif
 
 all: 		laplace2d_$(ID)
 
@@ -35,7 +38,7 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
 						  -D DIM=$(DIM)           \
-						      $(_SMEM) $(_COOP)   \
+					    $(_SMEM) $(_COOP) $(_NGPUS)   \
 							       $(DEBUG)  
 							     
 
