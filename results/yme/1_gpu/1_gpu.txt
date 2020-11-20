@@ -1,0 +1,160 @@
+base (NX=NY=32 1 GPU)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 32
+Minimal Score:
+15.3697
+base (NX=NY=64 1 GPU)
+Minimal valuation:
+BLOCK_X = 1, BLOCK_Y = 2
+Minimal Score:
+13.63615
+base (NX=NY=128 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 1
+Minimal Score:
+13.879
+base (NX=NY=256 1 GPU)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 512
+Minimal Score:
+13.8087
+base (NX=NY=512 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+14.0356
+base (NX=NY=1024 1 GPU)
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 8
+Minimal Score:
+19.6273
+base (NX=NY=2048 1 GPU)
+Minimal valuation:
+BLOCK_X = 128, BLOCK_Y = 2
+Minimal Score:
+54.26475
+base (NX=NY=4096 1 GPU)
+Minimal valuation:
+BLOCK_X = 256, BLOCK_Y = 1
+Minimal Score:
+189.57245
+smem (NX=NY=32 1 GPU)
+Minimal valuation:
+BLOCK_X = 512, BLOCK_Y = 2
+Minimal Score:
+13.9568
+smem (NX=NY=64 1 GPU)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 64
+Minimal Score:
+14.1369
+smem (NX=NY=128 1 GPU)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 64
+Minimal Score:
+13.778
+smem (NX=NY=256 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 4
+Minimal Score:
+13.8817
+smem (NX=NY=512 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 2
+Minimal Score:
+38.0754
+smem (NX=NY=1024 1 GPU)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 2
+Minimal Score:
+134.6215
+smem (NX=NY=2048 1 GPU)
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 1
+Minimal Score:
+500.56155
+smem (NX=NY=4096 1 GPU)
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 1
+Minimal Score:
+2058.7824
+coop (NX=NY=32 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 32
+Minimal Score:
+8.81715
+coop (NX=NY=64 1 GPU)
+Minimal valuation:
+BLOCK_X = 1, BLOCK_Y = 32
+Minimal Score:
+8.91045
+coop (NX=NY=128 1 GPU)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 256
+Minimal Score:
+9.09365
+coop (NX=NY=256 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 64
+Minimal Score:
+9.6416
+coop (NX=NY=512 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+12.04525
+coop (NX=NY=1024 1 GPU)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 64
+Minimal Score:
+26.18325
+coop (NX=NY=2048 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+74.0533
+coop (NX=NY=4096 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+250.55805
+coop_smem (NX=NY=32 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 64
+Minimal Score:
+8.75975
+coop_smem (NX=NY=64 1 GPU)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 64
+Minimal Score:
+8.86965
+coop_smem (NX=NY=128 1 GPU)
+Minimal valuation:
+BLOCK_X = 2, BLOCK_Y = 128
+Minimal Score:
+9.08125
+coop_smem (NX=NY=256 1 GPU)
+Minimal valuation:
+BLOCK_X = 4, BLOCK_Y = 128
+Minimal Score:
+10.49965
+coop_smem (NX=NY=512 1 GPU)
+Minimal valuation:
+BLOCK_X = 8, BLOCK_Y = 128
+Minimal Score:
+15.067
+coop_smem (NX=NY=1024 1 GPU)
+Minimal valuation:
+BLOCK_X = 16, BLOCK_Y = 64
+Minimal Score:
+35.43805
+coop_smem (NX=NY=2048 1 GPU)
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 32
+Minimal Score:
+101.4013
+coop_smem (NX=NY=4096 1 GPU)
+Minimal valuation:
+BLOCK_X = 32, BLOCK_Y = 32
+Minimal Score:
+360.18185
