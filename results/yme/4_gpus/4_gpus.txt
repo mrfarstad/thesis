@@ -38,11 +38,6 @@ Minimal valuation:
 BLOCK_X = 32, BLOCK_Y = 32
 Minimal Score:
 679.2033
-base (NX=NY=8192 4 GPUs)
-Minimal valuation:
-BLOCK_X = 512, BLOCK_Y = 2
-Minimal Score:
-1437.7089
 smem (NX=NY=32 4 GPUs)
 Minimal valuation:
 BLOCK_X = 128, BLOCK_Y = 8
