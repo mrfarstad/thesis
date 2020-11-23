@@ -1,11 +1,11 @@
-import json as j
+import json
 import math
 import pprint as p
 import subprocess
 
-domain_dims = [32, 64, 128, 256, 512, 1024, 2048, 4096]
+#domain_dims = [32, 64, 128, 256, 512, 1024, 2048, 4096]
 # NOTE: The 2_gpus output is a copy of 4_gpus. The real output is being generated.
-prefix = "results/yme/"
+prefix = 'results/yme/'
 folders = ["1_gpu/1_gpu.txt", "2_gpus/2_gpus.txt", "4_gpus/4_gpus.txt"]
 
 db = {}
@@ -42,10 +42,13 @@ for folder in folders:
 
             res = subprocess.run(
                     ['./generate_results.sh',
+                     version,
                      ngpus,
                      domain_dim,
                      blockdims['BLOCK_X'],
                      blockdims['BLOCK_Y']],
+                     #'32',
+                     #'32'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
             results = list(filter(None, res.split('\n')))
             blockdims["results"] = [float(result) for result in results]#[res.strip() for res in results]
@@ -57,4 +60,4 @@ with open('results.txt', 'w') as out_file:
      out_file.write(pretty_db)
 
 with open('results.json', 'w') as fp:
-    j.dump(db, fp)
+    json.dump(db, fp)

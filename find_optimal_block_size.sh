@@ -5,12 +5,8 @@ if [[ $# -eq 0 ]] ; then
 fi
 
 iter=1024
-#versions=(coop coop_smem)
-#versions=(base smem)
 versions=(base smem coop coop_smem)
 sizes=(32 64 128 256 512 1024 2048 4096)
-# 4096 8192)
-#sizes=(32 64 128)
 host=$1
 
 #./create_solutions.sh ${sizes[@]}
@@ -20,7 +16,7 @@ do
   [ ! -f solutions/solution\_$s\_$iter ] && ./create_solutions.sh $s
 done
 
-#rm -f tst.txt
+rm -f tst.txt
 for v in "${versions[@]}"
 do
   :
