@@ -10,6 +10,10 @@
 #include "omp.h"
 using namespace cooperative_groups;
 
+int const laplacian1Filter[] = { -1,  -4,  -1,
+                                 -4,  20,  -4,
+                                 -1,  -4,  -1};
+
 int main(int argc, const char **argv) {
     float  *h_ref, *d_ref,
            *d_u1[NGPUS], *d_u2[NGPUS],
@@ -34,6 +38,11 @@ int main(int argc, const char **argv) {
 
     initialize_host_region(d_ref);
 
+      int *d_filter;
+      size_t filterSize = 9 * sizeof(int);
+      CU(cudaMalloc((void **) &d_filter, filterSize));
+      CU(cudaMemcpy((void *) d_filter, (int *) laplacian1Filter, filterSize, cudaMemcpyHostToDevice));
+
     int size = BYTES_PER_GPU;
     if (NGPUS>1) size+=BYTES_HALO;
 #pragma omp parallel for
@@ -57,7 +66,7 @@ int main(int argc, const char **argv) {
 
     if(NGPUS==1) {
         if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
-        else      dispatch_kernels(d_u1[0], d_u2[0]);
+        else      dispatch_kernels(d_u1[0], d_u2[0], d_filter);
     } else dispatch_multi_gpu_kernels(d_u1, d_u2);
     
 #pragma omp parallel for
@@ -79,7 +88,7 @@ int main(int argc, const char **argv) {
     if (DEBUG) {
         //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref, NX, NY);
-        //saveResult(d_ref);
+        saveResult(d_ref);
         free(h_ref);
     }
 
@@ -92,4 +101,5 @@ int main(int argc, const char **argv) {
         cudaDeviceReset();
     }
     cudaFreeHost(d_ref);
+    cudaFree(d_filter);
 }

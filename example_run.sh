@@ -1,1 +1,1 @@
-./run.sh smem prod 32 32 128 hpclab13
+./run.sh base debug 32 32 256 hpclab13

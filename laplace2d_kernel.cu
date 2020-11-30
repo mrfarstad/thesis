@@ -4,6 +4,7 @@ using namespace cooperative_groups;
 
 __global__ void gpu_laplace2d_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
+                                   int *filter,
                                    int jstart,
                                    int jend)
 {
@@ -12,17 +13,39 @@ __global__ void gpu_laplace2d_base(float* __restrict__ d_u1,
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     idx = i + j *NX;
-    if (i>=0 && i<=NX-1 && j>=jstart && j<=jend) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend)
-          u2 = d_u1[idx]; // Dirichlet boundary conditions
-        else {
-          u2 = (d_u1[idx-1]  +
-                d_u1[idx+1]  +
-                d_u1[idx-NX]  +
-                d_u1[idx+NX]) * fourth;
+    //if (i>=0 && i<=NX-1 && j>=jstart && j<=jend) {
+    //    if (i==0 || i==NX-1 || j==jstart || j==jend)
+    //      u2 = d_u1[idx]; // Dirichlet boundary conditions
+    //    else {
+    //      u2 = (d_u1[idx-1]  +
+    //            d_u1[idx+1]  +
+    //            d_u1[idx-NX]  +
+    //            d_u1[idx+NX]) * fourth;
+    //    }
+    //    d_u2[idx] = u2;
+    //}
+    int aggregate = 0;
+    int filterDim = 3;
+    int filterCenter = filterDim/2;
+    for (unsigned int ky = 0; ky < filterDim; ky++) {
+      int nky = filterDim - 1 - ky;
+      for (unsigned int kx = 0; kx < filterDim; kx++) {
+        int nkx = filterDim - 1 - kx;
+
+
+        //int yy = threadIdx.y + (ky - filterCenter);
+        //int xx = threadIdx.x + (kx - filterCenter);
+        //if (xx >= 0 && xx < BLOCK_X && yy >=0 && yy < BLOCK_Y) {
+        //  aggregate += s_in[yy][xx] * s_filter[nky][nkx];
+        //} else {
+          int yy = j + (ky - filterCenter);
+          int xx = i + (kx - filterCenter);
+          if (xx >= 0 && xx < NX && yy >=0 && yy < NY) {
+            aggregate += d_u1[yy * NX + xx] * filter[nky * filterDim + nkx];
+          }
         }
-        d_u2[idx] = u2;
-    }
+     }
+     d_u2[idx] = aggregate;
 }
 
 __global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,

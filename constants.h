@@ -11,7 +11,7 @@
 #endif
 
 #ifndef ITERATIONS
-#define ITERATIONS 10
+#define ITERATIONS 8192
 #endif
 
 #ifndef DIM
