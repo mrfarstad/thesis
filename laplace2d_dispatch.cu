@@ -35,44 +35,49 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
     float *d_tmp;
     int i, s;
     int jstart, jend;
-    for (i=0; i<ITERATIONS; i++) {
-#pragma omp parallel for
+
+    int bot = HALO_DEPTH;
+    int top = HALO_DEPTH+NY/NGPUS-1;
+
+    for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
+//#pragma omp parallel for
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0)
-                CU(cudaMemcpy(d_u1[s] + (NY/NGPUS + 1) * NX, d_u1[s+1] + NX,
-                                   NX*sizeof(float), cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpy(d_u1[s] + (top+1) * NX, d_u1[s+1] + bot * NX,
+                                   BORDER_BYTES, cudaMemcpyDeviceToDevice));
             else if (s==NGPUS-1)
-                CU(cudaMemcpy(d_u1[s], d_u1[s-1] + (NY/NGPUS) * NX,
-                                   NX*sizeof(float), cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpy(d_u1[s] + 0, d_u1[s-1] + top * NX,
+                                   BORDER_BYTES, cudaMemcpyDeviceToDevice));
             else {
-                CU(cudaMemcpy(d_u1[s], d_u1[s-1] + (NY/NGPUS) * NX,
-                                   NX*sizeof(float), cudaMemcpyDeviceToDevice));
-                CU(cudaMemcpy(d_u1[s] + (NY/NGPUS + 1) * NX, d_u1[s+1] + NX,
-                                   NX*sizeof(float), cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpy(d_u1[s] + 0, d_u1[s-1] + top * NX,
+                                   BORDER_BYTES, cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpy(d_u1[s] + (top+1) * NX, d_u1[s+1] + bot * NX,
+                                   BORDER_BYTES, cudaMemcpyDeviceToDevice));
             }
         }
-        for (s=0; s<NGPUS; s++) {
-            cudaSetDevice(s);
-            if (s==0) {
-                jstart = 1;
-                jend = NY/NGPUS+1;
-            } else if (s==NGPUS-1) {
-                jstart = 0;
-                jend = NY/NGPUS;
-            } else {
-                jstart = 0;
-                jend = NY/NGPUS+1;
+        for (int n = 0; n < HALO_DEPTH; n++) {
+            for (s=0; s<NGPUS; s++) {
+                cudaSetDevice(s);
+                if (s==0) {
+                    jstart = bot;
+                    jend = top+HALO_DEPTH;
+                } else if (s==NGPUS-1) {
+                    jstart = 0;
+                    jend = top;
+                } else {
+                    jstart = 0;
+                    jend = top+HALO_DEPTH;
+                }
+                if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock>>>(d_u1[s], d_u2[s], jstart, jend);
+                else      gpu_laplace2d_base<<<dimGrid, dimBlock>>>(d_u1[s], d_u2[s], jstart, jend);
+                getLastCudaError("gpu_laplace2d execution failed\n");
             }
-            if (SMEM) gpu_laplace2d_smem<<<dimGrid, dimBlock>>>(d_u1[s], d_u2[s], jstart, jend);
-            else      gpu_laplace2d_base<<<dimGrid, dimBlock>>>(d_u1[s], d_u2[s], jstart, jend);
-            getLastCudaError("gpu_laplace2d execution failed\n");
-        }
-
-        for (s=0; s<NGPUS; s++) {
-            cudaSetDevice(s);
-            cudaDeviceSynchronize();
-            d_tmp = d_u1[s]; d_u1[s] = d_u2[s]; d_u2[s] = d_tmp; // swap d_u1 and d_u2
+            for (s=0; s<NGPUS; s++) {
+                cudaSetDevice(s);
+                cudaDeviceSynchronize();
+                d_tmp = d_u1[s]; d_u1[s] = d_u2[s]; d_u2[s] = d_tmp; // swap d_u1 and d_u2
+            }
         }
     }
 }

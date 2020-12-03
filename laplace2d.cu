@@ -35,8 +35,8 @@ int main(int argc, const char **argv) {
     initialize_host_region(d_ref);
 
     int size = BYTES_PER_GPU;
-    if (NGPUS>1) size+=BYTES_HALO;
-#pragma omp parallel for
+    if (NGPUS>1) size+=HALO_BYTES;
+//#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMalloc((void **)&d_u1[i], size));
@@ -48,8 +48,8 @@ int main(int argc, const char **argv) {
 
     int offset;
     if (NGPUS==1) offset=0;
-    else          offset=NX;
-#pragma omp parallel for
+    else          offset=HALO_DEPTH * NX;
+//#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpy(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice));
@@ -60,7 +60,7 @@ int main(int argc, const char **argv) {
         else      dispatch_kernels(d_u1[0], d_u2[0]);
     } else dispatch_multi_gpu_kernels(d_u1, d_u2);
     
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpy(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost));
