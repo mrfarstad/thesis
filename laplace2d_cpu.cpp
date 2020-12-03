@@ -14,7 +14,7 @@ inline double seconds()
 }
 
 int main(int argc, const char **argv){
-    int    i,
+    long    i,
            ibyte = NX*NY * sizeof(float);
     float  *h_u1, *h_u3, *h_swap;
     double start, elapsed;

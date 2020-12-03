@@ -43,7 +43,7 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
-		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu $(_DIM) $(_ITERATIONS)
+		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu -D DIM=$(DIM) $(_ITERATIONS)
 
 profile:
 	sudo ncu -f -o profile bin/laplace2d_$(ID)

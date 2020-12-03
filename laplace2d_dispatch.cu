@@ -33,14 +33,13 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
     dim3 dimBlock(BLOCK_X,BLOCK_Y);
     dim3 dimGrid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
     float *d_tmp;
-    int i, s;
+    int i, s, n;
     int jstart, jend;
 
     int bot = HALO_DEPTH;
     int top = HALO_DEPTH+NY/NGPUS-1;
 
     for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
-//#pragma omp parallel for
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0)
@@ -56,9 +55,11 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
                                    BORDER_BYTES, cudaMemcpyDeviceToDevice));
             }
         }
-        for (int n = 0; n < HALO_DEPTH; n++) {
+        for (n = 0; n < HALO_DEPTH; n++) {
             for (s=0; s<NGPUS; s++) {
                 cudaSetDevice(s);
+                jstart = bot;
+                jend = top;
                 if (s==0) {
                     jstart = bot;
                     jend = top+HALO_DEPTH;
