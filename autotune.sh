@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Run auto tune framework
-python ${PWD}/Autotuning/tuner/tune.py configs/$1/$2.conf
+python ${PWD}/Autotuning/tuner/tune.py $2.conf
+#python ${PWD}/Autotuning/tuner/tune.py configs/$1/$2.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/$1.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/hpclab13/base.conf
 # Create plt from csv

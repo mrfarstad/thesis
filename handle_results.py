@@ -6,7 +6,7 @@ import subprocess
 #domain_dims = [32, 64, 128, 256, 512, 1024, 2048, 4096]
 # NOTE: The 2_gpus output is a copy of 4_gpus. The real output is being generated.
 prefix = 'results/yme/'
-folders = ["1_gpu/1_gpu.txt", "2_gpus/2_gpus.txt", "4_gpus/4_gpus.txt"]
+folders = ["1_gpu/1_gpu.txt"]#, "2_gpus/2_gpus.txt", "4_gpus/4_gpus.txt"]
 
 db = {}
 

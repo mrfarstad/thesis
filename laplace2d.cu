@@ -34,7 +34,7 @@ int main(int argc, const char **argv) {
 
     initialize_host_region(d_ref);
 
-    int size = BYTES_PER_GPU;
+    unsigned long size = BYTES_PER_GPU;
     if (NGPUS>1) size+=HALO_BYTES;
 #pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
