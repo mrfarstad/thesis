@@ -19,6 +19,12 @@ int main(int argc, const char **argv) {
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
+    cudaStream_t streams[NGPUS];
+    for (int i = 0; i < NGPUS; i++) {
+        cudaSetDevice(i);
+        CU(cudaStreamCreate( &streams[i] ));
+    }
+
     if (DEBUG) {
         print_program_info();
         h_ref = (float *)malloc(BYTES);
@@ -52,18 +58,18 @@ int main(int argc, const char **argv) {
 #pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpy(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice));
+        CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
     }
 
     if(NGPUS==1) {
         if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
         else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else dispatch_multi_gpu_kernels(d_u1, d_u2);
+    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
     
 #pragma omp parallel for
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpy(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost));
+        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
     }
     
     for (int i = 0; i < NGPUS; i++) {
@@ -89,6 +95,7 @@ int main(int argc, const char **argv) {
 
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
+        CU(cudaStreamDestroy(streams[i]));
         CU(cudaFree(d_u1[i]));
         CU(cudaFree(d_u2[i]));
         cudaDeviceReset();

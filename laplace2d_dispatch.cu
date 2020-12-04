@@ -37,7 +37,7 @@ void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
     getLastCudaError("gpu_laplace2d execution failed\n");
 }
 
-void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
+void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
     dim3 block(BLOCK_X,BLOCK_Y);
     dim3 grid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
     float *d_tmp;
@@ -51,24 +51,32 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0)
-                CU(cudaMemcpy(d_u1[s] + (top+1) * NX,
-                              d_u1[s+1] + bot * NX,
-                              BORDER_BYTES,
-                              cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * NX,
+                                       s,
+                                       d_u1[s+1] + bot * NX,
+                                       s+1,
+                                       BORDER_BYTES,
+                                       streams[s]));
             else if (s==NGPUS-1)
-                CU(cudaMemcpy(d_u1[s],
-                              d_u1[s-1] + top * NX,
-                              BORDER_BYTES,
-                              cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpyPeerAsync(d_u1[s],
+                                       s,
+                                       d_u1[s-1] + top * NX,
+                                       s-1,
+                                       BORDER_BYTES,
+                                       streams[s]));
             else {
-                CU(cudaMemcpy(d_u1[s],
-                              d_u1[s-1] + top * NX,
-                              BORDER_BYTES,
-                              cudaMemcpyDeviceToDevice));
-                CU(cudaMemcpy(d_u1[s] + (top+1) * NX,
-                              d_u1[s+1] + bot * NX,
-                              BORDER_BYTES,
-                              cudaMemcpyDeviceToDevice));
+                CU(cudaMemcpyPeerAsync(d_u1[s],
+                                       s,
+                                       d_u1[s-1] + top * NX,
+                                       s-1,
+                                       BORDER_BYTES,
+                                       streams[s]));
+                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * NX,
+                                       s,
+                                       d_u1[s+1] + bot * NX,
+                                       s+1,
+                                       BORDER_BYTES,
+                                       streams[s]));
             }
         }
         for (n = 0; n < HALO_DEPTH; n++) {
@@ -87,20 +95,20 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2) {
                     jend = top+HALO_DEPTH;
                 }
                 if (SMEM)
-                    gpu_laplace2d_smem<<<grid, block>>>(d_u1[s],
-                                                        d_u2[s],
-                                                        jstart,
-                                                        jend);
+                    gpu_laplace2d_smem<<<grid, block, 0, streams[s]>>>(d_u1[s],
+                                                                       d_u2[s],
+                                                                       jstart,
+                                                                       jend);
                 else
-                    gpu_laplace2d_base<<<grid, block>>>(d_u1[s],
-                                                        d_u2[s],
-                                                        jstart,
-                                                        jend);
+                    gpu_laplace2d_base<<<grid, block, 0, streams[s]>>>(d_u1[s],
+                                                                       d_u2[s],
+                                                                       jstart,
+                                                                       jend);
                 getLastCudaError("gpu_laplace2d execution failed\n");
             }
             for (s=0; s<NGPUS; s++) {
                 cudaSetDevice(s);
-                cudaDeviceSynchronize();
+                cudaStreamSynchronize(streams[s]);
                 d_tmp = d_u1[s]; d_u1[s] = d_u2[s]; d_u2[s] = d_tmp; // swap d_u1 and d_u2
             }
         }
