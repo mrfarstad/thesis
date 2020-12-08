@@ -8,7 +8,7 @@ import subprocess
 #prefix = 'results/yme/'
 prefix = ''
 #folders = ["1_gpu/1_gpu.txt"]#, "2_gpus/2_gpus.txt", "4_gpus/4_gpus.txt"]
-folders = ["1_gpu.txt"]#, "2_gpus/2_gpus.txt", "4_gpus/4_gpus.txt"]
+folders = ["1_gpu.txt", "2_gpus.txt", "4_gpus.txt"]
 
 db = {}
 
