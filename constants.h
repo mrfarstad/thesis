@@ -29,7 +29,7 @@
 #define HALO_BYTES    (2*BORDER_BYTES)
 
 #ifndef DEBUG
-#define DEBUG true
+#define DEBUG false
 #endif
 
 #ifndef SMEM

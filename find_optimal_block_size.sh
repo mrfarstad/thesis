@@ -1,9 +1,4 @@
 #!/bin/bash
-#if [[ $# -eq 0 ]] ; then
-#    echo 'arg: hpclab13/yme'
-#    exit 0
-#fi
-#host=$1
 
 iter=64
 #sizes=(256) # DEBUG
@@ -49,7 +44,7 @@ do
           sed -i -re 's/(BLOCK_Y =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $v.conf
           stdbuf -o 0 -e 0 ./autotune.sh $host $v laplace2d | tee $out_path
           awk '{if ($1=="rms" && $2=="error") print}' $out_path > ${path}_errors.txt
-          #awk '/rms error/{x=NR+1}(NR<=x){print $4}' 1_gpu_errors.txt | awk '!/0.000000/'
+          #awk '/rms error/{x=NR+1}(NR<=x){print $4}' 1_gpu_errors.txt | awk '!/0.000000/' # OLD
           error=$(awk '/reading solution/{getline;print;}' ${out_path})
           if [[ ! -z $(echo "$error" | awk '!/rms error = 0.000000/') ]] ; then
               echo "#############################"
