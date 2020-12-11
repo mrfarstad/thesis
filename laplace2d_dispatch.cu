@@ -16,10 +16,21 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
 
 void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
     int device = 0;
+    dim3 block(BLOCK_X,BLOCK_Y);
+    int numBlocksPerSm = 0;
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
-    dim3 block(BLOCK_X,BLOCK_Y);
-    dim3 grid(deviceProp.multiProcessorCount, 1);
+    if (SMEM)
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm,
+                                                      (void*)gpu_laplace2d_coop_smem,
+                                                      BLOCK_X*BLOCK_Y,
+                                                      0);
+    else
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm,
+                                                      (void*)gpu_laplace2d_coop,
+                                                      BLOCK_X*BLOCK_Y,
+                                                      0);
+    dim3 grid(deviceProp.multiProcessorCount*numBlocksPerSm, 1);
     void *args[] = {
         &d_u1,
         &d_u2
