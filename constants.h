@@ -24,7 +24,10 @@
 #define OFFSET        (SIZE/NGPUS)
 #define BYTES         (SIZE*sizeof(float))
 #define BYTES_PER_GPU (BYTES/NGPUS)
+
+#ifndef HALO_DEPTH
 #define HALO_DEPTH    1
+#endif
 #define BORDER_BYTES  (HALO_DEPTH*NX*sizeof(float))
 #define HALO_BYTES    (2*BORDER_BYTES)
 

@@ -29,6 +29,9 @@ endif
 ifneq ($(NGPUS),)
     _NGPUS := -D NGPUS=$(NGPUS)
 endif
+ifneq ($(HALO_DEPTH),)
+    _HALO_DEPTH := -D HALO_DEPTH=$(HALO_DEPTH)
+endif
 
 all: 		laplace2d_$(ID)
 
@@ -38,7 +41,7 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
 						  -D DIM=$(DIM)           \
-					    $(_SMEM) $(_COOP) $(_NGPUS)   \
+			     $(_SMEM) $(_COOP) $(_NGPUS) $(_HALO_DEPTH)   \
 							       $(DEBUG)  
 							     
 

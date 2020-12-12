@@ -84,7 +84,7 @@ void print_program_info() {
     else if (SMEM)         printf("smem");
     else if (COOP)         printf("coop_base");
     else                   printf("base");
-    printf(" (DIM=%d BLOCK_X=%d BLOCK_Y=%d NGPUS=%d)", DIM, BLOCK_X, BLOCK_Y, NGPUS);
+    printf(" (DIM=%d BLOCK_X=%d BLOCK_Y=%d NGPUS=%d HALO_DEPTH=%d)", DIM, BLOCK_X, BLOCK_Y, NGPUS, HALO_DEPTH);
     printf("\n");
 }
 
