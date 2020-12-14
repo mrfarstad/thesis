@@ -36,7 +36,7 @@ endif
 all: 		laplace2d_$(ID)
 
 laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h Makefile #solution
-		 nvcc laplace2d.cu -o bin/laplace2d_$(ID) -arch $(ARCH)   \
+		 nvcc laplace2d.cu -O3 -o bin/laplace2d_$(ID) -arch $(ARCH)   \
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
@@ -46,7 +46,7 @@ laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_er
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h
-		 gcc laplace2d_cpu.cpp -o bin/laplace2d_cpu -D DIM=$(DIM) $(_ITERATIONS)
+		 gcc laplace2d_cpu.cpp -O3 -o bin/laplace2d_cpu -D DIM=$(DIM) $(_ITERATIONS)
 
 profile:
 	sudo ncu -f -o profile bin/laplace2d_$(ID)

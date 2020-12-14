@@ -25,6 +25,7 @@ sed -i -re 's/(BLOCK_Y = )[0-9|,| ]+/\1'$5'/' $config
 #sed -i -re 's/(BLOCK_Y = )[0-9]+[, 0-9]+/\1'$5'/' $config
 sed -i -re 's/(repeat = )[0-9]+/\1'$repeat'/' $config
 # Extract all numerical results from run
+
 #stdbuf -o 0 -e 0 python ${PWD}/Autotuning/tuner/tune.py $config | tee /dev/tty | awk '/rms error/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
 stdbuf -o 0 -e 0 python ${PWD}/Autotuning/tuner/tune.py $config | tee /dev/tty | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
 #stdbuf -o 0 -e 0 python ${PWD}/Autotuning/tuner/tune.py $config | tee /dev/tty | awk '/Running test/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'

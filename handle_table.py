@@ -2,7 +2,8 @@ import json
 
 import pandas as pd
 
-with open("results.json", 'r') as file:
+#with open("results.json", 'r') as file:
+with open("results_optimized.json", 'r') as file:
     db = json.loads(file.read())
 
 versions = []

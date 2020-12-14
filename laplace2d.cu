@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "constants.h"
-#include "helper_cuda.h"
 #include "laplace2d_initializer.h"
 #include "laplace2d_error_checker.h"
 #include "laplace2d_utils.h"
@@ -15,8 +14,6 @@ int main(int argc, const char **argv) {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-
-    print_program_info();
 
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
@@ -73,7 +70,7 @@ int main(int argc, const char **argv) {
         cudaSetDevice(i);
         cudaDeviceSynchronize();
     }
-    
+
     cudaSetDevice(0);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -87,6 +84,8 @@ int main(int argc, const char **argv) {
         //saveResult(d_ref);
         free(h_ref);
     }
+
+    print_program_info();
     printf("%.4f\n", milli); // Print time spent in ms
 
     for (int i = 0; i < NGPUS; i++) {
