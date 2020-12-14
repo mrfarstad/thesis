@@ -16,8 +16,6 @@ int main(int argc, const char **argv) {
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    print_program_info();
-
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
         readSolution(h_ref);
@@ -73,7 +71,7 @@ int main(int argc, const char **argv) {
         cudaSetDevice(i);
         cudaDeviceSynchronize();
     }
-    
+
     cudaSetDevice(0);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -87,6 +85,8 @@ int main(int argc, const char **argv) {
         //saveResult(d_ref);
         free(h_ref);
     }
+
+    print_program_info();
     printf("%.4f\n", milli); // Print time spent in ms
 
     for (int i = 0; i < NGPUS; i++) {

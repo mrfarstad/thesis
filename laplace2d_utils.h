@@ -18,7 +18,7 @@ static void save(float *d_u, char const *format)
 
     FILE *fp_snap = fopen(fname, "w");
     printf("saving %s: nx = %d ny = %d iterations: %d\n", fname, NX, NY, ITERATIONS);
-    fwrite(d_u, sizeof(float), NX * NY, fp_snap);
+    fwrite(d_u, sizeof(float), SIZE, fp_snap);
     fflush(stdout);
     fclose(fp_snap);
     return;
@@ -45,7 +45,7 @@ void readSolution(float *h_u)
     FILE *fp = fopen(fname, "r");
     if (fp != NULL) {
         fseek(fp, 0, SEEK_SET);
-        fread(h_u, sizeof(float), NX * NY, fp);
+        fread(h_u, sizeof(float), SIZE, fp);
         printf("reading %s: nx = %d ny = %d\n", fname, NX, NY);
         fclose(fp);
     } else {
@@ -79,7 +79,7 @@ void print_corners(float *h_u1, float *h_u2) {
 
 
 void print_program_info() {
-    printf("\nVersion: ");
+    printf("Version: ");
     if      (COOP && SMEM) printf("coop_smem");
     else if (SMEM)         printf("smem");
     else if (COOP)         printf("coop_base");

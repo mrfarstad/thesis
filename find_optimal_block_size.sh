@@ -2,7 +2,8 @@
 
 iter=64
 #sizes=(256) # DEBUG
-sizes=(256 512 1024 2048 4096 8192 16384 32768)
+sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
+#sizes=(2048 4096 8192 16384 32768 65536)
 gpus=(1 2 4)
 host=yme
 repeat=20
@@ -10,7 +11,10 @@ repeat=20
 for s in "${sizes[@]}"
 do
   :
-  [ ! -f solutions/solution\_$s\_$iter ] && ./create_solutions.sh $s
+  if [ ! -f solutions/solution\_$s\_$iter ] ; then
+      echo "Running CPU version"
+      ./create_solutions.sh $s
+  fi
 done
 
 for g in "${gpus[@]}"
@@ -45,15 +49,15 @@ do
           stdbuf -o 0 -e 0 ./autotune.sh $host $v laplace2d | tee $out_path
           awk '{if ($1=="rms" && $2=="error") print}' $out_path > ${path}_errors.txt
           #awk '/rms error/{x=NR+1}(NR<=x){print $4}' 1_gpu_errors.txt | awk '!/0.000000/' # OLD
-          error=$(awk '/reading solution/{getline;print;}' ${out_path})
-          if [[ ! -z $(echo "$error" | awk '!/rms error = 0.000000/') ]] ; then
-              echo "#############################"
-              echo "ERROR"
-              echo "$g GPU[s] $v DIM=$s ITERATIONS=$iter"
-              echo "$error"
-              echo "#############################"
-              exit 0
-          fi
+          #error=$(awk '/reading solution/{getline;print;}' ${out_path})
+          #if [[ ! -z $(echo "$error" | awk '!/rms error = 0.000000/') ]] ; then
+          #    echo "#############################"
+          #    echo "ERROR"
+          #    echo "$g GPU[s] $v DIM=$s ITERATIONS=$iter"
+          #    echo "$error"
+          #    echo "#############################"
+          #    exit 0
+          #fi
           #exit 0 # DEBUG
           awk '/Minimal valuation/{x=NR+3}(NR<=x){print}' $out_path >> $path.txt
         done

@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void cpu_laplace2d(float* u1, float* u2) 
 {
-  int   i, j, ind;
+  unsigned int   i, j, ind;
   float fourth=1.0f/4.0f;  // predefining this improves performance more than 10%
 
     for (j=0; j<NY; j++) {

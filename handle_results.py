@@ -3,8 +3,7 @@ import math
 import pprint as p
 import subprocess
 
-#folders = ["1_gpu.txt", "2_gpus.txt", "4_gpus.txt"]
-folders = ["4_gpus.txt"]
+folders = ["1_gpu.txt", "2_gpus.txt", "4_gpus.txt"]
 
 db = {}
 
@@ -18,8 +17,8 @@ for folder in folders:
             version = lines[i].split(' ')[0]
             db[gpus][version] = {}
 
-        for i in range(0, 5, 5): # DEBUG
-        #for i in range(0, len(lines), 5):
+        #for i in range(0, 5, 5): # DEBUG
+        for i in range(0, len(lines), 5):
             version = lines[i].split(' ')[0]
             tmp_db = {}
             params = lines[i+1:i+5] # Get the four lines preceeding each version
@@ -42,13 +41,12 @@ for folder in folders:
                      version,
                      ngpus,
                      domain_dim,
-                     blockdims['BLOCK_X'],
-                     blockdims['BLOCK_Y']],
-                     #'32',
-                     #'32'],
+                     #blockdims['BLOCK_X'],
+                     #blockdims['BLOCK_Y']],
+                     '32',
+                     '32'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
             results = list(filter(None, res.split('\n')))
-            print("this should be the results", results)
             blockdims["results"] = [float(result) for result in results]#[res.strip() for res in results]
             db[gpus][version][domain_dim] = blockdims
 
@@ -56,4 +54,5 @@ pretty_db = p.pformat(db)
 print(pretty_db)
 
 with open('results.json', 'w') as fp:
+#with open('results_optimized.json', 'w') as fp:
     json.dump(db, fp)
