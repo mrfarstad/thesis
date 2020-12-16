@@ -81,12 +81,12 @@ int main(int argc, const char **argv) {
     if (DEBUG) {
         //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref, NX, NY);
-        //saveResult(d_ref);
+        saveResult(d_ref);
         free(h_ref);
     }
 
     print_program_info();
-    printf("%.4f\n", milli); // Print time spent in ms
+    printf("%.4f\n", milli); // Print execution time in ms
 
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);

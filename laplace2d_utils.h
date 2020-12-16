@@ -9,7 +9,7 @@
 #define STR(x) STR_INDIR(x)
 #define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS)
 #define SOLUTION "solutions/solution" SUFFIX
-#define RESULT "result" SUFFIX
+#define RESULT "results/result" SUFFIX
 
 static void save(float *d_u, char const *format)
 {
@@ -34,6 +34,10 @@ void saveSolution(float *h_u) {
 
 void saveResult(float *d_u)
 {
+    struct stat st = {0};
+    if (stat("results", &st) == -1) {
+        mkdir("results", 0700);
+    }
     save(d_u, RESULT);
 }
 
