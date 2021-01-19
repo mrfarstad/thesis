@@ -10,7 +10,7 @@ if [[ $# -lt 5 ]] ; then
 fi
 
 #
-config=$1.conf
+config=configs/yme/$1.conf
 repeat=20
 #repeat=3
 iter=64

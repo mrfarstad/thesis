@@ -1,1 +1,0 @@
-{"4_gpus": {"base": {"256": {"BLOCK_X": "8", "BLOCK_Y": "64", "results": []}, "512": {"BLOCK_X": "2", "BLOCK_Y": "512", "results": []}}, "smem": {}}}
