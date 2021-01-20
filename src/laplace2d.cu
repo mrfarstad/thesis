@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include "constants.h"
-#include "laplace2d_initializer.h"
-#include "laplace2d_error_checker.h"
-#include "laplace2d_utils.h"
+#include "../include/constants.h"
+#include "../include/laplace2d_initializer.h"
+#include "../include/laplace2d_error_checker.h"
+#include "../include/laplace2d_utils.h"
 #include "laplace2d_dispatch.cu"
 #include "omp.h"
 
@@ -10,6 +10,8 @@ int main(int argc, const char **argv) {
     float  *h_ref, *d_ref,
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
+
+    printf("NGPUS: %d\n", NGPUS);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);

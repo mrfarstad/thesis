@@ -41,6 +41,10 @@ void saveResult(float *d_u)
     save(d_u, RESULT);
 }
 
+static inline void ignore_result(long long int unused_result) {
+    (void) unused_result;
+}
+
 void readSolution(float *h_u)
 {
     char fname[STRLEN];
@@ -49,7 +53,7 @@ void readSolution(float *h_u)
     FILE *fp = fopen(fname, "r");
     if (fp != NULL) {
         fseek(fp, 0, SEEK_SET);
-        fread(h_u, sizeof(float), SIZE, fp);
+        ignore_result(fread(h_u, sizeof(float), SIZE, fp));
         printf("reading %s: nx = %d ny = %d\n", fname, NX, NY);
         fclose(fp);
     } else {

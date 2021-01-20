@@ -1,4 +1,3 @@
-// Optimal blockdims for SX=SY=256 and ITERATIONS=8192 (basic) @ yme
 #ifndef BLOCK_X
 #define BLOCK_X 32
 #endif
@@ -7,7 +6,7 @@
 #endif
 
 #ifndef NGPUS
-#define NGPUS 4
+#define NGPUS 1
 #endif
 
 #ifndef ITERATIONS

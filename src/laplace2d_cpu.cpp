@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include "laplace2d_utils.h"
-#include "laplace2d_initializer.h"
-#include "laplace2d_cpu_kernel.h"
+#include "../include/laplace2d_utils.h"
+#include "../include/laplace2d_initializer.h"
+#include "../include/laplace2d_cpu_kernel.h"
 
 inline double seconds()
 {

@@ -1,5 +1,5 @@
-#include "constants.h"
-#include "helper_cuda.h"
+#include "../include/constants.h"
+#include "../include/helper_cuda.h"
 #include "laplace2d_kernel.cu"
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
