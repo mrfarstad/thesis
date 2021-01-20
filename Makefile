@@ -4,7 +4,7 @@ LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
 NVCCFLAGS := -lineinfo -rdc=true --use_fast_math #-lgomp  #--ptxas-options=-v #-arch=$(ARCH)
 ifeq ($(BUILD), debug)
     NVCC_DEBUG := -g -G
-    DEBUG := -D DEBUG=true
+    _DEBUG := -D DEBUG=true
 endif
 ifeq ($(BUILD), test)
     DEBUG := -D DEBUG=true
@@ -35,14 +35,14 @@ endif
 
 all: 		laplace2d_$(ID)
 
-laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h Makefile #solution
+laplace2d_$(ID): laplace2d.cu laplace2d_kernel.cu laplace2d_utils.h laplace2d_error_checker.h
 		 nvcc laplace2d.cu -O3 -o bin/laplace2d_$(ID) -arch $(ARCH)   \
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
 						  -D DIM=$(DIM)           \
 			     $(_SMEM) $(_COOP) $(_NGPUS) $(_HALO_DEPTH)   \
-							       $(DEBUG)  
+							      $(_DEBUG)  
 							     
 
 laplace2d_cpu:   laplace2d_initializer.h laplace2d_cpu_kernel.h

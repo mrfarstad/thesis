@@ -1,17 +1,16 @@
 #!/bin/bash
 
-iter=64
 #sizes=(256) # DEBUG
+source $(dirname "$0")/../constants.sh
 sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
 #sizes=(2048 4096 8192 16384 32768 65536)
 gpus=(1 2 4)
 host=yme
-repeat=20
 
 for s in "${sizes[@]}"
 do
   :
-  if [ ! -f solutions/solution\_$s\_$iter ] ; then
+  if [ ! -f solutions/solution\_$s\_$ITERATIONS ] ; then
       echo "Running CPU version"
       $(dirname "$0")/create_solutions.sh $s
   fi
@@ -41,7 +40,7 @@ do
           sed -i -re 's/(NGPUS = )[0-9]+/\1'$g'/' $v.conf
           sed -i -re 's/(DIM = )[0-9]+/\1'$s'/' $v.conf
           #sed -i -re 's/(repeat = )[0-9]+/\1'1'/' $v.conf # DEBUG
-          sed -i -re 's/(repeat = )[0-9]+/\1'$repeat'/' $v.conf
+          sed -i -re 's/(repeat = )[0-9]+/\1'$REPEAT'/' $v.conf
           #sed -i -re 's/(BLOCK_X =) .+/\1 32/' $v.conf # DEBUG
           #sed -i -re 's/(BLOCK_Y =) .+/\1 32/' $v.conf # DEBUG
           sed -i -re 's/(BLOCK_X =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $v.conf
