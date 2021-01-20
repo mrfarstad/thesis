@@ -10,7 +10,7 @@ repeat=20
 iter=64
 dim=32768
 
-[ ! -f solutions/solution\_$dim\_$iter ] && ./create_solutions.sh $dim
+[ ! -f solutions/solution\_$dim\_$iter ] && $(dirname "$0")/create_solutions.sh $dim
 
 sed -i -re 's/(NGPUS = )[0-9]+/\1'$2'/' $config
 sed -i -re 's/(DIM = )[0-9]+/\1'$3'/' $config

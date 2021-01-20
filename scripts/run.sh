@@ -5,9 +5,9 @@ if [[ $# -lt 5 ]] ; then
 fi
 iter=128
 echo $5
-[ ! -f solutions/solution\_$5\_$iter ] && ./create_solutions.sh $5
+[ ! -f solutions/solution\_$5\_$iter ] && $(dirname "$0")/create_solutions.sh $5
 ##make laplace2d_cpu DIM=$5
 #./bin/laplace2d_cpu
-./build.sh $@
-./bin/laplace2d_$2
+$(dirname "$0")/build.sh $@
+bin/laplace2d_$2
 #make clean

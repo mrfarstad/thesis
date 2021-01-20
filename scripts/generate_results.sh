@@ -14,7 +14,7 @@ config=configs/yme/$1.conf
 repeat=20
 #repeat=3
 iter=64
-[ ! -f solutions/solution\_$3\_$iter ] && ./create_solutions.sh $3
+[ ! -f solutions/solution\_$3\_$iter ] && $(dirname "$0")/create_solutions.sh $3
 
 sed -i -re 's/(NGPUS = )[0-9]+/\1'$2'/' $config
 sed -i -re 's/(DIM = )[0-9]+/\1'$3'/' $config

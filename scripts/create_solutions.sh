@@ -4,5 +4,5 @@ do
   :
   echo "Running CPU version (NX=NY=$d)"
   make laplace2d_cpu DIM=$d
-  ./bin/laplace2d_cpu
+  bin/laplace2d_cpu
 done

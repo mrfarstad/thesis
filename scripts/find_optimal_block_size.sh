@@ -13,7 +13,7 @@ do
   :
   if [ ! -f solutions/solution\_$s\_$iter ] ; then
       echo "Running CPU version"
-      ./create_solutions.sh $s
+      $(dirname "$0")/create_solutions.sh $s
   fi
 done
 
