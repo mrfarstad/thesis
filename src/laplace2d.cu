@@ -11,8 +11,6 @@ int main(int argc, const char **argv) {
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
 
-    printf("NGPUS: %d\n", NGPUS);
-
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);

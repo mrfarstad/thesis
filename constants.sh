@@ -8,5 +8,4 @@ export DEBUG=false
 export SMEM=false
 export COOP=false
 export REPEAT=20
-
-alias make="make -C .."
+export YME_WORKING_FOLDER=thesis

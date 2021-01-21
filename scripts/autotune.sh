@@ -1,14 +1,15 @@
 #!/bin/bash
-
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+source $project_folder/constants.sh
 # Run auto tune framework
-python ${PWD}/Autotuning/tuner/tune.py $2.conf
+python $project_folder/Autotuning/tuner/tune.py $project_folder/configs/$1/$2.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/$1/$2.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/$1.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/hpclab13/base.conf
 # Create plt from csv
-${PWD}/Autotuning/utilities/output_gnuplot.py results/"$3".csv results/"$3".plt
+$project_folder/Autotuning/utilities/output_gnuplot.py $project_folder/results/laplace2d.csv results/laplace2d.plt
 # Create image from plt
-gnuplot -e "set terminal png large size 1500, 1800; set output 'results/$3.png'; load 'results/laplace2d.plt'; exit;"
+gnuplot -e "set terminal png large size 1500, 1800; set output '$project_folder/results/laplace2d.png'; load '$project_folder/results/laplace2d.plt'; exit;"
 
 # If nothing is running on port 8080, then start a local server
 # so that you can see the images on the host using

@@ -1,1 +1,3 @@
-$(dirname "$0")/run.sh smem prod 32 32 2048 hpclab13
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+source $project_folder/constants.sh
+$project_folder/scripts/run.sh prod hpclab13

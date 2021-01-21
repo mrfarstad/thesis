@@ -1,7 +1,8 @@
 #!/bin/bash
 
 #sizes=(256) # DEBUG
-source $(dirname "$0")/../constants.sh
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+source $project_folder/constants.sh
 sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
 #sizes=(2048 4096 8192 16384 32768 65536)
 gpus=(1 2 4)
@@ -12,7 +13,7 @@ do
   :
   if [ ! -f solutions/solution\_$s\_$ITERATIONS ] ; then
       echo "Running CPU version"
-      $(dirname "$0")/create_solutions.sh $s
+      $project_folder/scripts/create_solutions.sh $s
   fi
 done
 
@@ -22,11 +23,11 @@ do
     if [[ $g -eq 1 ]] ; then
         versions=(base smem coop coop_smem)
         #versions=(base) # DEBUG
-        path=results/1_gpu
+        path=$project_folder/results/1_gpu
     else
         versions=(base smem)
         #versions=(base) # DEBUG
-        path=results/${g}_gpus
+        path=$project_folder/results/${g}_gpus
     fi
     [ -f ${path}.txt ] && mv ${path}.txt ${path}_backup.txt
     for v in "${versions[@]}"
@@ -35,17 +36,19 @@ do
         for s in "${sizes[@]}"
         do
           :
-          out_path=results/out_"$g"_"$v"_"$s".txt
-          echo "$v (NX=NY=$s $g GPU[s])" >> $path.txt
-          sed -i -re 's/(NGPUS = )[0-9]+/\1'$g'/' $v.conf
-          sed -i -re 's/(DIM = )[0-9]+/\1'$s'/' $v.conf
-          #sed -i -re 's/(repeat = )[0-9]+/\1'1'/' $v.conf # DEBUG
-          sed -i -re 's/(repeat = )[0-9]+/\1'$REPEAT'/' $v.conf
-          #sed -i -re 's/(BLOCK_X =) .+/\1 32/' $v.conf # DEBUG
-          #sed -i -re 's/(BLOCK_Y =) .+/\1 32/' $v.conf # DEBUG
-          sed -i -re 's/(BLOCK_X =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $v.conf
-          sed -i -re 's/(BLOCK_Y =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $v.conf
-          stdbuf -o 0 -e 0 ./autotune.sh $host $v laplace2d | tee $out_path
+          out_path=$project_folder/results/out_"$g"_"$v"_"$s".txt
+          conf_path=$project_folder/configs/yme/$v.conf
+          echo "conf_path: $conf_path"
+          echo "$v" >> $path.txt
+          sed -i -re 's/(NGPUS = )[0-9]+/\1'$g'/' $conf_path
+          sed -i -re 's/(DIM = )[0-9]+/\1'$s'/' $conf_path
+          #sed -i -re 's/(repeat = )[0-9]+/\1'1'/' $conf_path # DEBUG
+          sed -i -re 's/(repeat = )[0-9]+/\1'$REPEAT'/' $conf_path
+          #sed -i -re 's/(BLOCK_X =) .+/\1 32/' $conf_path # DEBUG
+          #sed -i -re 's/(BLOCK_Y =) .+/\1 32/' $conf_path # DEBUG
+          sed -i -re 's/(BLOCK_X =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $conf_path
+          sed -i -re 's/(BLOCK_Y =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $conf_path
+          stdbuf -o 0 -e 0 $project_folder/scripts/autotune.sh $host $v laplace2d | tee $out_path
           awk '{if ($1=="rms" && $2=="error") print}' $out_path > ${path}_errors.txt
           #awk '/rms error/{x=NR+1}(NR<=x){print $4}' 1_gpu_errors.txt | awk '!/0.000000/' # OLD
           #error=$(awk '/reading solution/{getline;print;}' ${out_path})

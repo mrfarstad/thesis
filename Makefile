@@ -2,12 +2,9 @@ INC       := -I$(CUDA_HOME)/include -I.
 LIB       := -L$(CUDA_HOME)/lib64  
 LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
 NVCCFLAGS := -lineinfo -rdc=true --use_fast_math #-lgomp  #--ptxas-options=-v #-arch=$(ARCH)
-ifeq ($(BUILD), debug)
+ifeq ($(DEBUG), true)
     NVCC_DEBUG := -g -G
     _DEBUG := -D DEBUG=true
-endif
-ifeq ($(BUILD), test)
-    DEBUG := -D DEBUG=true
 endif
 ifeq ($(HOST), yme)
     ARCH := sm_70
@@ -35,7 +32,7 @@ endif
 
 all: 		laplace2d_$(ID)
 
-laplace2d_$(ID): src/laplace2d.cu src/laplace2d_kernel.cu include/laplace2d_utils.h include/laplace2d_error_checker.h
+laplace2d_$(ID): src/laplace2d.cu src/laplace2d_kernel.cu include/laplace2d_utils.h include/laplace2d_error_checker.h include/constants.h
 		 nvcc src/laplace2d.cu -O3 -o bin/laplace2d_$(ID) -arch $(ARCH)   \
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \

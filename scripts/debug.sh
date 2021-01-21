@@ -1,12 +1,8 @@
 #!/bin/bash
-if [[ $# -eq 0 ]] ; then
-    echo 'arg: base/smem/coop/coop_smem'
-    exit 0
-fi
-
-make laplace2d_cpu
-bin/laplace2d_cpu
-#make BLOCK_X=32 BLOCK_Y=2 BUILD=debug ID=debug 
-$(dirname "$0")/build.sh $1 debug 32 32 2048 hpclab13
-bin/laplace2d_debug
-make clean
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+source $project_folder/constants.sh
+make -C $project_folder laplace2d_cpu
+$project_folder/bin/laplace2d_cpu
+$project_folder/scripts/build.sh debug hpclab13
+$project_folder/bin/laplace2d_debug
+make -C $project_folder clean

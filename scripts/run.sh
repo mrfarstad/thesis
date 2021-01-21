@@ -1,13 +1,12 @@
 #!/bin/bash
-if [[ $# -lt 5 ]] ; then
-    echo 'arg: (base/smem/coop/coop_smem) (prod/debug) BLOCK_X BLOCK_Y DIM HOST'
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+if [[ $# -lt 2 ]] ; then
+    echo 'arg: (prod/debug) HOST'
     exit 0
 fi
-iter=128
-echo $5
-[ ! -f solutions/solution\_$5\_$iter ] && $(dirname "$0")/create_solutions.sh $5
-##make laplace2d_cpu DIM=$5
-#./bin/laplace2d_cpu
-$(dirname "$0")/build.sh $@
-bin/laplace2d_$2
-#make clean
+[ ! -f $project_folder/solutions/solution\_$DIM\_$ITERATIONS ] && $project_folder/scripts/create_solutions.sh $DIM
+#make -C $project_folder laplace2d_cpu DIM=$5
+#$project_folder/bin/laplace2d_cpu
+$project_folder/scripts/build.sh $@
+$project_folder/bin/laplace2d_$1
+#make -C $project_folder clean

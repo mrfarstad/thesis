@@ -1,6 +1,9 @@
 #!/bin/bash
-rsync --exclude={'solutions/','results/','result_*'} -v -r ./* yme:~/thesis_autotune
+project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
+source $project_folder/constants.sh
+rsync --exclude={'solutions/','results/'} -v -r ./* yme:~/$YME_WORKING_FOLDER
 ssh yme -t "
-    cd thesis_autotune;
-    ./find_optimal_block_size.sh
+    cd $YME_WORKING_FOLDER;
+    source ./constants.sh
+    ./scripts/find_optimal_block_size.sh
     "
