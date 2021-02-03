@@ -3,8 +3,6 @@ project_folder=$(echo $(dirname "$0") | sed 's/thesis.*/thesis/')
 config=$project_folder/deep_halo.conf
 source $project_folder/constants.sh
 
-[ ! -f $project_folder/solutions/solution\_$DIM\_$ITERATIONS ] && $project_folder/scripts/create_solutions.sh $dim
-
 sed -i -re 's/(NGPUS = )[0-9]+/\1'$2'/' $config
 sed -i -re 's/(DIM = )[0-9]+/\1'$3'/' $config
 sed -i -re 's/(BLOCK_X = )[0-9|,| ]+/\1'$4'/' $config

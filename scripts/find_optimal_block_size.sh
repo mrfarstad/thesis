@@ -8,15 +8,6 @@ sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
 gpus=(1 2 4)
 host=yme
 
-for s in "${sizes[@]}"
-do
-  :
-  if [ ! -f solutions/solution\_$s\_$ITERATIONS ] ; then
-      echo "Running CPU version"
-      $project_folder/scripts/create_solutions.sh $s
-  fi
-done
-
 for g in "${gpus[@]}"
 do
   :
