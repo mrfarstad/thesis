@@ -30,26 +30,27 @@ ifneq ($(HALO_DEPTH),)
     _HALO_DEPTH := -D HALO_DEPTH=$(HALO_DEPTH)
 endif
 
-all: 		laplace2d_$(ID)
+all: 		laplace3d_$(ID)
 
-laplace2d_$(ID): src/laplace2d.cu src/laplace2d_kernel.cu include/laplace2d_utils.h include/laplace2d_error_checker.h include/constants.h
-		 nvcc src/laplace2d.cu -O3 -o bin/laplace2d_$(ID) -arch $(ARCH)   \
+laplace3d_$(ID): src/laplace3d.cu src/laplace3d_kernel.cu include/laplace3d_utils.h include/laplace3d_error_checker.h include/constants.h
+		 nvcc src/laplace3d.cu -O3 -o bin/laplace3d_$(ID) -arch $(ARCH)   \
 		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
 						  -D BLOCK_X=$(BLOCK_X)   \
 						  -D BLOCK_Y=$(BLOCK_Y)   \
+						  -D BLOCK_Z=$(BLOCK_Z)   \
 						  -D DIM=$(DIM)           \
 			     $(_SMEM) $(_COOP) $(_NGPUS) $(_HALO_DEPTH)   \
 							      $(_DEBUG)  
 							     
 
-laplace2d_cpu:   include/laplace2d_initializer.h include/laplace2d_cpu_kernel.h
-		 gcc src/laplace2d_cpu.cpp -O3 -o bin/laplace2d_cpu -D DIM=$(DIM) $(_ITERATIONS)
+laplace3d_cpu:   include/laplace3d_initializer.h include/laplace3d_cpu_kernel.h
+		 gcc src/laplace3d_cpu.cpp -O3 -o bin/laplace3d_cpu -D DIM=$(DIM) $(_ITERATIONS)
 
 profile:
-	sudo ncu -f -o profile bin/laplace2d_$(ID)
+	sudo ncu -f -o profile bin/laplace3d_$(ID)
 		
 clean:
-		rm -f bin/laplace2d_*
+		rm -f bin/laplace3d_*
 		rm -f result solution
 
 clean_results:

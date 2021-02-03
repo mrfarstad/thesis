@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include "../include/laplace2d_utils.h"
-#include "../include/laplace2d_initializer.h"
-#include "../include/laplace2d_cpu_kernel.h"
+#include "../include/laplace3d_utils.h"
+#include "../include/laplace3d_initializer.h"
+#include "../include/laplace3d_cpu_kernel.h"
 
 inline double seconds()
 {
@@ -26,11 +26,11 @@ int main(int argc, const char **argv){
 
     start = seconds();
     for (i = 1; i <= ITERATIONS; ++i) {
-        cpu_laplace2d(h_u1, h_u3);
+        cpu_laplace3d(h_u1, h_u3);
         h_swap = h_u1; h_u1 = h_u3; h_u3 = h_swap;   // swap h_u1 and h_u3
     }
     elapsed = seconds() - start;
-    printf("\ncpu_laplace2d: %.3f (ms) \n", elapsed);
+    printf("\ncpu_laplace3d: %.3f (ms) \n", elapsed);
 
     saveSolution(h_u1);
 

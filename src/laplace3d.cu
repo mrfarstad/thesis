@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "../include/constants.h"
-#include "../include/laplace2d_initializer.h"
-#include "../include/laplace2d_error_checker.h"
-#include "../include/laplace2d_utils.h"
-#include "laplace2d_dispatch.cu"
+#include "../include/laplace3d_initializer.h"
+#include "../include/laplace3d_error_checker.h"
+#include "../include/laplace3d_utils.h"
+#include "laplace3d_dispatch.cu"
 #include "omp.h"
 
 int main(int argc, const char **argv) {
@@ -80,7 +80,7 @@ int main(int argc, const char **argv) {
 
     if (DEBUG) {
         //print_corners(h_ref, d_ref);
-        check_domain_errors(h_ref, d_ref, NX, NY);
+        check_domain_errors(h_ref, d_ref);
         saveResult(d_ref);
         free(h_ref);
     }

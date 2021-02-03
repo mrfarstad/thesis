@@ -2,7 +2,10 @@
 #define BLOCK_X 32
 #endif
 #ifndef BLOCK_Y
-#define BLOCK_Y 4
+#define BLOCK_Y 2
+#endif
+#ifndef BLOCK_Z
+#define BLOCK_Z 2
 #endif
 
 #ifndef NGPUS
@@ -19,7 +22,8 @@
 
 #define NX DIM
 #define NY DIM
-#define SIZE          (NX*NY)
+#define NZ DIM
+#define SIZE          (NX*NY*NZ)
 #define OFFSET        (SIZE/NGPUS)
 #define BYTES         (SIZE*sizeof(float))
 #define BYTES_PER_GPU (BYTES/NGPUS)

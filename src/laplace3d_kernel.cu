@@ -2,30 +2,33 @@
 #include "cooperative_groups.h"
 using namespace cooperative_groups;
 
-__global__ void gpu_laplace2d_base(float* __restrict__ d_u1,
+__global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    int jstart,
                                    int jend)
 {
-    int   i, j, idx;
-    float u2 = 0.0f, fourth=1.0f/4.0f;
+    int   i, j, k, idx;
+    float u2 = 0.0f, sixth=1.0f/6.0f;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
-    idx = i + j *NX;
-    if (i<=NX-1 && j>=jstart && j<=jend) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend)
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+    idx = i + j*NX + k*NX*NY;
+    if (i<=NX-1 && j>=jstart && j<=jend && k <= NZ-1) {
+        if (i==0 || i==NX-1 || j==jstart || j==jend || k == 0 || k == NZ-1)
           u2 = d_u1[idx]; // Dirichlet boundary conditions
         else {
-          u2 = (d_u1[idx-1]   +
-                d_u1[idx+1]   +
-                d_u1[idx-NX]  +
-                d_u1[idx+NX]) * fourth;
+          u2 = (d_u1[idx-1]      +
+                d_u1[idx+1]      +
+                d_u1[idx-NX]     +
+                d_u1[idx+NX]     +
+                d_u1[idx-NX*NY]  +
+                d_u1[idx+NX*NY]) * sixth;
         }
         d_u2[idx] = u2;
     }
 }
 
-__global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,
+__global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    int jstart,
                                    int jend)
@@ -61,7 +64,7 @@ __global__ void gpu_laplace2d_smem(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
+__global__ void gpu_laplace3d_coop(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
     int   i, j, q, x, y,
@@ -93,7 +96,7 @@ __global__ void gpu_laplace2d_coop(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_laplace2d_coop_smem(float* __restrict__ d_u1,
+__global__ void gpu_laplace3d_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
     int   i, j, q, x, y, sx, sy, xskip, yskip, idx;

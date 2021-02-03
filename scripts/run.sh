@@ -5,8 +5,8 @@ if [[ $# -lt 2 ]] ; then
     exit 0
 fi
 [ ! -f $project_folder/solutions/solution\_$DIM\_$ITERATIONS ] && $project_folder/scripts/create_solutions.sh $DIM
-#make -C $project_folder laplace2d_cpu DIM=$5
-#$project_folder/bin/laplace2d_cpu
+#make -C $project_folder laplace3d_cpu DIM=$5
+#$project_folder/bin/laplace3d_cpu
 $project_folder/scripts/build.sh $@
-$project_folder/bin/laplace2d_$1
+$project_folder/bin/laplace3d_$1
 #make -C $project_folder clean
