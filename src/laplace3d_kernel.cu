@@ -33,32 +33,38 @@ __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
                                    int jstart,
                                    int jend)
 {
-    int   i, j, sx, sy, idx;
-    float u2 = 0.0f, fourth=1.0f/4.0f;
+    int   i, j, k, sx, sy, sz, idx;
+    float u2 = 0.0f, sixth=1.0f/6.0f;
     sx = threadIdx.x+1;
     sy = threadIdx.y+1;
+    sz = threadIdx.z+1;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     thread_block tb = this_thread_block();
-    __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
-    idx = i + j*NX;
-    bool active = i<=NX-1 && j>=jstart && j<=jend;
+    __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
+    idx = i + j*NX + k*NX*NY;
+    bool active = i<=NX-1 && j>=jstart && j<=jend && k<=NZ-1;
     if (active) {
-        if (threadIdx.x == 0 && i != 0)            smem[sy][sx-1]   = d_u1[idx-1];
-        if (threadIdx.x == BLOCK_X-1 && i != NX-1) smem[sy][sx+1]   = d_u1[idx+1];
-        if (threadIdx.y == 0 && j != jstart)       smem[sy-1][sx]   = d_u1[idx-NX];
-        if (threadIdx.y == BLOCK_Y-1 && j != jend) smem[sy+1][sx]   = d_u1[idx+NX];
-        smem[sy][sx] = d_u1[idx];
+        if (threadIdx.x == 0 && i != 0)            smem[sz][sy][sx-1]   = d_u1[idx-1];
+        if (threadIdx.x == BLOCK_X-1 && i != NX-1) smem[sz][sy][sx+1]   = d_u1[idx+1];
+        if (threadIdx.y == 0 && j != jstart)       smem[sz][sy-1][sx]   = d_u1[idx-NX];
+        if (threadIdx.y == BLOCK_Y-1 && j != jend) smem[sz][sy+1][sx]   = d_u1[idx+NX];
+        if (threadIdx.z == 0 && k != 0)            smem[sz-1][sy][sx]   = d_u1[idx-NX*NY];
+        if (threadIdx.z == BLOCK_Z-1 && k != NZ-1) smem[sz+1][sy][sx]   = d_u1[idx+NX*NY];
+        smem[sz][sy][sx] = d_u1[idx];
     }
     tb.sync();
     if (active) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend)
+        if (i==0 || i==NX-1 || j==jstart || j==jend || k==0 || k==NZ-1)
           u2 = d_u1[idx]; // Dirichlet boundary conditions
         else {
-          u2 = (smem[sy][sx-1]  +
-                smem[sy][sx+1]  +
-                smem[sy-1][sx]  +
-                smem[sy+1][sx]) * fourth;
+          u2 = (smem[sz][sy][sx-1]  +
+                smem[sz][sy][sx+1]  +
+                smem[sz][sy-1][sx]  +
+                smem[sz][sy+1][sx]  +
+                smem[sz-1][sy][sx]  +
+                smem[sz+1][sy][sx]) * sixth;
         }
         d_u2[idx] = u2;
     }
