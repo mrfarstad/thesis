@@ -1,7 +1,11 @@
+#ifndef LAPLACE3D_UTILS_H
+#define LAPLACE3D_UTILS_H
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "constants.h"
 
 #define STRLEN 30
@@ -17,7 +21,7 @@ static void save(float *d_u, char const *format)
     sprintf(fname, "%s", format);
 
     FILE *fp_snap = fopen(fname, "w");
-    printf("saving %s: nx = %d ny = %d iterations: %d\n", fname, NX, NY, ITERATIONS);
+    printf("saving %s: nx = %d ny = %d nz = %d iterations: %d\n", fname, NX, NY, NZ, ITERATIONS);
     fwrite(d_u, sizeof(float), SIZE, fp_snap);
     fflush(stdout);
     fclose(fp_snap);
@@ -45,7 +49,7 @@ static inline void ignore_result(long long int unused_result) {
     (void) unused_result;
 }
 
-void readSolution(float *h_u)
+int readSolution(float *h_u)
 {
     char fname[STRLEN];
     sprintf(fname, "%s", SOLUTION);
@@ -54,12 +58,14 @@ void readSolution(float *h_u)
     if (fp != NULL) {
         fseek(fp, 0, SEEK_SET);
         ignore_result(fread(h_u, sizeof(float), SIZE, fp));
-        printf("reading %s: nx = %d ny = %d\n", fname, NX, NY);
+        printf("reading %s: nx = %d ny = %d nz = %d\n", fname, NX, NY, NZ);
         fclose(fp);
-    } else {
-        printf("Unable to load file: %s\n", SOLUTION);
     }
-    return;
+    else {
+        printf("Unable to load file: %s\n", SOLUTION);
+        exit(EXIT_FAILURE);
+    }
+    return 0;
 }
 
 void print_corners(float *h_u1, float *h_u2) {
@@ -120,3 +126,4 @@ void print_program_info() {
     }                                                                        \
 }                                                                            \
 
+#endif

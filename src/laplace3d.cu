@@ -3,6 +3,7 @@
 #include "../include/laplace3d_initializer.h"
 #include "../include/laplace3d_error_checker.h"
 #include "../include/laplace3d_utils.h"
+#include "../include/laplace3d_cpu.h"
 #include "laplace3d_dispatch.cu"
 #include "omp.h"
 
@@ -17,6 +18,9 @@ int main(int argc, const char **argv) {
 
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
+        if (fopen(SOLUTION, "r") == NULL) {
+            laplace3d_cpu();
+        }
         readSolution(h_ref);
     }
 
@@ -25,7 +29,7 @@ int main(int argc, const char **argv) {
     cudaStream_t streams[NGPUS];
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaStreamCreate( &streams[i] ));
+        CU(cudaStreamCreate(&streams[i]));
     }
 
     if (NGPUS>1) ENABLE_P2P(NGPUS);

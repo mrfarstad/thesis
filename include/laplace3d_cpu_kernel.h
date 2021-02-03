@@ -1,7 +1,7 @@
 #include "constants.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-void cpu_laplace3d*(float* u1, float* u2) 
+void cpu_laplace3d(float* u1, float* u2) 
 {
   unsigned int   i, j, k, ind;
 

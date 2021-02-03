@@ -1,3 +1,6 @@
+#ifndef LAPLACE3D_INITIALIZER_H
+#define LAPLACE3D_INITIALIZER_H
+
 #include "constants.h"
 
 void initialize_host_region(float *h_u)
@@ -15,3 +18,5 @@ void initialize_host_region(float *h_u)
         }
     }
 }
+
+#endif
