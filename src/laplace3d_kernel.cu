@@ -111,38 +111,46 @@ __global__ void gpu_laplace3d_coop(float* __restrict__ d_u1,
 __global__ void gpu_laplace3d_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
-    int   i, j, q, x, y, sx, sy, xskip, yskip, idx;
-    float u2, *d_tmp, fourth=1.0f/4.0f;
+    int   i, j, k, q, x, y, z, sx, sy, sz, xskip, yskip, zskip, idx;
+    float u2, *d_tmp, sixth=1.0f/6.0f;
     sx = threadIdx.x+1;
     sy = threadIdx.y+1;
+    sz = threadIdx.z+1;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     xskip = BLOCK_X * gridDim.x;
     yskip = BLOCK_Y * gridDim.y;
+    zskip = BLOCK_Z * gridDim.z;
     grid_group grid = this_grid();
     thread_block block = this_thread_block();
-    __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
+    __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
     for (q = 1; q <= ITERATIONS; q++) {
-        for (y=j; y<NY; y+=yskip) {
-            for (x=i; x<NX; x+=xskip) {
-                idx = x + y*NX;
-                if (threadIdx.x == 0 && x != 0)            smem[sy][sx-1]   = d_u1[idx-1];
-                if (threadIdx.x == BLOCK_X-1 && x != NX-1) smem[sy][sx+1]   = d_u1[idx+1];
-                if (threadIdx.y == 0 && y != 0)            smem[sy-1][sx]   = d_u1[idx-NX];
-                if (threadIdx.y == BLOCK_Y-1 && y != NY-1) smem[sy+1][sx]   = d_u1[idx+NX];
-                smem[sy][sx] = d_u1[idx];
-                block.sync();
-                if (x==0 || x==NX-1 || y==0 || y==NY-1) {
-                  u2 = d_u1[idx]; // Dirichlet boundary conditions
+        for (z=k; z<NZ; z+=zskip) {
+            for (y=j; y<NY; y+=yskip) {
+                for (x=i; x<NX; x+=xskip) {
+                    idx = x + y*NX + z*NX*NY;
+                    if (threadIdx.x == 0 && x != 0)            smem[sz][sy][sx-1]   = d_u1[idx-1];
+                    if (threadIdx.x == BLOCK_X-1 && x != NX-1) smem[sz][sy][sx+1]   = d_u1[idx+1];
+                    if (threadIdx.y == 0 && y != 0)            smem[sz][sy-1][sx]   = d_u1[idx-NX];
+                    if (threadIdx.y == BLOCK_Y-1 && y != NY-1) smem[sz][sy+1][sx]   = d_u1[idx+NX];
+                    if (threadIdx.z == 0 && z != 0)            smem[sz-1][sy][sx]   = d_u1[idx-NX*NY];
+                    if (threadIdx.z == BLOCK_Z-1 && z != NZ-1) smem[sz+1][sy][sx]   = d_u1[idx+NX*NY];
+                    smem[sz][sy][sx] = d_u1[idx];
+                    block.sync();
+                    if (x==0 || x==NX-1 || y==0 || y==NY-1 || z==0 || z==NZ-1)
+                      u2 = d_u1[idx]; // Dirichlet boundary conditions
+                    else {
+                      u2 = (smem[sz][sy][sx-1]  +
+                            smem[sz][sy][sx+1]  +
+                            smem[sz][sy-1][sx]  +
+                            smem[sz][sy+1][sx]  +
+                            smem[sz-1][sy][sx]  +
+                            smem[sz+1][sy][sx]) * sixth;
+                    }
+                    d_u2[idx] = u2;
+                    block.sync();
                 }
-                else {
-                  u2 = (smem[sy][sx-1]  +
-                        smem[sy][sx+1]  +
-                        smem[sy-1][sx]  +
-                        smem[sy+1][sx]) * fourth;
-                }
-                d_u2[idx] = u2;
-                block.sync();
             }
         }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp;
