@@ -92,6 +92,8 @@ int main(int argc, const char **argv) {
     print_program_info();
     printf("%.4f\n", milli); // Print execution time in ms
 
+    CU(cudaFreeHost(d_ref));
+
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaStreamDestroy(streams[i]));
@@ -99,5 +101,4 @@ int main(int argc, const char **argv) {
         CU(cudaFree(d_u2[i]));
         cudaDeviceReset();
     }
-    cudaFreeHost(d_ref);
 }
