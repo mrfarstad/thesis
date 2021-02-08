@@ -7,26 +7,79 @@ __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
                                    int jstart,
                                    int jend)
 {
-    int   i, j, k, idx;
-    float u2 = 0.0f, sixth=1.0f/6.0f;
+    int   i, j, k, x, y, z, xskip, yskip, zskip, idx, lx, ly, lz;
+    float u2 = 0.0f, sixth=1.0f/6.0f, val, xstart, xend, yend, ystart, zend, zstart;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
-    idx = i + j*NX + k*NX*NY;
-    if (i<=NX-1 && j>=jstart && j<=jend && k <= NZ-1) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend || k == 0 || k == NZ-1)
-          u2 = d_u1[idx]; // Dirichlet boundary conditions
-        else {
-          u2 = (d_u1[idx-1]      +
-                d_u1[idx+1]      +
-                d_u1[idx-NX]     +
-                d_u1[idx+NX]     +
-                d_u1[idx-NX*NY]  +
-                d_u1[idx+NX*NY]) * sixth;
+    xskip = BLOCK_X * gridDim.x;
+    yskip = BLOCK_Y * gridDim.y;
+    zskip = BLOCK_Z * gridDim.z;
+    for (z=k; z<NZ; z+=zskip) {
+        for (y=j; y<NY; y+=yskip) {
+            for (x=i; x<NX; x+=xskip) {
+                idx = x + y*NX + z*NX*NY;
+                val = d_u1[idx]; // Dirichlet boundary conditions
+                // https://stackoverflow.com/questions/54055195/activemask-vs-ballot-sync
+                unsigned mask = __ballot_sync(0x7ffffffe, x!=0 && x!=NX-1);
+                // Warp shuffling must be performed outside conditional as both
+                // the send- and receive-threads need to execute the function
+                xstart = __shfl_up_sync(mask, val, 1);
+                ystart = __shfl_up_sync(mask, val, BLOCK_X);
+                zstart = __shfl_up_sync(mask, val, BLOCK_X*BLOCK_Y);
+                xend   = __shfl_down_sync(mask, val, 1);
+                yend   = __shfl_down_sync(mask, val, BLOCK_X);
+                zend   = __shfl_down_sync(mask, val, BLOCK_X*BLOCK_Y);
+                if (x==0 || x==NX-1 || y==0 || y==NY-1 || z==0 || z==NZ-1)
+                  u2 = val; // Dirichlet boundary conditions
+                else {
+                  lx = threadIdx.x % BLOCK_X;
+                  ly = threadIdx.y % BLOCK_Y;
+                  lz = threadIdx.z % BLOCK_Z;
+                  if (lx == 0)         xstart = d_u1[idx-1];
+                  if (lx == BLOCK_X-1) xend   = d_u1[idx+1];
+                  if (ly == 0)         ystart = d_u1[idx-NX];
+                  if (ly == BLOCK_Y-1) yend   = d_u1[idx+NX];
+                  if (lz == 0)         zstart = d_u1[idx-NX*NY];
+                  if (lz == BLOCK_Z-1) zend   = d_u1[idx+NX*NY];
+                  u2 = (xstart +
+                        xend   +
+                        ystart +
+                        yend   +
+                        zstart +
+                        zend)  * sixth;    
+                }
+                d_u2[idx] = u2;
+            }
         }
-        d_u2[idx] = u2;
     }
 }
+
+//__global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
+//			           float* __restrict__ d_u2,
+//                                   int jstart,
+//                                   int jend)
+//{
+//    int   i, j, k, idx;
+//    float u2 = 0.0f, sixth=1.0f/6.0f;
+//    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+//    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+//    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+//    idx = i + j*NX + k*NX*NY;
+//    if (i<=NX-1 && j>=jstart && j<=jend && k <= NZ-1) {
+//        if (i==0 || i==NX-1 || j==jstart || j==jend || k == 0 || k == NZ-1)
+//          u2 = d_u1[idx]; // Dirichlet boundary conditions
+//        else {
+//          u2 = (d_u1[idx-1]      +
+//                d_u1[idx+1]      +
+//                d_u1[idx-NX]     +
+//                d_u1[idx+NX]     +
+//                d_u1[idx-NX*NY]  +
+//                d_u1[idx+NX*NY]) * sixth;
+//        }
+//        d_u2[idx] = u2;
+//    }
+//}
 
 __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
