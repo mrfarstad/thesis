@@ -34,6 +34,10 @@
 #define BORDER_BYTES  (HALO_DEPTH*NX*sizeof(float))
 #define HALO_BYTES    (2*BORDER_BYTES)
 
+#ifndef SMEM_HALO_DEPTH
+#define SMEM_HALO_DEPTH    1
+#endif
+
 #ifndef DEBUG
 #define DEBUG false
 #endif

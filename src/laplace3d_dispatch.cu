@@ -6,7 +6,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
     dim3 grid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y, 1 + (NZ-1)/BLOCK_Z);
     float *d_tmp;
-    for (int i=0; i<ITERATIONS; i++) {
+    for (int i=0; i<ITERATIONS/SMEM_HALO_DEPTH; i++) {
         if (SMEM) gpu_laplace3d_smem<<<grid, block>>>(d_u1, d_u2, 0, NY-1);
         else      gpu_laplace3d_base<<<grid, block>>>(d_u1, d_u2, 0, NY-1);
         getLastCudaError("gpu_laplace3d execution failed\n");
