@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#sizes=(256) # DEBUG
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
 source $project_folder/constants.sh
-sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
+#sizes=(256 512 1024 2048 4096 8192 16384 32768) # OLD
 #sizes=(2048 4096 8192 16384 32768 65536)
+sizes=(256) # DEBUG
 gpus=(1 2 4)
 host=yme
 
@@ -37,8 +37,10 @@ do
           sed -i -re 's/(repeat = )[0-9]+/\1'$REPEAT'/' $conf_path
           #sed -i -re 's/(BLOCK_X =) .+/\1 32/' $conf_path # DEBUG
           #sed -i -re 's/(BLOCK_Y =) .+/\1 32/' $conf_path # DEBUG
+          #sed -i -re 's/(BLOCK_Z =) .+/\1 32/' $conf_path # DEBUG
           sed -i -re 's/(BLOCK_X =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $conf_path
           sed -i -re 's/(BLOCK_Y =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $conf_path
+          sed -i -re 's/(BLOCK_Z =) .+/\1 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $conf_path
           stdbuf -o 0 -e 0 $project_folder/scripts/autotune.sh $host $v laplace3d | tee $out_path
           awk '{if ($1=="rms" && $2=="error") print}' $out_path > ${path}_errors.txt
           #awk '/rms error/{x=NR+1}(NR<=x){print $4}' 1_gpu_errors.txt | awk '!/0.000000/' # OLD

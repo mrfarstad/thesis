@@ -159,10 +159,8 @@ class Optimisation:
         # List of dictionaries of possible tests (each dict contains a single value for each var at this level) 
         topLevelTests = map(dict, crossproduct(topLevelVarVals))
 
-        #####
-        # Fix: Do not run tests are exceed the allowed threads per block limit (1024)
-        #####
-        topLevelTests = [d for d in topLevelTests if int(d['BLOCK_X']) * int(d['BLOCK_Y']) >= 32 and int(d['BLOCK_X']) * int(d['BLOCK_Y']) <= 1024]
+        # Do not run tests that exceed the maximum allowed threads per block limit (1024) or below warp size (32)
+        topLevelTests = [d for d in topLevelTests if int(d['BLOCK_X']) * int(d['BLOCK_Y']) * int(d['BLOCK_Z']) >= 32 and int(d['BLOCK_X']) * int(d['BLOCK_Y']) * int(d['BLOCK_Z']) <= 1024]
         
         # These dictionaries only contain mappings for variables at this level.
         # So we merge the existing presets into topLevelTests

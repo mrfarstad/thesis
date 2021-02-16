@@ -1,18 +1,19 @@
 import json
 import math
 import pprint as p
+
 import subprocess
 
-folders = ["1_gpu.txt", "2_gpus.txt", "4_gpus.txt"]
+files = ["1_gpu.txt", "2_gpus.txt", "4_gpus.txt"]
 
 db = {}
 
-for folder in folders:
-    gpus = folder.split('.')[0]
+for path in files:
+    gpus = path.split('.')[0]
     db[gpus] = {}
-    ngpus = folder.split('_')[0]
-    with open(folder, "r") as file:
-        lines = file.readlines()
+    ngpus = path.split('_')[0]
+    with open("results/" + path, "r") as f:
+        lines = f.readlines()
         for i in range(0, len(lines), 5):
             version = lines[i].split(' ')[0]
             db[gpus][version] = {}
@@ -43,8 +44,10 @@ for folder in folders:
                      domain_dim,
                      #blockdims['BLOCK_X'],
                      #blockdims['BLOCK_Y']],
+                     #blockdims['BLOCK_Z']],
                      '32',
-                     '32'],
+                     '8',
+                     '4'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
             results = list(filter(None, res.split('\n')))
             blockdims["results"] = [float(result) for result in results]#[res.strip() for res in results]

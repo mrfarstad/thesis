@@ -5,5 +5,5 @@ rsync --exclude={'solutions/','results/'} -v -r ./* yme:~/$YME_WORKING_FOLDER
 ssh yme -t "
     cd $YME_WORKING_FOLDER;
     source ./constants.sh
-    python3 find_halo_depth.py
+    python3 ./scripts/find_halo_depth.py
     "

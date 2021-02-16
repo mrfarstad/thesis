@@ -5,6 +5,6 @@ rsync --exclude={'solutions/','results/'} -v -r ./* yme:~/$YME_WORKING_FOLDER
 ssh yme -t "
     cd $YME_WORKING_FOLDER;
     source ./constants.sh
-    stdbuf -o 0 -e 0 ./generate_results.sh smem 1 8192 32 32;
+    stdbuf -o 0 -e 0 ./scripts/generate_results.sh base 1 256 32 8 4;
     "
 # | tee results/generate_results_out.txt;
