@@ -4,7 +4,7 @@
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y, 1 + (NZ-1)/BLOCK_Z);
+    dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float *d_tmp;
     for (int i=0; i<ITERATIONS; i++) {
         if (SMEM) gpu_laplace3d_smem<<<grid, block>>>(d_u1, d_u2, 0, NY-1);
@@ -49,42 +49,42 @@ void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
 }
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
-    dim3 block(BLOCK_X,BLOCK_Y);
-    dim3 grid(1 + (NX-1)/BLOCK_X, 1 + (NY-1)/BLOCK_Y);
+    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
+    dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float *d_tmp;
     int i, s, n;
-    int jstart, jend;
+    int kstart, kend;
 
     int bot = HALO_DEPTH;
-    int top = HALO_DEPTH+NY/NGPUS-1;
+    int top = HALO_DEPTH+NZ/NGPUS-1;
 
     for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
         for (s=0; s<NGPUS; s++) {
             cudaSetDevice(s);
             if (s==0)
-                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * NX,
+                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * BORDER_SIZE,
                                        s,
-                                       d_u1[s+1] + bot * NX,
+                                       d_u1[s+1] + bot * BORDER_SIZE,
                                        s+1,
                                        BORDER_BYTES,
                                        streams[s]));
             else if (s==NGPUS-1)
                 CU(cudaMemcpyPeerAsync(d_u1[s],
                                        s,
-                                       d_u1[s-1] + top * NX,
+                                       d_u1[s-1] + top * BORDER_SIZE,
                                        s-1,
                                        BORDER_BYTES,
                                        streams[s]));
             else {
                 CU(cudaMemcpyPeerAsync(d_u1[s],
                                        s,
-                                       d_u1[s-1] + top * NX,
+                                       d_u1[s-1] + top * BORDER_SIZE,
                                        s-1,
                                        BORDER_BYTES,
                                        streams[s]));
-                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * NX,
+                CU(cudaMemcpyPeerAsync(d_u1[s] + (top+1) * BORDER_SIZE,
                                        s,
-                                       d_u1[s+1] + bot * NX,
+                                       d_u1[s+1] + bot * BORDER_SIZE,
                                        s+1,
                                        BORDER_BYTES,
                                        streams[s]));
@@ -93,28 +93,28 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
         for (n = 0; n < HALO_DEPTH; n++) {
             for (s=0; s<NGPUS; s++) {
                 cudaSetDevice(s);
-                jstart = bot;
-                jend = top;
+                kstart = bot;
+                kend = top;
                 if (s==0) {
-                    jstart = bot;
-                    jend = top+HALO_DEPTH;
+                    kstart = bot;
+                    kend = top+HALO_DEPTH;
                 } else if (s==NGPUS-1) {
-                    jstart = 0;
-                    jend = top;
+                    kstart = 0;
+                    kend = top;
                 } else {
-                    jstart = 0;
-                    jend = top+HALO_DEPTH;
+                    kstart = 0;
+                    kend = top+HALO_DEPTH;
                 }
                 if (SMEM)
                     gpu_laplace3d_smem<<<grid, block, 0, streams[s]>>>(d_u1[s],
                                                                        d_u2[s],
-                                                                       jstart,
-                                                                       jend);
+                                                                       kstart,
+                                                                       kend);
                 else
                     gpu_laplace3d_base<<<grid, block, 0, streams[s]>>>(d_u1[s],
                                                                        d_u2[s],
-                                                                       jstart,
-                                                                       jend);
+                                                                       kstart,
+                                                                       kend);
                 getLastCudaError("gpu_laplace3d execution failed\n");
             }
             for (s=0; s<NGPUS; s++) {

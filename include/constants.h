@@ -31,7 +31,8 @@
 #ifndef HALO_DEPTH
 #define HALO_DEPTH    1
 #endif
-#define BORDER_BYTES  (HALO_DEPTH*NX*sizeof(float))
+#define BORDER_SIZE   (NX*NY)
+#define BORDER_BYTES  (HALO_DEPTH*BORDER_SIZE*sizeof(float))
 #define HALO_BYTES    (2*BORDER_BYTES)
 
 #ifndef DEBUG

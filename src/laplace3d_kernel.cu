@@ -4,8 +4,8 @@ using namespace cooperative_groups;
 
 __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
-                                   int jstart,
-                                   int jend)
+                                   int kstart,
+                                   int kend)
 {
     int   i, j, k, idx;
     float u2 = 0.0f, sixth=1.0f/6.0f;
@@ -13,8 +13,8 @@ __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     idx = i + j*NX + k*NX*NY;
-    if (i<=NX-1 && j>=jstart && j<=jend && k <= NZ-1) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend || k == 0 || k == NZ-1)
+    if (i<NX && j<NY && k>=kstart && k<=kend) {
+        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
           u2 = d_u1[idx]; // Dirichlet boundary conditions
         else {
           u2 = (d_u1[idx-1]      +
@@ -30,8 +30,8 @@ __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
 
 __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
-                                   int jstart,
-                                   int jend)
+                                   int kstart,
+                                   int kend)
 {
     int   i, j, k, sx, sy, sz, idx;
     float u2 = 0.0f, sixth=1.0f/6.0f;
@@ -44,19 +44,19 @@ __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
     thread_block tb = this_thread_block();
     __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
     idx = i + j*NX + k*NX*NY;
-    bool active = i<=NX-1 && j>=jstart && j<=jend && k<=NZ-1;
+    bool active = i<NX && j<NY && k>=kstart && k<=kend;
     if (active) {
         if (threadIdx.x == 0 && i != 0)            smem[sz][sy][sx-1]   = d_u1[idx-1];
         if (threadIdx.x == BLOCK_X-1 && i != NX-1) smem[sz][sy][sx+1]   = d_u1[idx+1];
-        if (threadIdx.y == 0 && j != jstart)       smem[sz][sy-1][sx]   = d_u1[idx-NX];
-        if (threadIdx.y == BLOCK_Y-1 && j != jend) smem[sz][sy+1][sx]   = d_u1[idx+NX];
-        if (threadIdx.z == 0 && k != 0)            smem[sz-1][sy][sx]   = d_u1[idx-NX*NY];
-        if (threadIdx.z == BLOCK_Z-1 && k != NZ-1) smem[sz+1][sy][sx]   = d_u1[idx+NX*NY];
+        if (threadIdx.y == 0 && j != 0)            smem[sz][sy-1][sx]   = d_u1[idx-NX];
+        if (threadIdx.y == BLOCK_Y-1 && j != NY-1) smem[sz][sy+1][sx]   = d_u1[idx+NX];
+        if (threadIdx.z == 0 && k != kstart)       smem[sz-1][sy][sx]   = d_u1[idx-NX*NY];
+        if (threadIdx.z == BLOCK_Z-1 && k != kend) smem[sz+1][sy][sx]   = d_u1[idx+NX*NY];
         smem[sz][sy][sx] = d_u1[idx];
     }
     tb.sync();
     if (active) {
-        if (i==0 || i==NX-1 || j==jstart || j==jend || k==0 || k==NZ-1)
+        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
           u2 = d_u1[idx]; // Dirichlet boundary conditions
         else {
           u2 = (smem[sz][sy][sx-1]  +
