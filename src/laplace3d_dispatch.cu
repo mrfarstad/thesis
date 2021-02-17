@@ -43,7 +43,7 @@ void fetch_upper_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* stream
                            dev,
                            d_u1[dev+1] + BOT * BORDER_SIZE,
                            dev+1,
-                           BORDER_BYTES,
+                           GHOST_ZONE_BYTES,
                            streams[dev]));
 }
 
@@ -52,7 +52,7 @@ void fetch_lower_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* stream
                            dev,
                            d_u1[dev-1] + TOP * BORDER_SIZE,
                            dev-1,
-                           BORDER_BYTES,
+                           GHOST_ZONE_BYTES,
                            streams[dev]));
 }
 

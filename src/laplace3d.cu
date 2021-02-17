@@ -52,7 +52,7 @@ int main(int argc, const char **argv) {
 
     int offset;
     if (NGPUS==1) offset=0;
-    else          offset=HALO_DEPTH * BORDER_SIZE;
+    else          offset=GHOST_ZONE;
 #pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);

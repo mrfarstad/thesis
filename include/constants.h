@@ -31,9 +31,10 @@
 #ifndef HALO_DEPTH
 #define HALO_DEPTH    1
 #endif
-#define BORDER_SIZE   (NX*NY)
-#define BORDER_BYTES  (HALO_DEPTH*BORDER_SIZE*sizeof(float))
-#define HALO_BYTES    (2*BORDER_BYTES)
+#define BORDER_SIZE      (NX*NY)
+#define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)
+#define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
+#define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 
 #define BOT (HALO_DEPTH)
 #define TOP (HALO_DEPTH+NZ/NGPUS-1)
