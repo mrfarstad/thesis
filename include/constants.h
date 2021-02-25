@@ -36,8 +36,8 @@
 #define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
 #define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 
-#define BOT (HALO_DEPTH)
-#define TOP (HALO_DEPTH+NZ/NGPUS-1)
+#define INTERNAL_START (HALO_DEPTH)
+#define INTERNAL_END   (INTERNAL_START+NZ/NGPUS)
 
 #ifndef DEBUG
 #define DEBUG false
