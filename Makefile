@@ -33,14 +33,14 @@ endif
 all: 		laplace3d_$(ID)
 
 laplace3d_$(ID): src/laplace3d.cu src/laplace3d_kernel.cu include/laplace3d_utils.h include/laplace3d_error_checker.h include/constants.h
-		 nvcc src/laplace3d.cu -O3 -o bin/laplace3d_$(ID) -arch $(ARCH)   \
-		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)   \
-						  -D BLOCK_X=$(BLOCK_X)   \
-						  -D BLOCK_Y=$(BLOCK_Y)   \
-						  -D BLOCK_Z=$(BLOCK_Z)   \
-						  -D DIM=$(DIM)           \
-			     $(_SMEM) $(_COOP) $(_NGPUS) $(_HALO_DEPTH)   \
-							      $(_DEBUG)  
+		 nvcc src/laplace3d.cu -O3 -o bin/laplace3d_$(ID) -arch $(ARCH) \
+		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)         \
+						  -D BLOCK_X=$(BLOCK_X)         \
+						  -D BLOCK_Y=$(BLOCK_Y)         \
+						  -D BLOCK_Z=$(BLOCK_Z)         \
+						  -D DIM=$(DIM)                 \
+					    $(_SMEM) $(_COOP) $(_NGPUS)         \
+		                $(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
 							     
 
 laplace3d_cpu:   include/laplace3d_initializer.h include/laplace3d_cpu_kernel.h
