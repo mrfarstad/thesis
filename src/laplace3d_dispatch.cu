@@ -56,27 +56,46 @@ void send_lower_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* streams
                            streams[dev]));
 }
 
-void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
-    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
-    float **d_tmp;
-    int i, s, n, kstart, kend;
-    for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
-        for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);
-        for (s=1; s<NGPUS; s++)   send_lower_ghost_zone(d_u1, s, streams);
-        for (s=0; s<NGPUS; s++)   CU(cudaStreamSynchronize(streams[s]));
-        for (n=0; n<HALO_DEPTH; n++) {
-            for (s=0; s<NGPUS; s++) {
-                CU(cudaSetDevice(s));
-                kstart = 0;
-                kend   = INTERNAL_END-1+HALO_DEPTH;
-                if      (s==0)       kstart = INTERNAL_START;
-                else if (s==NGPUS-1) kend   = INTERNAL_END-1;
-                get_kernel()<<<grid, block, 0, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
-                getLastCudaError("kernel execution failed\n");
-            }
-            d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
+void exchange_ghost_zones(float **d_u1, cudaStream_t* streams) {
+    int s;
+    for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);
+    for (s=1; s<NGPUS; s++)   send_lower_ghost_zone(d_u1, s, streams);
+    for (s=0; s<NGPUS; s++)   CU(cudaStreamSynchronize(streams[s]));
+}
+
+void launch_kernel(kernel kern, float **d_u1, float **d_u2, cudaStream_t* streams) {
+        dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
+        dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
+        int s, kstart, kend;
+        for (s=0; s<NGPUS; s++) {
+            CU(cudaSetDevice(s));
+            kstart = 0;
+            kend   = INTERNAL_END-1+HALO_DEPTH;
+            if      (s==0)       kstart = INTERNAL_START;
+            else if (s==NGPUS-1) kend   = INTERNAL_END-1;
+            kern<<<grid, block, 0, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
+            getLastCudaError("kernel execution failed\n");
         }
+}
+
+void calculate_ghost_zones(float **d_u1, float **d_u2, cudaStream_t* streams) {
+        launch_kernel(gpu_laplace3d_base_ghost_zone, d_u1, d_u2, streams);
+}
+
+void calculate_internal(float **d_u1, float **d_u2, cudaStream_t* streams) {
+        launch_kernel(gpu_laplace3d_base_internal, d_u1, d_u2, streams);
+}
+
+void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
+    float **d_tmp;
+    int i, s;
+    exchange_ghost_zones(d_u1, streams);
+    // TODO: Deep halo
+    for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
+        calculate_ghost_zones(d_u1, d_u2, streams);
+        exchange_ghost_zones(d_u2, streams);
+        calculate_internal(d_u1, d_u2, streams);
+        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
         for (s=0; s<NGPUS; s++) CU(cudaStreamSynchronize(streams[s]));
     }
 }

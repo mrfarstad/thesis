@@ -28,6 +28,58 @@ __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
     }
 }
 
+__global__ void gpu_laplace3d_base_internal(float* __restrict__ d_u1,
+                                            float* __restrict__ d_u2,
+                                            int kstart,
+                                            int kend)
+{
+    int   i, j, k, idx;
+    float u2 = 0.0f, sixth=1.0f/6.0f;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+    idx = i + j*NX + k*NX*NY;
+    if (i<NX && j<NY && k>=kstart+HALO_DEPTH && k<=kend-HALO_DEPTH) {
+        if (i==0 || i==NX-1 || j==0 || j==NY-1)
+          u2 = d_u1[idx]; // Dirichlet boundary conditions
+        else {
+          u2 = (d_u1[idx-1]      +
+                d_u1[idx+1]      +
+                d_u1[idx-NX]     +
+                d_u1[idx+NX]     +
+                d_u1[idx-NX*NY]  +
+                d_u1[idx+NX*NY]) * sixth;
+        }
+        d_u2[idx] = u2;
+    }
+}
+
+__global__ void gpu_laplace3d_base_ghost_zone(float* __restrict__ d_u1,
+                                              float* __restrict__ d_u2,
+                                              int kstart,
+                                              int kend)
+{
+    int   i, j, k, idx;
+    float u2 = 0.0f, sixth=1.0f/6.0f;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+    idx = i + j*NX + k*NX*NY;
+    if (i<NX && j<NY && ((k>=kstart && k<=kstart+HALO_DEPTH) || (k>=kend-HALO_DEPTH && k<=kend))) {
+        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
+          u2 = d_u1[idx]; // Dirichlet boundary conditions
+        else {
+          u2 = (d_u1[idx-1]      +
+                d_u1[idx+1]      +
+                d_u1[idx-NX]     +
+                d_u1[idx+NX]     +
+                d_u1[idx-NX*NY]  +
+                d_u1[idx+NX*NY]) * sixth;
+        }
+        d_u2[idx] = u2;
+    }
+}
+
 __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    int kstart,
