@@ -6,5 +6,5 @@ ssh yme -t "
     cd $YME_WORKING_FOLDER;
     source ./constants.sh;
     ./scripts/build.sh debug yme
-    cuda-gdb ./bin/laplace3d_debug
+    cuda-gdb ./bin/stencil_debug
     "

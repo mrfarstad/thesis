@@ -1,13 +1,13 @@
-#ifndef laplace3d_CPU
-#define laplace3d_CPU
+#ifndef STENCIL_CPU
+#define STENCIL_CPU
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include "constants.h"
-#include "laplace3d_initializer.h"
-#include "laplace3d_cpu_kernel.h"
-#include "laplace3d_utils.h"
+#include "stencil_initializer.h"
+#include "stencil_cpu_kernel.h"
+#include "stencil_utils.h"
 
 inline double seconds()
 {
@@ -17,7 +17,7 @@ inline double seconds()
     return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
 }
 
-void laplace3d_cpu()
+void stencil_cpu()
 {
     unsigned int    i;
     float  *h_u1, *h_u3, *h_swap;
@@ -30,11 +30,11 @@ void laplace3d_cpu()
 
     start = seconds();
     for (i = 1; i <= ITERATIONS; ++i) {
-        cpu_laplace3d(h_u1, h_u3);
+        cpu_stencil(h_u1, h_u3);
         h_swap = h_u1; h_u1 = h_u3; h_u3 = h_swap;   // swap h_u1 and h_u3
     }
     elapsed = seconds() - start;
-    printf("\ncpu_laplace3d: %.3f (ms) \n", elapsed);
+    printf("\ncpu_stencil: %.3f (ms) \n", elapsed);
 
     saveSolution(h_u1);
 

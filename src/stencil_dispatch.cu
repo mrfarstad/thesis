@@ -1,12 +1,12 @@
 #include "../include/constants.h"
 #include "../include/helper_cuda.h"
-#include "laplace3d_kernel.cu"
+#include "stencil_kernel.cu"
 
 typedef void (*kernel)      (float*,float*,int,int);
 typedef void (*coop_kernel) (float*,float*);
 
-kernel      get_kernel()      { return SMEM ? gpu_laplace3d_smem      : gpu_laplace3d_base; }
-coop_kernel get_coop_kernel() { return SMEM ? gpu_laplace3d_coop_smem : gpu_laplace3d_coop; }
+kernel      get_kernel()      { return SMEM ? gpu_stencil_smem      : gpu_stencil_base; }
+coop_kernel get_coop_kernel() { return SMEM ? gpu_stencil_coop_smem : gpu_stencil_coop; }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);

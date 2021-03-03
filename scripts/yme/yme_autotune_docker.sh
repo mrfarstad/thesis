@@ -7,5 +7,5 @@ ssh yme -t "
     source ./constants.sh
     docker build . -t nvidia-test;
     "
-    #docker create -it --gpus all --name laplace2d nvidia-test bash;
-    #docker cp laplace2d:/usr/src/laplace2d/results/laplace2d.png .
+    #docker create -it --gpus all --name stencil nvidia-test bash;
+    #docker cp stencil:/usr/src/laplace2d/results/laplace2d.png .

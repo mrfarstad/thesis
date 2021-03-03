@@ -1,5 +1,5 @@
-#ifndef LAPLACE3D_UTILS_H
-#define LAPLACE3D_UTILS_H
+#ifndef STENCIL_UTILS_H
+#define STENCIL_UTILS_H
 
 #include <sys/types.h>
 #include <sys/stat.h>

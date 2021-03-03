@@ -1,13 +1,14 @@
 #include "../include/constants.h"
 #include "cooperative_groups.h"
+#include "stencils.cu"
 using namespace cooperative_groups;
 
-__global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
+__global__ void gpu_stencil_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    int kstart,
                                    int kend)
 {
-    int   i, j, k, idx;
+    unsigned int   i, j, k, idx;
     float u2 = 0.0f, sixth=1.0f/6.0f;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
@@ -22,13 +23,13 @@ __global__ void gpu_laplace3d_base(float* __restrict__ d_u1,
                 d_u1[idx-NX]     +
                 d_u1[idx+NX]     +
                 d_u1[idx-NX*NY]  +
-                d_u1[idx+NX*NY]) * sixth;
+                d_u1[idx+NX*NY]) * sixth;    
         }
         d_u2[idx] = u2;
     }
 }
 
-__global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
+__global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    int kstart,
                                    int kend)
@@ -70,7 +71,7 @@ __global__ void gpu_laplace3d_smem(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_laplace3d_coop(float* __restrict__ d_u1,
+__global__ void gpu_stencil_coop(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
     int   i, j, k, q, x, y, z,
@@ -108,7 +109,7 @@ __global__ void gpu_laplace3d_coop(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_laplace3d_coop_smem(float* __restrict__ d_u1,
+__global__ void gpu_stencil_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
     int   i, j, k, q, x, y, z, sx, sy, sz, xskip, yskip, zskip, idx;
