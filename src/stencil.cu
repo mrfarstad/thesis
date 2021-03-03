@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "../include/constants.h"
-#include "../include/laplace3d_initializer.h"
-#include "../include/laplace3d_error_checker.h"
-#include "../include/laplace3d_utils.h"
-#include "../include/laplace3d_cpu.h"
-#include "laplace3d_dispatch.cu"
+#include "../include/stencil_initializer.h"
+#include "../include/stencil_error_checker.h"
+#include "../include/stencil_utils.h"
+#include "../include/stencil_cpu.h"
+#include "stencil_dispatch.cu"
 #include "omp.h"
 
 int main(int argc, const char **argv) {
@@ -19,7 +19,7 @@ int main(int argc, const char **argv) {
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
         if (fopen(SOLUTION, "r") == NULL) {
-            laplace3d_cpu();
+            stencil_cpu();
         }
         readSolution(h_ref);
     }

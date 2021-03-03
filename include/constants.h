@@ -19,6 +19,9 @@
 #ifndef DIM
 #define DIM 256
 #endif
+#ifndef STENCIL_DIM
+#define STENCIL_DIM 3
+#endif
 
 #define NX DIM
 #define NY DIM

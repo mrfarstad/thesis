@@ -7,9 +7,9 @@ python $project_folder/Autotuning/tuner/tune.py $project_folder/configs/$1/$2.co
 #python ${PWD}/Autotuning/tuner/tune.py configs/$1.conf
 #python ${PWD}/Autotuning/tuner/tune.py configs/hpclab13/base.conf
 # Create plt from csv
-$project_folder/Autotuning/utilities/output_gnuplot.py $project_folder/results/laplace3d.csv results/laplace3d.plt
+$project_folder/Autotuning/utilities/output_gnuplot.py $project_folder/results/stencil.csv results/stencil.plt
 # Create image from plt
-nuplot -e "set terminal png large size 1500, 1800; set output '$project_folder/results/laplace3d.png'; load '$project_folder/results/laplace3d.plt'; exit;"
+tuplot -e "set terminal png large size 1500, 1800; set output '$project_folder/results/stencil.png'; load '$project_folder/results/stencil.plt'; exit;"
 
 # If nothing is running on port 8080, then start a local server
 # so that you can see the images on the host using

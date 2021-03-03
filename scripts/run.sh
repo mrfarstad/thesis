@@ -4,8 +4,8 @@ if [[ $# -lt 2 ]] ; then
     echo 'arg: (prod/debug) HOST'
     exit 0
 fi
-#make -C $project_folder laplace3d_cpu DIM=$5
-#$project_folder/bin/laplace3d_cpu
+#make -C $project_folder stencil_cpu DIM=$5
+#$project_folder/bin/stencil_cpu
 $project_folder/scripts/build.sh $@
-$project_folder/bin/laplace3d_$1
+$project_folder/bin/stencil_$1
 #make -C $project_folder clean

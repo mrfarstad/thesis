@@ -1,5 +1,5 @@
-#ifndef LAPLACE3D_INITIALIZER_H
-#define LAPLACE3D_INITIALIZER_H
+#ifndef STENCIL_INITIALIZER_H
+#define STENCIL_INITIALIZER_H
 
 #include "constants.h"
 

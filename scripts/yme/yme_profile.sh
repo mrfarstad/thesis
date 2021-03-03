@@ -8,6 +8,6 @@ ssh yme -t "
     cd $YME_WORKING_FOLDER;
     source ./constants.sh
     ./scripts/build.sh $build yme;
-    sudo \$(which nvprof) -o $output -f ./bin/laplace3d_$build;
+    sudo \$(which nvprof) -o $output -f ./bin/stencil_$build;
     "
 rsync -v -r yme:~/$YME_WORKING_FOLDER/$output bin/
