@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include "constants.h"
-#include "stencil_initializer.h"
-#include "stencil_cpu_kernel.h"
-#include "stencil_utils.h"
+#include "stencil_cpu_kernel.cu"
+#include "../include/constants.h"
+#include "../include/stencil_initializer.h"
+#include "../include/stencil_utils.h"
 
 inline double seconds()
 {

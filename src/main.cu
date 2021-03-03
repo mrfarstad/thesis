@@ -3,7 +3,7 @@
 #include "../include/stencil_initializer.h"
 #include "../include/stencil_error_checker.h"
 #include "../include/stencil_utils.h"
-#include "../include/stencil_cpu.h"
+#include "stencil_cpu.cu"
 #include "stencil_dispatch.cu"
 #include "omp.h"
 
