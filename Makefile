@@ -3,7 +3,7 @@ LIB       := -L$(CUDA_HOME)/lib64
 LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
 NVCCFLAGS := -lineinfo -rdc=true #--use_fast_math -lgomp  #--ptxas-options=-v #-arch=$(ARCH)
 ifeq ($(DEBUG), true)
-    NVCC_DEBUG := -g -G
+    #NVCC_DEBUG := -g -G # Causes troubles with floating point numbers if uncommented
     _DEBUG := -D DEBUG=true
 endif
 ifeq ($(HOST), yme)
@@ -29,19 +29,22 @@ endif
 ifneq ($(HALO_DEPTH),)
     _HALO_DEPTH := -D HALO_DEPTH=$(HALO_DEPTH)
 endif
+ifneq ($(STENCIL_DEPTH),)
+    _STENCIL_DEPTH := -D STENCIL_DEPTH=$(STENCIL_DEPTH)
+endif
 
 all: 		stencil_$(ID)
 
 stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include/stencil_error_checker.h include/constants.h
-		 nvcc src/main.cu -O3 -o bin/stencil_$(ID) -arch $(ARCH) \
-		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)         \
-						  -D BLOCK_X=$(BLOCK_X)         \
-						  -D BLOCK_Y=$(BLOCK_Y)         \
-						  -D BLOCK_Z=$(BLOCK_Z)         \
-						  -D DIM=$(DIM)                 \
-					    $(_SMEM) $(_COOP) $(_NGPUS)         \
-		                $(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
-							     
+	       nvcc src/main.cu -O3 -o bin/stencil_$(ID) -arch $(ARCH)         \
+	       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)  \
+					  -D BLOCK_X=$(BLOCK_X)  \
+					  -D BLOCK_Y=$(BLOCK_Y)  \
+					  -D BLOCK_Z=$(BLOCK_Z)  \
+					  -D DIM=$(DIM)          \
+		    $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS)  \
+			$(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
+					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu src/stencil_cpu_kernel.cu
 		 gcc src/stencil_cpu.cpp -O3 -o bin/stencil_cpu -D DIM=$(DIM) $(_ITERATIONS)

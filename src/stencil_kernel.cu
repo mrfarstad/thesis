@@ -8,20 +8,15 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
                                    int kstart,
                                    int kend)
 {
-    unsigned int   i, j, k, idx;
-    float u2;
+    int   i, j, k, idx;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     idx = i + j*NX + k*NX*NY;
-    if (i<NX && j<NY && k>=kstart && k<=kend) {
-        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
-          u2 = d_u1[idx]; // Dirichlet boundary conditions
-        else {
-          u2 = stencil(d_u1, idx);
-        }
-        d_u2[idx] = u2;
-    }
+    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
+        j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
+        k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH)
+        d_u2[idx] = stencil(d_u1, idx);
 }
 
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,

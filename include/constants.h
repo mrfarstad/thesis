@@ -19,28 +19,27 @@
 #ifndef DIM
 #define DIM 256
 #endif
-#ifndef STENCIL_DIM
-#define STENCIL_DIM 3
+
+#ifndef STENCIL_DEPTH
+#define STENCIL_DEPTH 1
 #endif
 
 #define NX DIM
 #define NY DIM
 #define NZ DIM
-#define SIZE          (NX*NY*NZ)
-#define OFFSET        (SIZE/NGPUS)
-#define BYTES         (SIZE*sizeof(float))
-#define BYTES_PER_GPU (BYTES/NGPUS)
+#define SIZE             (NX*NY*NZ)
+#define OFFSET           (SIZE/NGPUS)
+#define BYTES            (SIZE*sizeof(float))
+#define BYTES_PER_GPU    (BYTES/NGPUS)
 
-#ifndef HALO_DEPTH
-#define HALO_DEPTH    1
-#endif
+#define HALO_DEPTH       (STENCIL_DEPTH)
 #define BORDER_SIZE      (NX*NY)
 #define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)
 #define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
 #define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 
-#define INTERNAL_START (HALO_DEPTH)
-#define INTERNAL_END   (INTERNAL_START+NZ/NGPUS)
+#define INTERNAL_START   (HALO_DEPTH)
+#define INTERNAL_END     (INTERNAL_START+NZ/NGPUS)
 
 #ifndef DEBUG
 #define DEBUG false

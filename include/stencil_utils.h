@@ -13,7 +13,7 @@
 #define STRLEN 30
 #define STR_INDIR(x) #x
 #define STR(x) STR_INDIR(x)
-#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS)
+#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS) "_" STR(STENCIL_DEPTH)
 #define SOLUTION "solutions/solution" SUFFIX
 #define RESULT "results/result" SUFFIX
 

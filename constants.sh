@@ -1,10 +1,11 @@
 export BLOCK_X=32
 export BLOCK_Y=8
 export BLOCK_Z=4
-export NGPUS=1
+export NGPUS=2
 export ITERATIONS=64
 export DIM=256
-export HALO_DEPTH=1 # Needs to be a multiplum of 2 and lower than ITERATIONS
+export STENCIL_DEPTH=2
+#export HALO_DEPTH=1 # Needs to be a multiplum of 2 and lower than ITERATIONS
 export DEBUG=true
 export SMEM=false
 export COOP=false

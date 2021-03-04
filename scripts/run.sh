@@ -6,10 +6,10 @@ if [[ $# -lt 2 ]] ; then
 fi
 #make -C $project_folder stencil_cpu DIM=$5
 #$project_folder/bin/stencil_cpu
-if [ ! -z "$3" ]
-  then
-    rm -rf $project_folder/solutions/*
-fi
+#if [ ! -z "$3" ]
+#  then
+#    rm -rf $project_folder/solutions/*
+#fi
 $project_folder/scripts/build.sh $@
 $project_folder/bin/stencil_$1
 #make -C $project_folder clean
