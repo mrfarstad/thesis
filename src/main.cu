@@ -18,9 +18,8 @@ int main(int argc, const char **argv) {
 
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
-        if (fopen(SOLUTION, "r") == NULL) {
-            stencil_cpu();
-        }
+        char f[] = SOLUTION;
+        if (!file_exists(f)) stencil_cpu();
         readSolution(h_ref);
     }
 

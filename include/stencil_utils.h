@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
 #include "constants.h"
 
 #define STRLEN 30
@@ -14,6 +16,11 @@
 #define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS)
 #define SOLUTION "solutions/solution" SUFFIX
 #define RESULT "results/result" SUFFIX
+
+bool file_exists (char *filename) {
+  struct stat   buffer;   
+  return (stat (filename, &buffer) == 0);
+}
 
 static void save(float *d_u, char const *format)
 {
