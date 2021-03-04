@@ -22,6 +22,7 @@
 #ifndef STENCIL_DIM
 #define STENCIL_DIM 3
 #endif
+#define STENCIL_WIDTH (STENCIL_DIM/2)
 
 #define NX DIM
 #define NY DIM
@@ -31,8 +32,9 @@
 #define BYTES         (SIZE*sizeof(float))
 #define BYTES_PER_GPU (BYTES/NGPUS)
 
+//#define HALO_DEPTH    (STENCIL_DIM/2)
 #ifndef HALO_DEPTH
-#define HALO_DEPTH    1
+#define HALO_DEPTH 1 
 #endif
 #define BORDER_SIZE      (NX*NY)
 #define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)

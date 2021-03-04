@@ -29,17 +29,21 @@ endif
 ifneq ($(HALO_DEPTH),)
     _HALO_DEPTH := -D HALO_DEPTH=$(HALO_DEPTH)
 endif
+ifneq ($(STENCIL_DIM),)
+    _STENCIL_DIM := -D STENCIL_DIM=$(STENCIL_DIM)
+endif
+
 
 all: 		stencil_$(ID)
 
 stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include/stencil_error_checker.h include/constants.h
 		 nvcc src/main.cu -O3 -o bin/stencil_$(ID) -arch $(ARCH) \
-		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)         \
-						  -D BLOCK_X=$(BLOCK_X)         \
-						  -D BLOCK_Y=$(BLOCK_Y)         \
-						  -D BLOCK_Z=$(BLOCK_Z)         \
-						  -D DIM=$(DIM)                 \
-					    $(_SMEM) $(_COOP) $(_NGPUS)         \
+		       $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)  \
+						  -D BLOCK_X=$(BLOCK_X)  \
+						  -D BLOCK_Y=$(BLOCK_Y)  \
+						  -D BLOCK_Z=$(BLOCK_Z)  \
+						  -D DIM=$(DIM)          \
+			    $(_STENCIL_DIM) $(_SMEM) $(_COOP) $(_NGPUS)  \
 		                $(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
 							     
 

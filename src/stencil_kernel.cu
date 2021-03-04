@@ -4,23 +4,19 @@
 using namespace cooperative_groups;
 
 __global__ void gpu_stencil_base(float* __restrict__ d_u1,
-			           float* __restrict__ d_u2,
-                                   int kstart,
-                                   int kend)
+			         float* __restrict__ d_u2,
+                                 int kstart,
+                                 int kend)
 {
     unsigned int   i, j, k, idx;
-    float u2;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     idx = i + j*NX + k*NX*NY;
-    if (i<NX && j<NY && k>=kstart && k<=kend) {
-        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
-          u2 = d_u1[idx]; // Dirichlet boundary conditions
-        else {
-          u2 = stencil(d_u1, idx);
-        }
-        d_u2[idx] = u2;
+    if (i>=STENCIL_WIDTH && i<NX-STENCIL_WIDTH &&
+        j>=STENCIL_WIDTH && j<NY-STENCIL_WIDTH &&
+        k>=STENCIL_WIDTH && k<NZ-STENCIL_WIDTH) {
+        d_u2[idx] = stencil(d_u1, idx);
     }
 }
 
