@@ -8,6 +8,6 @@ export STENCIL_DEPTH=1
 #export HALO_DEPTH=1 # Needs to be a multiplum of 2 and lower than ITERATIONS
 export DEBUG=true
 export SMEM=false
-export COOP=false
+export COOP=true
 export REPEAT=20
 export YME_WORKING_FOLDER=thesis

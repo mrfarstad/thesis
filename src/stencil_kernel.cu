@@ -67,7 +67,7 @@ __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
     int   i, j, k, q, x, y, z,
           xskip, yskip, zskip, 
           idx;
-    float u2, *d_tmp, sixth=1.0f/6.0f;
+    float *d_tmp;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
@@ -76,21 +76,11 @@ __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
     zskip = BLOCK_Z * gridDim.z;
     grid_group grid = this_grid();
     for (q = 1; q <= ITERATIONS; q++) {
-        for (z=k; z<NZ; z+=zskip) {
-            for (y=j; y<NY; y+=yskip) {
-                for (x=i; x<NX; x+=xskip) {
+        for (z=k+STENCIL_DEPTH; z<NZ-STENCIL_DEPTH; z+=zskip) {
+            for (y=j+STENCIL_DEPTH; y<NY-STENCIL_DEPTH; y+=yskip) {
+                for (x=i+STENCIL_DEPTH; x<NX-STENCIL_DEPTH; x+=xskip) {
                     idx = x + y*NX + z*NX*NY;
-                    if (x==0 || x==NX-1 || y==0 || y==NY-1 || z==0 || z==NZ-1)
-                      u2 = d_u1[idx]; // Dirichlet boundary conditions
-                    else {
-                      u2 = (d_u1[idx-1]      +
-                            d_u1[idx+1]      +
-                            d_u1[idx-NX]     +
-                            d_u1[idx+NX]     +
-                            d_u1[idx-NX*NY]  +
-                            d_u1[idx+NX*NY]) * sixth;    
-                    }
-                    d_u2[idx] = u2;
+                    d_u2[idx] = stencil(d_u1, idx);
                 }
             }
         }
