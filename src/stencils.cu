@@ -12,7 +12,7 @@ __host__ __device__ float stencil(float *d_u1, unsigned int idx) {
     float u = 0.0f;
     for (dim=0; dim<3; dim++)
         for (s=1; s<=STENCIL_DEPTH; s++)
-            u+=(d_u1[idx+s*offsets[dim]] + d_u1[idx-s*offsets[dim]]);
+            u+=(d_u1[idx-s*offsets[dim]] + d_u1[idx+s*offsets[dim]]);
     return u / c - d_u1[idx];
 }
 
@@ -21,13 +21,11 @@ __device__ float stencil(float smem[BLOCK_Z+2*STENCIL_DEPTH][BLOCK_Y+2*STENCIL_D
     unsigned int s;
     float u = 0.0f, c = (float) (6 * STENCIL_DEPTH);
     for (s=1; s<=STENCIL_DEPTH; s++)
-        //u+=(smem[sz][sy][sx-s] + smem[sz][sy][sx+s]);
-        u+=(smem[sz][sy][sx+s] + smem[sz][sy][sx-s]);
+        u+=(smem[sz][sy][sx-s] + smem[sz][sy][sx+s]);
     for (s=1; s<=STENCIL_DEPTH; s++)
-        //u+=(smem[sz][sy-s][sx] + smem[sz][sy+s][sx]);
-        u+=(smem[sz][sy+s][sx] + smem[sz][sy-s][sx]);
+        u+=(smem[sz][sy-s][sx] + smem[sz][sy+s][sx]);
     for (s=1; s<=STENCIL_DEPTH; s++)
-        u+=(smem[sz+s][sy][sx] + smem[sz-s][sy][sx]);
+        u+=(smem[sz-s][sy][sx] + smem[sz+s][sy][sx]);
     return u / c - smem[sz][sy][sx];
 }
 
