@@ -24,6 +24,7 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
                                    int kstart,
                                    int kend)
 {
+    bool active;
     int   i, j, k, sx, sy, sz, idx, s;
     sx = threadIdx.x+STENCIL_DEPTH;
     sy = threadIdx.y+STENCIL_DEPTH;
@@ -34,32 +35,31 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
     thread_block tb = this_thread_block();
     __shared__ float smem[BLOCK_Z+2*STENCIL_DEPTH][BLOCK_Y+2*STENCIL_DEPTH][BLOCK_X+2*STENCIL_DEPTH];
     idx = i + j*NX + k*NX*NY;
-    bool active = i<NX && j<NY && k>=kstart && k<=kend;
-    if (active) {
-        if (threadIdx.x == 0 && i != 0) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz][sy][sx-s]   = d_u1[idx-s];
-        }
-        if (threadIdx.x == BLOCK_X-1 && i != NX-1) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz][sy][sx+s]   = d_u1[idx+s];
-        }
-        if (threadIdx.y == 0 && j != 0) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz][sy-s][sx]   = d_u1[idx-s*NX];
-        }
-        if (threadIdx.y == BLOCK_Y-1 && j != NY-1) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz][sy+s][sx]   = d_u1[idx+s*NX];
-        }
-        if (threadIdx.z == 0 && k != kstart) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz-s][sy][sx]   = d_u1[idx-s*NX*NY];
-        }
-        if (threadIdx.z == BLOCK_Z-1 && k != kend) {
-            for (s=1; s<=STENCIL_DEPTH; s++)
-                smem[sz+s][sy][sx]   = d_u1[idx+s*NX*NY];
-        }
+    if (i<NX && j<NY && k>=kstart && k<=kend) {
+        active = false;
+        for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.x == s && i != s;
+        if (active) smem[sz][sy][sx-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
+
+        active = false;
+        for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.x == BLOCK_X-s && i != NX-s;
+        if (active) smem[sz][sy][sx+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
+
+        active = false;
+        for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.y == s && j != s;
+        if (active) smem[sz][sy-STENCIL_DEPTH][sx] = d_u1[idx-STENCIL_DEPTH*NX];
+
+        active = false;
+        for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.y == BLOCK_Y-s && j != NY-s;
+        if (active) smem[sz][sy+STENCIL_DEPTH][sx] = d_u1[idx+STENCIL_DEPTH*NX];
+
+        active = false;
+        for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.z == s && k != s;
+        if (active) smem[sz-STENCIL_DEPTH][sy][sx] = d_u1[idx-STENCIL_DEPTH*NX*NY];
+
+        active = false;
+        for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.z == BLOCK_Z-s && k != NZ-s;
+        if (active) smem[sz+STENCIL_DEPTH][sy][sx] = d_u1[idx+STENCIL_DEPTH*NX*NY];
+
         smem[sz][sy][sx] = d_u1[idx];
     }
     tb.sync();
