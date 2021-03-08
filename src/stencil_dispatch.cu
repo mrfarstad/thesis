@@ -13,7 +13,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float *d_tmp;
     for (int i=0; i<ITERATIONS; i++) {
-        get_kernel()<<<grid, block>>>(d_u1, d_u2, 0, NY-1);
+        get_kernel()<<<grid, block>>>(d_u1, d_u2, 0, NZ-1);
         getLastCudaError("kernel execution failed\n");
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }

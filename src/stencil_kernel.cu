@@ -24,41 +24,49 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
                                    int kstart,
                                    int kend)
 {
-    int   i, j, k, sx, sy, sz, idx;
-    float u2 = 0.0f, sixth=1.0f/6.0f;
-    sx = threadIdx.x+1;
-    sy = threadIdx.y+1;
-    sz = threadIdx.z+1;
+    int   i, j, k, sx, sy, sz, idx, s;
+    sx = threadIdx.x+STENCIL_DEPTH;
+    sy = threadIdx.y+STENCIL_DEPTH;
+    sz = threadIdx.z+STENCIL_DEPTH;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     thread_block tb = this_thread_block();
-    __shared__ float smem[BLOCK_Z+2][BLOCK_Y+2][BLOCK_X+2];
+    __shared__ float smem[BLOCK_Z+2*STENCIL_DEPTH][BLOCK_Y+2*STENCIL_DEPTH][BLOCK_X+2*STENCIL_DEPTH];
     idx = i + j*NX + k*NX*NY;
     bool active = i<NX && j<NY && k>=kstart && k<=kend;
     if (active) {
-        if (threadIdx.x == 0 && i != 0)            smem[sz][sy][sx-1]   = d_u1[idx-1];
-        if (threadIdx.x == BLOCK_X-1 && i != NX-1) smem[sz][sy][sx+1]   = d_u1[idx+1];
-        if (threadIdx.y == 0 && j != 0)            smem[sz][sy-1][sx]   = d_u1[idx-NX];
-        if (threadIdx.y == BLOCK_Y-1 && j != NY-1) smem[sz][sy+1][sx]   = d_u1[idx+NX];
-        if (threadIdx.z == 0 && k != kstart)       smem[sz-1][sy][sx]   = d_u1[idx-NX*NY];
-        if (threadIdx.z == BLOCK_Z-1 && k != kend) smem[sz+1][sy][sx]   = d_u1[idx+NX*NY];
+        if (threadIdx.x == 0 && i != 0) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz][sy][sx-s]   = d_u1[idx-s];
+        }
+        if (threadIdx.x == BLOCK_X-1 && i != NX-1) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz][sy][sx+s]   = d_u1[idx+s];
+        }
+        if (threadIdx.y == 0 && j != 0) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz][sy-s][sx]   = d_u1[idx-s*NX];
+        }
+        if (threadIdx.y == BLOCK_Y-1 && j != NY-1) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz][sy+s][sx]   = d_u1[idx+s*NX];
+        }
+        if (threadIdx.z == 0 && k != kstart) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz-s][sy][sx]   = d_u1[idx-s*NX*NY];
+        }
+        if (threadIdx.z == BLOCK_Z-1 && k != kend) {
+            for (s=1; s<=STENCIL_DEPTH; s++)
+                smem[sz+s][sy][sx]   = d_u1[idx+s*NX*NY];
+        }
         smem[sz][sy][sx] = d_u1[idx];
     }
     tb.sync();
-    if (active) {
-        if (i==0 || i==NX-1 || j==0 || j==NY-1 || k==kstart || k==kend)
-          u2 = d_u1[idx]; // Dirichlet boundary conditions
-        else {
-          u2 = (smem[sz][sy][sx-1]  +
-                smem[sz][sy][sx+1]  +
-                smem[sz][sy-1][sx]  +
-                smem[sz][sy+1][sx]  +
-                smem[sz-1][sy][sx]  +
-                smem[sz+1][sy][sx]) * sixth;
-        }
-        d_u2[idx] = u2;
-    }
+    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
+        j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
+        k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH)
+        d_u2[idx] = stencil(smem, sz, sy, sx);
 }
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
