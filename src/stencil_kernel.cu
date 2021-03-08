@@ -66,7 +66,7 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
         k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH)
-        d_u2[idx] = stencil(smem, sz, sy, sx);
+        d_u2[idx] = smem_stencil((**smem), sz, sy, sx);
 }
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
