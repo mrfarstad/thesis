@@ -25,7 +25,8 @@ for gpu in gpus:
                      '32',
                      '8',
                      '4',
-                     str(depth)],
+                     str(depth),
+                     '20'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
             results = list(filter(None, res.split('\n')))
             db[gpu][version][depth] = [float(result) for result in results]

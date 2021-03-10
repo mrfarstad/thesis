@@ -10,9 +10,9 @@ for g in "${gpus[@]}"
 do
   :
     if [[ $g -eq 1 ]] ; then
-        versions=(base) #smem coop coop_smem)
+        versions=(base smem coop) # coop_smem)
     else
-        versions=(base) # smem)
+        versions=(base smem)
     fi
     for v in "${versions[@]}"
     do
