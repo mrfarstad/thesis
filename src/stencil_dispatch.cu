@@ -12,8 +12,13 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
     dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float *d_tmp;
+    unsigned int smem = 0;
+    if (SMEM) {
+        smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
+    }
     for (int i=0; i<ITERATIONS; i++) {
-        get_kernel()<<<grid, block>>>(d_u1, d_u2, 0, NZ-1);
+        get_kernel()<<<grid, block, smem>>>(d_u1, d_u2, 0, NZ-1);
         getLastCudaError("kernel execution failed\n");
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }
@@ -74,7 +79,12 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
             kend   = INTERNAL_END-1+HALO_DEPTH;
             if      (s==0)       kstart = INTERNAL_START;
             else if (s==NGPUS-1) kend   = INTERNAL_END-1;
-            get_kernel()<<<grid, block, 0, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
+            unsigned int smem = 0;
+            if (SMEM) {
+                smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+                cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
+            }
+            get_kernel()<<<grid, block, smem, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
             getLastCudaError("kernel execution failed\n");
         }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
