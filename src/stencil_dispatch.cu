@@ -2,7 +2,7 @@
 #include "../include/helper_cuda.h"
 #include "stencil_kernel.cu"
 
-typedef void (*kernel)      (float*,float*,int,int);
+typedef void (*kernel)      (float*,float*,unsigned int,unsigned int);
 typedef void (*coop_kernel) (float*,float*);
 
 kernel      get_kernel()      { return SMEM ? gpu_stencil_smem      : gpu_stencil_base; }
@@ -16,6 +16,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     if (SMEM) {
         smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
+        // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
     }
     for (int i=0; i<ITERATIONS; i++) {
         get_kernel()<<<grid, block, smem>>>(d_u1, d_u2, 0, NZ-1);
@@ -66,7 +67,8 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
     dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float **d_tmp;
     //int i, s, n, kstart, kend;
-    int i, s, kstart, kend;
+    int i, s;
+    unsigned short kstart, kend;
     //for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
     for (i=0; i<ITERATIONS; i++) {
         for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);

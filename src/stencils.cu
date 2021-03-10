@@ -5,8 +5,9 @@
 
 __host__ __device__ float stencil(float *d_u1, unsigned int idx, unsigned int const offsets[3]) {
     float u = 0.0f, c = (float) (6 * STENCIL_DEPTH);
-    for (unsigned int dim=0; dim<3; dim++)
-        for (unsigned int s=1; s<=STENCIL_DEPTH; s++)
+    unsigned char dim, s;
+    for (dim=0; dim<3; dim++)
+        for (s=1; s<=STENCIL_DEPTH; s++)
             u+=(d_u1[idx-s*offsets[dim]] + d_u1[idx+s*offsets[dim]]);
     return u / c - d_u1[idx];
 }

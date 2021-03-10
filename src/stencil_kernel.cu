@@ -5,10 +5,10 @@ using namespace cooperative_groups;
 
 __global__ void gpu_stencil_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
-                                   int kstart,
-                                   int kend)
+                                   unsigned int kstart,
+                                   unsigned int kend)
 {
-    int   i, j, k, idx;
+    unsigned int   i, j, k, idx;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
@@ -21,10 +21,10 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
 
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
-                                   int kstart,
-                                   int kend)
+                                   unsigned int kstart,
+                                   unsigned int kend)
 {
-    int   i, j, k, idx, sidx;
+    unsigned int   i, j, k, idx, sidx;
     extern __shared__ float smem[];
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
@@ -38,52 +38,49 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
         j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
         k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH) 
     {
-        float u = 0.0f, c = (float) (6 * STENCIL_DEPTH), u0, u1;
-        unsigned int d, s;
+        float u = 0.0f;
+        unsigned short d, s;
         bool active;
         for (d=1; d<=STENCIL_DEPTH; d++) {
             active = false;
             for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.x == s && i != s;
-            if (active) u0 = d_u1[idx-d];
-            else        u0 = smem[sidx-d];
+            if (active) u += d_u1[idx-d];
+            else        u += smem[sidx-d];
             active = false;
             for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.x == BLOCK_X-s && i != NX-s;
-            if (active) u1 = d_u1[idx+d];
-            else        u1 = smem[sidx+d];
-            u+=(u0 + u1);
+            if (active) u += d_u1[idx+d];
+            else        u += smem[sidx+d];
         }
         for (d=1; d<=STENCIL_DEPTH; d++) {
             active = false;
             for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.y == s && j != s;
-            if (active) u0 = d_u1[idx-d*NX];
-            else        u0 = smem[sidx-d*BLOCK_X];
+            if (active) u += d_u1[idx-d*NX];
+            else        u += smem[sidx-d*BLOCK_X];
             active = false;
             for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.y == BLOCK_Y-s && j != NY-s;
-            if (active) u1 = d_u1[idx+d*NX];
-            else        u1 = smem[sidx+d*BLOCK_X];
-            u+=(u0 + u1);
+            if (active) u += d_u1[idx+d*NX];
+            else        u += smem[sidx+d*BLOCK_X];
         }
         for (d=1; d<=STENCIL_DEPTH; d++) {
             active = false;
             for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.z == s && k != s;
-            if (active) u0 = d_u1[idx-d*NX*NY];
-            else        u0 = smem[sidx-d*BLOCK_X*BLOCK_Y];
+            if (active) u += d_u1[idx-d*NX*NY];
+            else        u += smem[sidx-d*BLOCK_X*BLOCK_Y];
             active = false;
             for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.z == BLOCK_Z-s && k != NZ-s;
-            if (active) u1 = d_u1[idx+d*NX*NY];
-            else        u1 = smem[sidx+d*BLOCK_X*BLOCK_Y];
-            u+=(u0 + u1);
+            if (active) u += d_u1[idx+d*NX*NY];
+            else        u += smem[sidx+d*BLOCK_X*BLOCK_Y];
         }
-        d_u2[idx] = u / c - smem[sidx];
+        d_u2[idx] = u / (float) (6 * STENCIL_DEPTH) - smem[sidx];
     }
 }
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
-    int   i, j, k, q, x, y, z,
-          xskip, yskip, zskip, 
-          idx;
+    unsigned int i, j, k, q, x, y, z,
+                 xskip, yskip, zskip, 
+                 idx;
     float *d_tmp;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
