@@ -1,13 +1,13 @@
-export BLOCK_X=32
+export BLOCK_X=16
 export BLOCK_Y=8
-export BLOCK_Z=4
+export BLOCK_Z=8
 export NGPUS=1
 export ITERATIONS=64
 export DIM=256
 export STENCIL_DEPTH=32
 #export HALO_DEPTH=1 # Needs to be a multiplum of 2 and lower than ITERATIONS
 export DEBUG=true
-export SMEM=true
-export COOP=false
+export SMEM=false
+export COOP=true
 export REPEAT=20
 export YME_WORKING_FOLDER=thesis
