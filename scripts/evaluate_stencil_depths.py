@@ -4,7 +4,7 @@ import pprint as p
 import subprocess
 
 gpus = [1, 2, 4]
-stencil_depths = [1, 2, 4, 8, 16, 32]
+stencil_depths = [1, 2, 4, 8, 16, 32, 64, 128]
 
 db = {}
 for gpu in gpus:
@@ -21,10 +21,10 @@ for gpu in gpus:
                     ['./scripts/evaluate_stencil_depths.sh',
                      version,
                      str(gpu),
-                     '256',
-                     '32',
+                     '512',
+                     '16',
                      '8',
-                     '4',
+                     '8',
                      str(depth),
                      '20'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
