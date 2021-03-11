@@ -16,6 +16,10 @@
 #define ITERATIONS 64
 #endif
 
+#ifndef DIMENSIONS
+#define DIMENSIONS 3
+#endif
+
 #ifndef DIM
 #define DIM 256
 #endif
@@ -26,20 +30,32 @@
 
 #define NX DIM
 #define NY DIM
+#if DIMENSIONS==3
 #define NZ DIM
+#else
+#define NZ 1
+#endif
 #define SIZE             (NX*NY*NZ)
 #define OFFSET           (SIZE/NGPUS)
 #define BYTES            (SIZE*sizeof(float))
 #define BYTES_PER_GPU    (BYTES/NGPUS)
 
 #define HALO_DEPTH       (STENCIL_DEPTH)
+#if DIMENSIONS==3
 #define BORDER_SIZE      (NX*NY)
+#else
+#define BORDER_SIZE      (NX)
+#endif
 #define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)
 #define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
 #define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 
 #define INTERNAL_START   (HALO_DEPTH)
+#if DIMENSIONS==3
 #define INTERNAL_END     (INTERNAL_START+NZ/NGPUS)
+#else
+#define INTERNAL_END     (INTERNAL_START+NY/NGPUS)
+#endif
 
 #ifndef DEBUG
 #define DEBUG false
