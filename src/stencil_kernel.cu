@@ -3,6 +3,7 @@
 #include "stencils.cu"
 using namespace cooperative_groups;
 
+#if DIMENSIONS==3
 __global__ void gpu_stencil_base(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    unsigned int kstart,
@@ -18,6 +19,21 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
         k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH)
         d_u2[idx] = stencil(d_u1, idx);
 }
+#else
+__global__ void gpu_stencil_base(float* __restrict__ d_u1,
+			           float* __restrict__ d_u2,
+                                   unsigned int jstart,
+                                   unsigned int jend)
+{
+    unsigned int   i, j, idx;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    idx = i + j*NX;
+    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
+        j>=kstart+STENCIL_DEPTH && j<kend-STENCIL_DEPTH)
+        d_u2[idx] = stencil(d_u1, idx);
+}
+#endif
 
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
