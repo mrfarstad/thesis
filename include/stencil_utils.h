@@ -76,25 +76,29 @@ int readSolution(float *h_u)
 }
 
 void print_corners(float *h_u1, float *h_u2) {
-    int i, j, ind;
+    int i, j, k, ind;
     printf("DEVICE\n");
-    for (j=0; j<8; j++) {
-      for (i=0; i<8; i++) {
-        ind = i + j*NX;
-        printf(" %5.2f ", h_u2[ind]);
+    for (k=0; k<2; k++) {
+      for (j=0; j<2; j++) {
+        for (i=0; i<2; i++) {
+          ind = i + j*NX + k*NX*NY;
+          printf(" %5.2f ", h_u2[ind]);
+        }
+        printf("\n");
       }
-      printf("\n");
     }
 
     printf("\n");
 
     printf("HOST\n");
-    for (j=0; j<8; j++) {
-      for (i=0; i<8; i++) {
-        ind = i + j*NX;
-        printf(" %5.2f ", h_u1[ind]);
+    for (k=0; j<2; j++) {
+      for (j=0; j<2; j++) {
+        for (i=0; i<2; i++) {
+          ind = i + j*NX + k*NX*NY;
+          printf(" %5.2f ", h_u1[ind]);
+        }
+        printf("\n");
       }
-      printf("\n");
     }
 }
 
