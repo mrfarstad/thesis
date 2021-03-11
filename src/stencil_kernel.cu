@@ -225,6 +225,7 @@ __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
 }
 #endif
 
+#if DIMENSIONS==3
 __global__ void gpu_stencil_coop_smem(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
 {
@@ -274,3 +275,45 @@ __global__ void gpu_stencil_coop_smem(float* __restrict__ d_u1,
         grid.sync();
     }
 }
+#else
+__global__ void gpu_stencil_coop_smem(float* __restrict__ d_u1,
+			      float* __restrict__ d_u2)
+{
+    int   i, j, q, x, y, sx, sy, xskip, yskip, idx;
+    float u2, *d_tmp, sixth=1.0f/6.0f;
+    sx = threadIdx.x+1;
+    sy = threadIdx.y+1;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    xskip = BLOCK_X * gridDim.x;
+    yskip = BLOCK_Y * gridDim.y;
+    grid_group grid = this_grid();
+    thread_block block = this_thread_block();
+    __shared__ float smem[BLOCK_Y+2][BLOCK_X+2];
+    for (q = 1; q <= ITERATIONS; q++) {
+        for (y=j; y<NY; y+=yskip) {
+            for (x=i; x<NX; x+=xskip) {
+                idx = x + y*NX;
+                if (threadIdx.x == 0 && x != 0)            smem[sz][sy][sx-1]   = d_u1[idx-1];
+                if (threadIdx.x == BLOCK_X-1 && x != NX-1) smem[sz][sy][sx+1]   = d_u1[idx+1];
+                if (threadIdx.y == 0 && y != 0)            smem[sz][sy-1][sx]   = d_u1[idx-NX];
+                if (threadIdx.y == BLOCK_Y-1 && y != NY-1) smem[sz][sy+1][sx]   = d_u1[idx+NX];
+                smem[sy][sx] = d_u1[idx];
+                block.sync();
+                if (x==0 || x==NX-1 || y==0 || y==NY-1)
+                  u2 = d_u1[idx]; // Dirichlet boundary conditions
+                else {
+                  u2 = (smem[sy][sx-1]  +
+                        smem[sy][sx+1]  +
+                        smem[sy-1][sx]  +
+                        smem[sy+1][sx]) * sixth;
+                }
+                d_u2[idx] = u2;
+                block.sync();
+            }
+        }
+        d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp;
+        grid.sync();
+    }
+}
+#endif
