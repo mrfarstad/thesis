@@ -35,6 +35,7 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
 }
 #endif
 
+#if DIMENSIONS==3
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    unsigned int kstart,
@@ -88,9 +89,54 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
             if (active) u += d_u1[idx+d*NX*NY];
             else        u += smem[sidx+d*BLOCK_X*BLOCK_Y];
         }
-        d_u2[idx] = u / (float) (6 * STENCIL_DEPTH) - smem[sidx];
+        d_u2[idx] = u / (float) (2*DIMENSIONS*STENCIL_DEPTH) - smem[sidx];
     }
 }
+#else
+__global__ void gpu_stencil_smem(float* __restrict__ d_u1,
+			           float* __restrict__ d_u2,
+                                   unsigned int jstart,
+                                   unsigned int jend)
+{
+    unsigned int   i, j, idx, sidx;
+    extern __shared__ float smem[];
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    idx = i + j*NX;
+    sidx = threadIdx.x + threadIdx.y*BLOCK_X;
+    if (i<NX && j>=jstart && j<=jend)
+        smem[sidx] = d_u1[idx];
+    this_thread_block().sync();
+    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
+        j>=kstart+STENCIL_DEPTH && j<=kend-STENCIL_DEPTH) 
+    {
+        float u = 0.0f;
+        unsigned short d, s; // It might be that short is not necessary in 2D
+        bool active;
+        for (d=1; d<=STENCIL_DEPTH; d++) {
+            active = false;
+            for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.x == s && i != s;
+            if (active) u += d_u1[idx-d];
+            else        u += smem[sidx-d];
+            active = false;
+            for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.x == BLOCK_X-s && i != NX-s;
+            if (active) u += d_u1[idx+d];
+            else        u += smem[sidx+d];
+        }
+        for (d=1; d<=STENCIL_DEPTH; d++) {
+            active = false;
+            for (s=0; s<STENCIL_DEPTH; s++) active |= threadIdx.y == s && j != s;
+            if (active) u += d_u1[idx-d*NX];
+            else        u += smem[sidx-d*BLOCK_X];
+            active = false;
+            for (s=1; s<=STENCIL_DEPTH; s++) active |= threadIdx.y == BLOCK_Y-s && j != NY-s;
+            if (active) u += d_u1[idx+d*NX];
+            else        u += smem[sidx+d*BLOCK_X];
+        }
+        d_u2[idx] = u / (float) (2*DIMENSIONS*STENCIL_DEPTH) - smem[sidx];
+    }
+}
+#endif
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,
 			      float* __restrict__ d_u2)
