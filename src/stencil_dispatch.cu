@@ -15,7 +15,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     unsigned int smem = 0;
     if (SMEM) {
         smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
-        cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
+        //cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
         // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
     }
     for (int i=0; i<ITERATIONS; i++) {
