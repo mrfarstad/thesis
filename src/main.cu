@@ -19,10 +19,13 @@ int main(int argc, const char **argv) {
         readSolution(h_ref);
     }
 
-    cudaStream_t streams[NGPUS];
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaStreamCreate(&streams[i]));
+    cudaStream_t streams_ghost_zone[NGPUS], streams_internal[NGPUS];
+
+    for (int i = 0; i < NGPUS; i++)
+    {
+        CU(cudaSetDevice(i));
+        CU(cudaStreamCreate( &streams_ghost_zone[i] ));
+        CU(cudaStreamCreate( &streams_internal[i] ));
     }
 
     if (NGPUS>1) ENABLE_P2P(NGPUS);
@@ -55,21 +58,24 @@ int main(int argc, const char **argv) {
 #pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
+        CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams_internal[i]));
     }
 
     if(NGPUS==1) {
         if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
         else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
+    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams_internal, streams_ghost_zone);
     
 #pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
+        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams_internal[i]));
     }
-    
-    for (int s=0; s<NGPUS; s++) CU(cudaStreamSynchronize(streams[s]));
+
+    for (int i = 0; i < NGPUS; i++) {
+        cudaSetDevice(i);
+        cudaDeviceSynchronize();
+    }
 
     cudaSetDevice(0);
     cudaEventRecord(stop);
@@ -92,7 +98,8 @@ int main(int argc, const char **argv) {
 
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
-        CU(cudaStreamDestroy(streams[i]));
+        CU(cudaStreamDestroy(streams_ghost_zone[i]));
+        CU(cudaStreamDestroy(streams_internal[i]));
         CU(cudaFree(d_u1[i]));
         CU(cudaFree(d_u2[i]));
         cudaDeviceReset();
