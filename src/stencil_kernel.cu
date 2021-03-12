@@ -19,13 +19,48 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
         d_u2[idx] = stencil(d_u1, idx);
 }
 
+__device__ inline float handle_ghost_zone(float *d_u1, float *smem, float u, unsigned int idx, unsigned int sidx) {
+    unsigned int d;
+#pragma unroll
+    for (d=STENCIL_DEPTH; d>=1; d--) {
+        if (threadIdx.x >= d)        u += smem[sidx-d];
+        else                         u += d_u1[idx-d];
+    }
+#pragma unroll
+    for (d=1; d<=STENCIL_DEPTH; d++) {
+        if (threadIdx.x+d < BLOCK_X) u += smem[sidx+d];
+        else                         u += d_u1[idx+d];
+    }
+#pragma unroll
+    for (d=STENCIL_DEPTH; d>=1; d--) {
+        if (threadIdx.y >= d)        u += smem[sidx-d*BLOCK_X];
+        else                         u += d_u1[idx-d*NX];
+    }
+#pragma unroll
+    for (d=1; d<=STENCIL_DEPTH; d++) {
+        if (threadIdx.y+d < BLOCK_Y) u += smem[sidx+d*BLOCK_X];
+        else                         u += d_u1[idx+d*NX];
+    }
+#pragma unroll
+    for (d=STENCIL_DEPTH; d>=1; d--) {
+        if (threadIdx.z >= d)        u += smem[sidx-d*BLOCK_X*BLOCK_Y];
+        else                         u += d_u1[idx-d*NX*NY];
+    }
+#pragma unroll
+    for (d=1; d<=STENCIL_DEPTH; d++) {
+        if (threadIdx.z+d < BLOCK_Z) u += smem[sidx+d*BLOCK_X*BLOCK_Y];
+        else                         u += d_u1[idx+d*NX*NY];
+    }
+    return u;
+}
+
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,
                                    unsigned int kstart,
                                    unsigned int kend)
 {
     float u = 0.0f, u0;
-    unsigned int   i, j, k, idx, sidx, d;
+    unsigned int   i, j, k, idx, sidx;
     extern __shared__ float smem[];
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
@@ -40,39 +75,7 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
         k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH) 
-    {
-#pragma unroll
-        for (d=STENCIL_DEPTH; d>=1; d--) {
-            if (threadIdx.x >= d)        u += smem[sidx-d];
-            else                         u += d_u1[idx-d];
-        }
-#pragma unroll
-        for (d=1; d<=STENCIL_DEPTH; d++) {
-            if (threadIdx.x+d < BLOCK_X) u += smem[sidx+d];
-            else                         u += d_u1[idx+d];
-        }
-#pragma unroll
-        for (d=STENCIL_DEPTH; d>=1; d--) {
-            if (threadIdx.y >= d)        u += smem[sidx-d*BLOCK_X];
-            else                         u += d_u1[idx-d*NX];
-        }
-#pragma unroll
-        for (d=1; d<=STENCIL_DEPTH; d++) {
-            if (threadIdx.y+d < BLOCK_Y) u += smem[sidx+d*BLOCK_X];
-            else                         u += d_u1[idx+d*NX];
-        }
-#pragma unroll
-        for (d=STENCIL_DEPTH; d>=1; d--) {
-            if (threadIdx.z >= d)        u += smem[sidx-d*BLOCK_X*BLOCK_Y];
-            else                         u += d_u1[idx-d*NX*NY];
-        }
-#pragma unroll
-        for (d=1; d<=STENCIL_DEPTH; d++) {
-            if (threadIdx.z+d < BLOCK_Z) u += smem[sidx+d*BLOCK_X*BLOCK_Y];
-            else                         u += d_u1[idx+d*NX*NY];
-        }
-        d_u2[idx] = u / (float) (6 * STENCIL_DEPTH) - u0;
-    }
+        d_u2[idx] = handle_ghost_zone(d_u1, smem, u, idx, sidx) / (float) (6 * STENCIL_DEPTH) - u0;
 }
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,

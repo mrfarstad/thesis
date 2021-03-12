@@ -53,4 +53,8 @@
 #define COOP false
 #endif
 
+#ifndef SQUARE_STENCIL
+#define SQUARE_STENCIL false
+#endif
+
 #define CU checkCudaErrors 

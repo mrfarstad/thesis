@@ -84,7 +84,7 @@ int main(int argc, const char **argv) {
     if (DEBUG) {
         //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref);
-        saveResult(d_ref);
+        //saveResult(d_ref);
         free(h_ref);
     }
 

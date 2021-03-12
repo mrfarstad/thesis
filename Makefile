@@ -32,6 +32,9 @@ endif
 ifneq ($(STENCIL_DEPTH),)
     _STENCIL_DEPTH := -D STENCIL_DEPTH=$(STENCIL_DEPTH)
 endif
+ifeq ($(SQUARE_STENCIL), true)
+    _SQUARE_STENCIL := -D SQUARE_STENCIL=true
+endif
 
 all: 		stencil_$(ID)
 
@@ -42,8 +45,8 @@ stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include
 					  -D BLOCK_Y=$(BLOCK_Y)  \
 					  -D BLOCK_Z=$(BLOCK_Z)  \
 					  -D DIM=$(DIM)          \
-		    $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS)  \
-			$(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
+ 	 $(_STENCIL_DEPTH) $(_SQUARE_STENCIL) $(_SMEM) $(_COOP)  \
+ 	      $(_NGPUS) $(_ITERATIONS) $(_HALO_DEPTH) $(_DEBUG)  
 					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu src/stencil_cpu_kernel.cu
