@@ -3,10 +3,26 @@
 #include "stencils.cu"
 using namespace cooperative_groups;
 
-__global__ void gpu_stencil_base(float* __restrict__ d_u1,
-			           float* __restrict__ d_u2,
-                                   unsigned int kstart,
-                                   unsigned int kend)
+typedef bool (*check_t) (unsigned int,unsigned int,unsigned int);
+
+__device__ inline bool is_internal(unsigned int k, unsigned int kstart, unsigned int kend) {
+#if NGPUS==1
+    return k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH;
+#else
+    return k>=kstart+2*STENCIL_DEPTH && k<=kend-2*STENCIL_DEPTH;
+#endif
+}
+
+__device__ inline bool is_ghost_zone(unsigned int k, unsigned int kstart, unsigned int kend) {
+    return (k>=kstart+STENCIL_DEPTH && k<=kstart+2*STENCIL_DEPTH) ||
+           (k>=kend-2*STENCIL_DEPTH && k<=kend-STENCIL_DEPTH);
+}
+
+__device__ void gpu_stencil_base_kernel(float* __restrict__ d_u1,
+                                 float* __restrict__ d_u2,
+                                 unsigned int kstart,
+                                 unsigned int kend,
+                                 check_t check)
 {
     unsigned int   i, j, k, idx;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
@@ -15,9 +31,26 @@ __global__ void gpu_stencil_base(float* __restrict__ d_u1,
     idx = i + j*NX + k*NX*NY;
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
-        k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH)
+        check(k, kstart, kend))
         d_u2[idx] = stencil(d_u1, idx);
 }
+
+__global__ void gpu_stencil_base(float* __restrict__ d_u1,
+                                 float* __restrict__ d_u2,
+                                 unsigned int kstart,
+                                 unsigned int kend)
+{
+    gpu_stencil_base_kernel(d_u1, d_u2, kstart, kend, is_internal);
+}
+
+__global__ void gpu_stencil_base_ghost_zone(float* __restrict__ d_u1,
+                                            float* __restrict__ d_u2,
+                                            unsigned int kstart,
+                                            unsigned int kend)
+{
+    gpu_stencil_base_kernel(d_u1, d_u2, kstart, kend, is_ghost_zone);
+}
+
 
 __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
 			           float* __restrict__ d_u2,

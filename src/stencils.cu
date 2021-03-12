@@ -3,7 +3,8 @@
 
 #include "../include/constants.h"
 
-__host__ __device__ float stencil(float *d_u1, unsigned int idx, unsigned int const offsets[3]) {
+__host__ __device__ float stencil(float *d_u1, unsigned int idx) {
+    unsigned int const offsets[] = {1, NX, NX*NY};
     float u = 0.0f, c = (float) (6 * STENCIL_DEPTH);
     unsigned char dim, s;
     for (dim=0; dim<3; dim++)
@@ -12,9 +13,5 @@ __host__ __device__ float stencil(float *d_u1, unsigned int idx, unsigned int co
     return u / c - d_u1[idx];
 }
 
-__host__ __device__ float stencil(float *d_u1, unsigned int idx) {
-    unsigned int const offsets[] = {1, NX, NX*NY};
-    return stencil(d_u1, idx, offsets);
-}
 
 #endif
