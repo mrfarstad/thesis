@@ -52,10 +52,11 @@ __global__ void gpu_stencil_base_ghost_zone(float* __restrict__ d_u1,
 }
 
 
-__global__ void gpu_stencil_smem(float* __restrict__ d_u1,
-			           float* __restrict__ d_u2,
-                                   unsigned int kstart,
-                                   unsigned int kend)
+__device__ void gpu_stencil_smem_kernel(float* __restrict__ d_u1,
+			                float* __restrict__ d_u2,
+                                        unsigned int kstart,
+                                        unsigned int kend,
+                                        check_t check)
 {
     float u = 0.0f, u0;
     unsigned int   i, j, k, idx, sidx, d;
@@ -72,7 +73,7 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
     this_thread_block().sync();
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH &&
-        k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH) 
+        check(k, kstart, kend))
     {
 #pragma unroll
         for (d=STENCIL_DEPTH; d>=1; d--) {
@@ -106,6 +107,22 @@ __global__ void gpu_stencil_smem(float* __restrict__ d_u1,
         }
         d_u2[idx] = u / (float) (6 * STENCIL_DEPTH) - u0;
     }
+}
+
+__global__ void gpu_stencil_smem(float* __restrict__ d_u1,
+                                 float* __restrict__ d_u2,
+                                 unsigned int kstart,
+                                 unsigned int kend)
+{
+    gpu_stencil_smem_kernel(d_u1, d_u2, kstart, kend, is_internal);
+}
+
+__global__ void gpu_stencil_smem_ghost_zone(float* __restrict__ d_u1,
+                                            float* __restrict__ d_u2,
+                                            unsigned int kstart,
+                                            unsigned int kend)
+{
+    gpu_stencil_smem_kernel(d_u1, d_u2, kstart, kend, is_ghost_zone);
 }
 
 __global__ void gpu_stencil_coop(float* __restrict__ d_u1,

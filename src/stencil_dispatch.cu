@@ -97,11 +97,13 @@ void launch_kernel(kernel_t kernel, dim3 grid, dim3 block, float **d_u1, float *
 }
 
 void calculate_ghost_zones(dim3 grid, dim3 block, float **d_u1, float **d_u2, cudaStream_t* streams) {
-        launch_kernel(gpu_stencil_base_ghost_zone, grid, block, d_u1, d_u2, streams);
+        if (SMEM) launch_kernel(gpu_stencil_smem_ghost_zone, grid, block, d_u1, d_u2, streams);
+        else      launch_kernel(gpu_stencil_base_ghost_zone, grid, block, d_u1, d_u2, streams);
 }
 
 void calculate_internal(dim3 grid, dim3 block, float **d_u1, float **d_u2, cudaStream_t* streams) {
-        launch_kernel(gpu_stencil_base, grid, block, d_u1, d_u2, streams);
+        if (SMEM) launch_kernel(gpu_stencil_smem, grid, block, d_u1, d_u2, streams);
+        else      launch_kernel(gpu_stencil_base, grid, block, d_u1, d_u2, streams);
 }
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream_internal, cudaStream_t *streams_ghost_zone) {
