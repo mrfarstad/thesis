@@ -4,7 +4,7 @@
 
 void check_domain_errors(float *h_u1, float *h_u2)
 {
-    int   i, j, k, idx;
+    unsigned long i, j, k, idx;
     float err = 0.0;
     for (k=0; k<NZ; k++) {
         for (j=0; j<NY; j++) {

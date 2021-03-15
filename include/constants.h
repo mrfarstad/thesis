@@ -26,7 +26,7 @@
 
 #define NX DIM
 #define NY DIM
-#define NZ DIM
+#define NZ ((unsigned long) DIM)
 #define SIZE             (NX*NY*NZ)
 #define OFFSET           (SIZE/NGPUS)
 #define BYTES            (SIZE*sizeof(float))

@@ -28,7 +28,7 @@ static void save(float *d_u, char const *format)
     sprintf(fname, "%s", format);
 
     FILE *fp_snap = fopen(fname, "w");
-    printf("saving %s: nx = %d ny = %d nz = %d iterations: %d\n", fname, NX, NY, NZ, ITERATIONS);
+    printf("saving %s: nx = %d ny = %d nz = %d iterations: %d\n", fname, NX, NY, (unsigned int) NZ, ITERATIONS);
     fwrite(d_u, sizeof(float), SIZE, fp_snap);
     fflush(stdout);
     fclose(fp_snap);
@@ -65,7 +65,7 @@ int readSolution(float *h_u)
     if (fp != NULL) {
         fseek(fp, 0, SEEK_SET);
         ignore_result(fread(h_u, sizeof(float), SIZE, fp));
-        printf("reading %s: nx = %d ny = %d nz = %d\n", fname, NX, NY, NZ);
+        printf("reading %s: nx = %d ny = %d nz = %d\n", fname, NX, NY, (unsigned int) NZ);
         fclose(fp);
     }
     else {

@@ -5,7 +5,7 @@
 
 void initialize_host_region(float *h_u)
 {
-    int i, j, k, idx;
+    unsigned long i, j, k, idx;
     for (k=0; k<NZ; k++) {
         for (j=0; j<NY; j++) {
             for (i=0; i<NX; i++) {
