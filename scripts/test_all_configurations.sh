@@ -4,7 +4,7 @@ source $project_folder/constants.sh
 host=yme
 out_path=results/out.txt
 gpus=(1 2 4)
-stencil_depths=(1 2 4)
+stencil_depths=(1 2 4 8 16 32 64 128)
 
 for g in "${gpus[@]}"
 do
