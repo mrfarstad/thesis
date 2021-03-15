@@ -12,18 +12,12 @@ int main(int argc, const char **argv) {
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
 
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
         char f[] = SOLUTION;
         if (!file_exists(f)) stencil_cpu();
         readSolution(h_ref);
     }
-
-    cudaEventRecord(start);
 
     cudaStream_t streams[NGPUS];
     for (int i = 0; i < NGPUS; i++) {
@@ -49,6 +43,12 @@ int main(int argc, const char **argv) {
         CU(cudaMalloc((void **)&d_u2[i], size));
     }
 
+    CU(cudaSetDevice(0));
+    cudaEvent_t start, stop;
+    CU(cudaEventCreate(&start));
+    CU(cudaEventCreate(&stop));
+    CU(cudaEventRecord(start));
+
     int offset;
     if (NGPUS==1) offset=0;
     else          offset=GHOST_ZONE;
@@ -69,10 +69,7 @@ int main(int argc, const char **argv) {
         CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
     }
     
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        cudaDeviceSynchronize();
-    }
+    for (int s=0; s<NGPUS; s++) CU(cudaStreamSynchronize(streams[s]));
 
     cudaSetDevice(0);
     cudaEventRecord(stop);
@@ -84,7 +81,7 @@ int main(int argc, const char **argv) {
     if (DEBUG) {
         //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref);
-        saveResult(d_ref);
+        //saveResult(d_ref);
         free(h_ref);
     }
 
