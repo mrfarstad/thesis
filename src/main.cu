@@ -9,7 +9,7 @@
 
 int main(int argc, const char **argv) {
     float  *h_ref, *d_ref,
-           *d_u1[NGPUS], *d_u2[NGPUS],
+           *d_u1, *d_u2,
            milli;
 
     if (DEBUG) {
@@ -19,59 +19,24 @@ int main(int argc, const char **argv) {
         readSolution(h_ref);
     }
 
-    cudaStream_t streams[NGPUS];
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaStreamCreate(&streams[i]));
-    }
-
-    if (NGPUS>1) ENABLE_P2P(NGPUS);
-
-    if (cudaMallocHost((void**)&d_ref, BYTES) != cudaSuccess) {
-        fprintf(stderr, "Error returned from pinned host memory allocation\n");
-        exit(1);
-    }
+    d_ref = (float *)malloc(BYTES);
 
     initialize_host_region(d_ref);
 
-    unsigned long size = BYTES_PER_GPU;
-    if (NGPUS>1) size += HALO_BYTES;
-#pragma omp parallel for num_threads(NGPUS)
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaMalloc((void **)&d_u1[i], size));
-        CU(cudaMalloc((void **)&d_u2[i], size));
-    }
+    CU(cudaMalloc((void **)&d_u1, BYTES));
+    CU(cudaMalloc((void **)&d_u2, BYTES));
 
-    CU(cudaSetDevice(0));
     cudaEvent_t start, stop;
     CU(cudaEventCreate(&start));
     CU(cudaEventCreate(&stop));
     CU(cudaEventRecord(start));
 
-    int offset;
-    if (NGPUS==1) offset=0;
-    else          offset=GHOST_ZONE;
-#pragma omp parallel for num_threads(NGPUS)
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
-    }
+    CU(cudaMemcpy(d_u1, d_ref, BYTES, cudaMemcpyHostToDevice));
 
-    if(NGPUS==1) {
-        if (COOP) dispatch_cooperative_groups_kernels(d_u1[0], d_u2[0]);
-        else      dispatch_kernels(d_u1[0], d_u2[0]);
-    } else dispatch_multi_gpu_kernels(d_u1, d_u2, streams);
-    
-#pragma omp parallel for num_threads(NGPUS)
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
-    }
-    
-    for (int s=0; s<NGPUS; s++) CU(cudaStreamSynchronize(streams[s]));
+    dispatch_kernels(d_u1, d_u2);
 
-    cudaSetDevice(0);
+    CU(cudaMemcpy(d_ref, d_u1, BYTES, cudaMemcpyDeviceToHost));
+
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&milli, start, stop);
@@ -79,22 +44,16 @@ int main(int argc, const char **argv) {
     cudaEventDestroy(stop);
 
     if (DEBUG) {
-        //print_corners(h_ref, d_ref);
         check_domain_errors(h_ref, d_ref);
-        //saveResult(d_ref);
         free(h_ref);
     }
 
     print_program_info();
     printf("%.4f\n", milli); // Print execution time in ms
 
-    CU(cudaFreeHost(d_ref));
+    free(d_ref);
 
-    for (int i = 0; i < NGPUS; i++) {
-        cudaSetDevice(i);
-        CU(cudaStreamDestroy(streams[i]));
-        CU(cudaFree(d_u1[i]));
-        CU(cudaFree(d_u2[i]));
-        cudaDeviceReset();
-    }
+    CU(cudaFree(d_u1));
+    CU(cudaFree(d_u2));
+    cudaDeviceReset();
 }
