@@ -6,12 +6,17 @@
 typedef void (*kernel)      (float*,float*,unsigned int,unsigned int);
 typedef void (*coop_kernel) (float*,float*);
 
-kernel      get_kernel()      { return SMEM ? gpu_stencil_smem      : gpu_stencil_base; }
+kernel      get_kernel()      { 
+    if (SMEM)       return gpu_stencil_smem;
+    if (UNROLL_X>1) return gpu_stencil_base_unrolled;
+    return gpu_stencil_base;
+}
+
 coop_kernel get_coop_kernel() { return SMEM ? gpu_stencil_coop_smem : gpu_stencil_coop; }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid(1+(NX-1)/BLOCK_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
+    dim3 grid((1+(NX-1)/BLOCK_X)/UNROLL_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
     float *d_tmp;
     unsigned int smem = 0;
     if (SMEM) {

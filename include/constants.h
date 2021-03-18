@@ -24,9 +24,13 @@
 #define STENCIL_DEPTH 1
 #endif
 
+#ifndef UNROLL_X
+#define UNROLL_X 4
+#endif
+
 #define NX DIM
 #define NY DIM
-#define NZ ((unsigned long) DIM)
+#define NZ               ((unsigned long) DIM)
 #define SIZE             (NX*NY*NZ)
 #define OFFSET           (SIZE/NGPUS)
 #define BYTES            (SIZE*sizeof(float))
@@ -54,3 +58,5 @@
 #endif
 
 #define CU checkCudaErrors 
+
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))

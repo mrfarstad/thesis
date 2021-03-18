@@ -26,22 +26,22 @@ int main(int argc, const char **argv) {
     CU(cudaMalloc((void **)&d_u1, BYTES));
     CU(cudaMalloc((void **)&d_u2, BYTES));
 
+    CU(cudaMemcpy(d_u1, d_ref, BYTES, cudaMemcpyHostToDevice));
+
     cudaEvent_t start, stop;
     CU(cudaEventCreate(&start));
     CU(cudaEventCreate(&stop));
     CU(cudaEventRecord(start));
 
-    CU(cudaMemcpy(d_u1, d_ref, BYTES, cudaMemcpyHostToDevice));
-
     dispatch_kernels(d_u1, d_u2);
-
-    CU(cudaMemcpy(d_ref, d_u1, BYTES, cudaMemcpyDeviceToHost));
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&milli, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
+
+    CU(cudaMemcpy(d_ref, d_u1, BYTES, cudaMemcpyDeviceToHost));
 
     if (DEBUG) {
         check_domain_errors(h_ref, d_ref);
