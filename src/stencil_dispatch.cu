@@ -1,20 +1,23 @@
 #include "../include/constants.h"
 #include "../include/helper_cuda.h"
-#include "stencil_kernel.cu"
 #include "stencil_kernel_base.cu"
+#include "stencil_kernel_smem.cu"
+#include "stencil_kernel_coop.cu"
 
 typedef void (*kernel)      (float*,float*,unsigned int,unsigned int);
 typedef void (*coop_kernel) (float*,float*);
 
 kernel      get_kernel()      { 
     if (DIMENSIONS==3) {
-        if (SMEM)       return gpu_stencil_smem;
+        if (SMEM)       return gpu_stencil_smem_3d;
         if (UNROLL_X>1) return gpu_stencil_base_3d_unrolled;
         return gpu_stencil_base_3d;
     } else if (DIMENSIONS==2) {
+        if (SMEM)       return gpu_stencil_smem_2d;
         if (UNROLL_X>1) return gpu_stencil_base_2d_unrolled;
         return gpu_stencil_base_2d;
     } else {
+        if (SMEM)       return gpu_stencil_smem_1d;
         if (UNROLL_X>1) return gpu_stencil_base_1d_unrolled;
         return gpu_stencil_base_1d;
     }
@@ -31,6 +34,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     unsigned int smem = 0;
     if (SMEM) {
         smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        //cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
         // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
     }
     for (int i=0; i<ITERATIONS; i++) {
@@ -99,7 +103,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
             unsigned int smem = 0;
             if (SMEM) {
                 smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
-                cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
+                cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
             }
             get_kernel()<<<grid, block, smem, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
             getLastCudaError("kernel execution failed\n");
