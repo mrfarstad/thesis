@@ -7,16 +7,26 @@ typedef void (*kernel)      (float*,float*,unsigned int,unsigned int);
 typedef void (*coop_kernel) (float*,float*);
 
 kernel      get_kernel()      { 
-    if (SMEM)       return gpu_stencil_smem;
-    if (UNROLL_X>1) return gpu_stencil_base_unrolled;
-    return gpu_stencil_base;
+    if (DIMENSIONS==3) {
+        if (SMEM)       return gpu_stencil_smem;
+        if (UNROLL_X>1) return gpu_stencil_base_3d_unrolled;
+        return gpu_stencil_base_3d;
+    } else if (DIMENSIONS==2) {
+        if (UNROLL_X>1) return gpu_stencil_base_2d_unrolled;
+        return gpu_stencil_base_2d;
+    } else {
+        if (UNROLL_X>1) return gpu_stencil_base_1d_unrolled;
+        return gpu_stencil_base_1d;
+    }
 }
 
-coop_kernel get_coop_kernel() { return SMEM ? gpu_stencil_coop_smem : gpu_stencil_coop; }
+coop_kernel get_coop_kernel() { return gpu_stencil_coop; }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
     dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid((1+(NX-1)/BLOCK_X)/UNROLL_X, 1+(NY-1)/BLOCK_Y, 1+(NZ-1)/BLOCK_Z);
+    dim3 grid((1+(NX-1)/BLOCK_X)/UNROLL_X);
+    if (DIMENSIONS>1) grid.y = 1+(NY-1)/BLOCK_Y;
+    if (DIMENSIONS>2) grid.z = 1+(NZ-1)/BLOCK_Z;
     float *d_tmp;
     unsigned int smem = 0;
     if (SMEM) {
@@ -73,7 +83,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
     float **d_tmp;
     //int i, s, n, kstart, kend;
     int i, s;
-    unsigned short kstart, kend;
+    unsigned int kstart, kend;
     //for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
     for (i=0; i<ITERATIONS; i++) {
         for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);

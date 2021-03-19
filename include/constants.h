@@ -20,6 +20,10 @@
 #define DIM 256
 #endif
 
+#ifndef DIMENSIONS
+#define DIMENSIONS 3
+#endif
+
 #ifndef STENCIL_DEPTH
 #define STENCIL_DEPTH 1
 #endif
@@ -28,22 +32,40 @@
 #define UNROLL_X 4
 #endif
 
-#define NX DIM
-#define NY DIM
-#define NZ               ((unsigned long) DIM)
-#define SIZE             (NX*NY*NZ)
+#define NX               (DIM)
+#define NY               (DIM)
+#define NZ               (DIM)
+#if DIMENSIONS==3
+#define SIZE             (NX*NY*(unsigned long)NZ)
+#elif DIMENSIONS==2
+#define SIZE             (NX*(unsigned long)NY)
+#else 
+#define SIZE             ((unsigned long)NX)
+#endif
 #define OFFSET           (SIZE/NGPUS)
 #define BYTES            (SIZE*sizeof(float))
 #define BYTES_PER_GPU    (BYTES/NGPUS)
 
 #define HALO_DEPTH       (STENCIL_DEPTH)
+#if DIMENSIONS==3
 #define BORDER_SIZE      (NX*NY)
+#elif DIMENSIONS==2
+#define BORDER_SIZE      (NX)
+#else
+#define BORDER_SIZE      (1)
+#endif
 #define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)
 #define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
 #define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 
 #define INTERNAL_START   (HALO_DEPTH)
+#if DIMENSIONS==3
 #define INTERNAL_END     (INTERNAL_START+NZ/NGPUS)
+#elif DIMENSIONS==2
+#define INTERNAL_END     (INTERNAL_START+NY/NGPUS)
+#else
+#define INTERNAL_END     (INTERNAL_START+NX/NGPUS)
+#endif
 
 #ifndef DEBUG
 #define DEBUG false

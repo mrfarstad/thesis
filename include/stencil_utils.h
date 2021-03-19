@@ -10,10 +10,10 @@
 #include <limits.h>
 #include "constants.h"
 
-#define STRLEN 30
+#define STRLEN 35
 #define STR_INDIR(x) #x
 #define STR(x) STR_INDIR(x)
-#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS) "_" STR(STENCIL_DEPTH)
+#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS) "_" STR(STENCIL_DEPTH) "_" STR(DIMENSIONS) "d"
 #define SOLUTION "solutions/solution" SUFFIX
 #define RESULT "results/result" SUFFIX
 
@@ -28,7 +28,7 @@ static void save(float *d_u, char const *format)
     sprintf(fname, "%s", format);
 
     FILE *fp_snap = fopen(fname, "w");
-    printf("saving %s: nx = %d ny = %d nz = %d iterations: %d\n", fname, NX, NY, (unsigned int) NZ, ITERATIONS);
+    printf("saving %s: nx = %d ny = %d nz = %d iterations: %d\n", fname, NX, (unsigned int) NY,  NZ, ITERATIONS);
     fwrite(d_u, sizeof(float), SIZE, fp_snap);
     fflush(stdout);
     fclose(fp_snap);
@@ -105,7 +105,7 @@ void print_program_info() {
     else if (SMEM)         printf("smem");
     else if (COOP)         printf("coop_base");
     else                   printf("base");
-    printf(" (DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d STENCIL_DEPTH=%d)", DIM, BLOCK_X, BLOCK_Y, BLOCK_Z, NGPUS, STENCIL_DEPTH);
+    printf(" (DIMENSIONS=%d DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d STENCIL_DEPTH=%d)", DIMENSIONS, DIM, BLOCK_X, BLOCK_Y, BLOCK_Z, NGPUS, STENCIL_DEPTH);
     printf("\n");
 }
 
