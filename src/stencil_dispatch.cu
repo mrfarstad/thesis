@@ -33,7 +33,7 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     float *d_tmp;
     unsigned int smem = 0;
     if (SMEM) {
-        smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        smem = (BLOCK_X+SMEM_PAD)*BLOCK_Y*BLOCK_Z*sizeof(float);
         //cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
         // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
     }
@@ -102,7 +102,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
             else if (s==NGPUS-1) kend   = INTERNAL_END-1;
             unsigned int smem = 0;
             if (SMEM) {
-                smem = BLOCK_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+                smem = (BLOCK_X+SMEM_PAD)*BLOCK_Y*BLOCK_Z*sizeof(float);
                 cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, smem);
             }
             get_kernel()<<<grid, block, smem, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);

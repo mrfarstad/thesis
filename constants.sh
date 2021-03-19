@@ -14,3 +14,4 @@ export REPEAT=20
 export YME_WORKING_FOLDER=thesis
 export UNROLL_X=1
 export DIMENSIONS=3
+export SMEM_PAD=1

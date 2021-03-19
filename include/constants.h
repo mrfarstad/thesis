@@ -28,6 +28,10 @@
 #define STENCIL_DEPTH 1
 #endif
 
+#ifndef SMEM_PAD
+#define SMEM_PAD 0
+#endif
+
 #define STENCIL_COEFF ((float)2*DIMENSIONS*STENCIL_DEPTH)
 
 #ifndef UNROLL_X
