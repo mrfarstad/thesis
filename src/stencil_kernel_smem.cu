@@ -41,6 +41,37 @@ __device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsig
     return u;
 }
 
+
+__device__ inline void accumulate (float *src, unsigned int idx, float* u, int offset) {
+#pragma unroll
+    for (unsigned int d=1; d<=STENCIL_DEPTH; d++) *u += src[idx+d*offset];
+}
+
+// This kernel only uses shared memory for stencil dimensions smaller than the block dimensions
+__device__ inline void smem_stencil_new(float* smem, float* d_u1, unsigned int sidx, unsigned int idx, float* u) {
+    if (threadIdx.x >= STENCIL_DEPTH)        accumulate(smem, sidx, u, -1);
+    else                                     accumulate(d_u1, idx, u, -1);
+
+    if (threadIdx.x+STENCIL_DEPTH < BLOCK_X) accumulate(smem, sidx, u, 1);
+    else                                     accumulate(d_u1, idx, u, 1);
+
+#if DIMENSIONS>1
+    if (threadIdx.y >= STENCIL_DEPTH)        accumulate(smem, sidx, u, -(BLOCK_X+SMEM_PAD));
+    else                                     accumulate(d_u1, idx, u, -NX);
+
+    if (threadIdx.y+STENCIL_DEPTH < BLOCK_Y) accumulate(smem, sidx, u, BLOCK_X+SMEM_PAD);
+    else                                     accumulate(d_u1, idx, u, NX);
+#endif
+
+#if DIMENSIONS>2
+    if (threadIdx.z >= STENCIL_DEPTH)        accumulate(smem, sidx, u, -((BLOCK_X+SMEM_PAD)*BLOCK_Y));
+    else                                     accumulate(d_u1, idx, u, -(NX*NY));
+
+    if (threadIdx.z+STENCIL_DEPTH < BLOCK_Z) accumulate(smem, sidx, u, (BLOCK_X+SMEM_PAD)*BLOCK_Y);
+    else                                     accumulate(d_u1, idx, u, NX*NY);
+#endif
+}
+
 __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
 			            float* __restrict__ d_u2,
                                     unsigned int kstart,
@@ -88,7 +119,9 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=jstart+STENCIL_DEPTH && j<=jend-STENCIL_DEPTH) 
     {
-        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx, u) / STENCIL_COEFF - u0;
+        //d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx, u) / STENCIL_COEFF - u0;
+        smem_stencil_new(smem, d_u1, sidx, idx, &u);
+        d_u2[idx] = u / STENCIL_COEFF - u0;
     }
 }
 
