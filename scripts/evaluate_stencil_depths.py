@@ -11,22 +11,25 @@ for gpu in gpus:
     db[gpu] = {}
 for gpu in gpus:
     if gpu == 1:
-        versions = ['base', 'smem', 'coop']#, 'coop_smem']
+        versions = ['base', 'smem', 'coop']
     else:
         versions = ['base', 'smem']
     for version in versions:
         db[gpu][version] = {}
         for depth in stencil_depths:
             res = subprocess.run(
-                    ['./scripts/evaluate_stencil_depths.sh',
+                    ['./scripts/evaluate_configuration.sh',
                      version,
                      str(gpu),
                      '1024',
+                     '3',
                      '16',
                      '8',
                      '8',
                      str(depth),
-                     '5'],
+                     '5',
+                     '0',
+                     '0'],
                     stdout=subprocess.PIPE).stdout.decode('utf-8')
             results = list(filter(None, res.split('\n')))
             db[gpu][version][depth] = [float(result) for result in results]

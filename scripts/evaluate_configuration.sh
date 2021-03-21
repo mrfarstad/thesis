@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# -lt 9 ]] ; then
-    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT UNROLL_X'
+if [[ $# -lt 11 ]] ; then
+    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT SMEM_PAD UNROLL_X'
     exit 0
 fi
 
@@ -10,9 +10,7 @@ project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
 config=$project_folder/configs/yme/general.conf
 constants=$project_folder/constants.sh
 
-bash $project_folder/scripts/set_run_configuration.sh $1 $2 $8
-sed -i -re 's/(DIM=)[0-9]+/\1'$3'/' $constants
-[ ! -z "$9" ] && sed -i -re 's/(UNROLL_X=)[0-9]+/\1'${10}'/' $constants
+bash $project_folder/scripts/set_run_configuration.sh $1 $2 $3 $4 $8 ${10} ${11}
 
 source $project_folder/constants.sh # Required for $REPEAT # But this overrides SMEM, COOP etc..
 

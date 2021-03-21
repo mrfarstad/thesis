@@ -4,7 +4,7 @@
 #include "../include/constants.h"
 
 __host__ __device__ float stencil(float *d_u1, unsigned int idx) {
-    float u = 0.0f, c = (float) (6 * STENCIL_DEPTH);
+    float u = 0.0f, c = (float) (2*DIMENSIONS*STENCIL_DEPTH);
     unsigned int dim, s;
     unsigned int offsets[DIMENSIONS] = {1};
 #if DIMENSIONS>1

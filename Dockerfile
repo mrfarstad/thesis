@@ -8,4 +8,4 @@ WORKDIR /usr/src/thesis
 
 COPY . ./
 
-ENTRYPOINT ["python3", "-u", "./scripts/evaluate_unroll.py"]
+ENTRYPOINT ["python3", "-u", "./scripts/evaluate_smem_pad.py"]

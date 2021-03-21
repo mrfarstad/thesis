@@ -3,9 +3,8 @@ import math
 import pprint as p
 import subprocess
 
-#dimensions = [2, 3]
-dimensions = [2]
-unroll_x = [1, 2, 4, 8]
+dimensions = [2, 3]
+smem_pad = [0, 1]
 stencil_depths = [1, 2, 4, 8, 16, 32, 64]
 
 db = {}
@@ -14,31 +13,30 @@ for dimension in dimensions:
     if dimension == 3:
         dims = [256, 512, 1024]
     else:
-        #dims = [16384, 32768, 65536]
         dims = [8192, 16384, 32768]
     for dim in dims:
         db[dimension][dim] = {}
         for depth in stencil_depths:
             db[dimension][dim][depth] = {}
         for depth in stencil_depths:
-            for ux in unroll_x:
-                db[dimension][dim][depth][ux] = {}
+            for pad in smem_pad:
+                db[dimension][dim][depth][pad] = {}
                 res = subprocess.run(
                         ['./scripts/evaluate_configuration.sh',
                          'base',
                          '1',
                          str(dim),
                          str(dimension),
+                         '32',
                          '16',
-                         '8',
-                         '8',
+                         '2',
                          str(depth),
                          '5',
-                         '1',
-                         str(ux)],
+                         str(pad),
+                         '1'],
                         stdout=subprocess.PIPE).stdout.decode('utf-8')
                 results = list(filter(None, res.split('\n')))
-                db[dimension][dim][depth][ux] = [float(result) for result in results]
+                db[dimension][dim][depth][pad] = [float(result) for result in results]
 p.pprint(db)
 with open('results.json', 'w') as fp:
     json.dump(db, fp)

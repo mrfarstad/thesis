@@ -17,28 +17,28 @@ __device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsig
 #if DIMENSIONS>1
 #pragma unroll
     for (d=STENCIL_DEPTH; d>=1; d--) {
-        if (threadIdx.y >= d)        u += smem[sidx-d*BLOCK_X];
+        if (threadIdx.y >= d)        u += smem[sidx-d*(BLOCK_X+SMEM_PAD)];
         else                         u += d_u1[idx-d*NX];
     }
 #pragma unroll
     for (d=1; d<=STENCIL_DEPTH; d++) {
-        if (threadIdx.y+d < BLOCK_Y) u += smem[sidx+d*BLOCK_X];
+        if (threadIdx.y+d < BLOCK_Y) u += smem[sidx+d*(BLOCK_X+SMEM_PAD)];
         else                         u += d_u1[idx+d*NX];
     }
 #endif
 #if DIMENSIONS>2
 #pragma unroll
     for (d=STENCIL_DEPTH; d>=1; d--) {
-        if (threadIdx.z >= d)        u += smem[sidx-d*BLOCK_X*BLOCK_Y];
+        if (threadIdx.z >= d)        u += smem[sidx-d*(BLOCK_X+SMEM_PAD)*BLOCK_Y];
         else                         u += d_u1[idx-d*NX*NY];
     }
 #pragma unroll
     for (d=1; d<=STENCIL_DEPTH; d++) {
-        if (threadIdx.z+d < BLOCK_Z) u += smem[sidx+d*BLOCK_X*BLOCK_Y];
+        if (threadIdx.z+d < BLOCK_Z) u += smem[sidx+d*(BLOCK_X+SMEM_PAD)*BLOCK_Y];
         else                         u += d_u1[idx+d*NX*NY];
     }
-    return u;
 #endif
+    return u;
 }
 
 __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
