@@ -12,6 +12,6 @@ export SMEM=true
 export COOP=false
 export REPEAT=20
 export YME_WORKING_FOLDER=thesis
-export UNROLL_X=1
+export UNROLL_X=4
 export DIMENSIONS=2
 export SMEM_PAD=0

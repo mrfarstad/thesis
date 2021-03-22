@@ -38,6 +38,8 @@
 #define UNROLL_X 4
 #endif
 
+#define SMEM_X (BLOCK_X*UNROLL_X+SMEM_PAD)
+
 #define NX               (DIM)
 #define NY               (DIM)
 #define NZ               (DIM)
