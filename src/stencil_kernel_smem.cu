@@ -98,7 +98,6 @@ __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
     }
 }
 
-
 __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
 			                     float* __restrict__ d_u2,
                                              unsigned int jstart,
@@ -162,6 +161,66 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
                 else                              u += d_u1[idx+d*NX];
             }
             d_u2[idx] = u / STENCIL_COEFF - smem[threadIdx.y][threadIdx.x+ioff];
+        }
+    }
+}
+
+
+__global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
+                                                      float* __restrict__ d_u2,
+                                                      unsigned int jstart,
+                                                      unsigned int jend)
+{
+    unsigned int i, j, s, idx, ioff, d, si, sj;
+    float u;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    __shared__ float smem[BLOCK_Y+2*STENCIL_DEPTH][SMEM_X+2*STENCIL_DEPTH];
+    si = threadIdx.x + STENCIL_DEPTH;
+    sj = threadIdx.y + STENCIL_DEPTH;
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        ioff = s*BLOCK_X;
+        idx = (i+ioff) + j*NX;
+        if ((i+ioff)<NX && j<=NY)
+        {
+            if (s==0 && threadIdx.x < STENCIL_DEPTH && i >= STENCIL_DEPTH)
+            {
+                smem[sj][si+ioff-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
+            }
+            if (s==UNROLL_X-1 && threadIdx.x >= BLOCK_X-STENCIL_DEPTH && i < NX-STENCIL_DEPTH)
+            {
+                smem[sj][si+ioff+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
+            }
+            if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
+            {
+                smem[sj-STENCIL_DEPTH][si+ioff] = d_u1[idx-STENCIL_DEPTH*NX];
+            }
+            if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j < NY-STENCIL_DEPTH)
+            {
+                smem[sj+STENCIL_DEPTH][si+ioff] = d_u1[idx+STENCIL_DEPTH*NX];
+            }
+            smem[sj][si+ioff] = d_u1[idx];
+        }
+    }
+    this_thread_block().sync();
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        ioff = s*BLOCK_X;
+        idx = (i+ioff) + j*NX;
+        if ((i+ioff)>=STENCIL_DEPTH && (i+ioff)<NX-STENCIL_DEPTH &&
+            j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH)
+        {
+            u = 0.0f;
+#pragma unroll
+            for (d=1; d<=STENCIL_DEPTH; d++)
+            {
+                u += smem[sj][si+ioff-d]
+                   + smem[sj][si+ioff+d]
+                   + smem[sj-d][si+ioff]
+                   + smem[sj+d][si+ioff];
+            }
+            d_u2[idx] = u / STENCIL_COEFF - smem[sj][si+ioff];
         }
     }
 }

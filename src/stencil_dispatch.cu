@@ -14,7 +14,8 @@ kernel      get_kernel()      {
         return gpu_stencil_base_3d;
     } else if (DIMENSIONS==2) {
         if (SMEM) {
-            if (UNROLL_X>1) return gpu_stencil_smem_2d_unrolled;
+            if (UNROLL_X>1) return gpu_stencil_smem_2d_unrolled_prefetch;
+            //if (UNROLL_X>1) return gpu_stencil_smem_2d_unrolled;
             else            return gpu_stencil_smem_2d;
         }
         if (UNROLL_X>1)     return gpu_stencil_base_2d_unrolled;
