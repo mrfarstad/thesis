@@ -140,8 +140,8 @@ __device__ void apply_stencil_prefetched(
         unsigned int idx,
         unsigned int sidx,
         float *smem,
-        float *d_u2
-        ) {
+        float *d_u2)
+{
     float u = 0.0f;
     unsigned int d;
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
@@ -159,29 +159,45 @@ __device__ void apply_stencil_prefetched(
     }
 }
 
-__global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
-                                             float* __restrict__ d_u2,
-                                             unsigned int jstart,
-                                             unsigned int jend)
+__device__ void prefetch_i_left(
+    unsigned int i,
+    unsigned int sidx,
+    unsigned int idx,
+    float *smem,
+    float *d_u1)
 {
-    unsigned int i, j, idx, sidx, si, sj;
-    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
-    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
-    extern __shared__ float smem[];
-    si = threadIdx.x + STENCIL_DEPTH;
-    sj = threadIdx.y + STENCIL_DEPTH;
-    idx = i + j*NX;
-    sidx = si + sj*SMEM_P_X;
+    if (threadIdx.x < STENCIL_DEPTH && i >= STENCIL_DEPTH)
+    {
+        smem[sidx-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
+    }
+}
+
+__device__ void prefetch_i_right(
+    unsigned int i,
+    unsigned int sidx,
+    unsigned int idx,
+    float *smem,
+    float *d_u1)
+{
+    if (threadIdx.x >= BLOCK_X-STENCIL_DEPTH && i < NX-STENCIL_DEPTH)
+    {
+        smem[sidx+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
+    }
+}
+
+__device__ void prefetch(
+    unsigned int s,
+    unsigned int i,
+    unsigned int j,
+    unsigned int idx,
+    unsigned int sidx,
+    float *smem,
+    float *d_u1)
+{
     if (i<NX && j<=NY)
     {
-        if (threadIdx.x < STENCIL_DEPTH && i >= STENCIL_DEPTH)
-        {
-            smem[sidx-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
-        }
-        if (threadIdx.x >= BLOCK_X-STENCIL_DEPTH && i < NX-STENCIL_DEPTH)
-        {
-            smem[sidx+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
-        }
+        if(s==0)          prefetch_i_left(i, sidx, idx, smem, d_u1);
+        if(s==UNROLL_X-1) prefetch_i_right(i, sidx, idx, smem, d_u1);
         if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
         {
             smem[sidx-STENCIL_DEPTH*SMEM_P_X] = d_u1[idx-STENCIL_DEPTH*NX];
@@ -192,20 +208,33 @@ __global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
         }
         smem[sidx] = d_u1[idx];
     }
+}
+
+__global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
+                                             float* __restrict__ d_u2,
+                                             unsigned int jstart,
+                                             unsigned int jend)
+{
+    extern __shared__ float smem[];
+    unsigned int i, j, idx, sidx;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    idx = i + j*NX;
+    sidx = (threadIdx.x + STENCIL_DEPTH) + (threadIdx.y + STENCIL_DEPTH)*SMEM_P_X;
+    prefetch(0, i, j, idx, sidx, smem, d_u1);
     this_thread_block().sync();
     apply_stencil_prefetched(i, j, idx, sidx, smem, d_u2);
 }
-
 
 __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
                                                       float* __restrict__ d_u2,
                                                       unsigned int jstart,
                                                       unsigned int jend)
 {
+    extern __shared__ float smem[];
     unsigned int i, j, s, idx, sidx, ioff, si, sj;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
-    extern __shared__ float smem[];
     si = threadIdx.x + STENCIL_DEPTH;
     sj = threadIdx.y + STENCIL_DEPTH;
 #pragma unroll
@@ -213,26 +242,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
         sidx = si+ioff + sj*SMEM_P_X;
-        if ((i+ioff)<NX && j<=NY)
-        {
-            if (s==0 && threadIdx.x < STENCIL_DEPTH && i >= STENCIL_DEPTH)
-            {
-                smem[sidx-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
-            }
-            if (s==UNROLL_X-1 && threadIdx.x >= BLOCK_X-STENCIL_DEPTH && i < NX-STENCIL_DEPTH)
-            {
-                smem[sidx+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
-            }
-            if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
-            {
-                smem[sidx-STENCIL_DEPTH*SMEM_P_X] = d_u1[idx-STENCIL_DEPTH*NX];
-            }
-            if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j < NY-STENCIL_DEPTH)
-            {
-                smem[sidx+STENCIL_DEPTH*SMEM_P_X] = d_u1[idx+STENCIL_DEPTH*NX];
-            }
-            smem[sidx] = d_u1[idx];
-        }
+        prefetch(s, i+ioff, j, idx, sidx, smem, d_u1);
     }
     this_thread_block().sync();
 #pragma unroll
@@ -240,7 +250,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
         sidx = (si+ioff) + sj*SMEM_P_X;
-        apply_stencil_prefetched((i+ioff), j, idx, sidx, smem, d_u2);
+        apply_stencil_prefetched(i+ioff, j, idx, sidx, smem, d_u2);
     }
 }
 
