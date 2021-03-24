@@ -81,7 +81,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
     for (s=0; s<UNROLL_X; s++) {
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
-        if ((i+ioff)<NX && j<=NY)
+        if ((i+ioff)<NX && j<NY)
         {
             smem[threadIdx.y][threadIdx.x+ioff] = d_u1[idx];
         }
@@ -194,7 +194,7 @@ __device__ void prefetch(
     float *smem,
     float *d_u1)
 {
-    if (i<NX && j<=NY)
+    if (i<NX && j<NY)
     {
         if(s==0)          prefetch_i_left(i, sidx, idx, smem, d_u1);
         if(s==UNROLL_X-1) prefetch_i_right(i, sidx, idx, smem, d_u1);
