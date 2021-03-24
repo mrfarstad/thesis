@@ -6,7 +6,8 @@ import subprocess
 #dimensions = [2, 3]
 dimensions = [2]
 unroll_x = [1, 2, 4, 8]
-stencil_depths = [1, 2, 4, 8, 16, 32, 64]
+#stencil_depths = [1, 2, 4, 8, 16, 32, 64]
+stencil_depths = [1, 2, 4, 8, 16, 32]
 
 db = {}
 for dimension in dimensions:
@@ -29,12 +30,12 @@ for dimension in dimensions:
                          '1',
                          str(dim),
                          str(dimension),
-                         '16',
-                         '8',
-                         '8',
+                         '32',
+                         '32',
+                         '1',
                          str(depth),
                          '5',
-                         '1',
+                         '0',
                          str(ux)],
                         stdout=subprocess.PIPE).stdout.decode('utf-8')
                 results = list(filter(None, res.split('\n')))

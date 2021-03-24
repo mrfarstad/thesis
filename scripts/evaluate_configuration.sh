@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# -lt 11 ]] ; then
-    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT SMEM_PAD UNROLL_X'
+if [[ $# -lt 9 ]] ; then
+    echo 'arg: VERSION NGPUS DIM DIMENSIONS BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT SMEM_PAD UNROLL_X'
     exit 0
 fi
 

@@ -38,6 +38,9 @@ endif
 ifneq ($(SMEM_PAD),)
     _SMEM_PAD := -D SMEM_PAD=$(SMEM_PAD)
 endif
+ifneq ($(PREFETCH),)
+    _PREFETCH := -D PREFETCH=$(PREFETCH)
+endif
 
 all: 		stencil_$(ID)
 
@@ -50,7 +53,7 @@ stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include
 		      			  -D DIM=$(DIM)                \
 	  $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
 	       $(_DIMENSIONS) $(_UNROLL_X) $(_UNROLL_DIM) $(_SMEM_PAD) \
-							     $(_DEBUG)
+						$(_PREFETCH) $(_DEBUG)
 					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu src/stencil_cpu_kernel.cu
