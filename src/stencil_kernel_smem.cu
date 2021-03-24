@@ -41,7 +41,14 @@ __device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsig
     return u;
 }
 
-
+/*
+ * Although this performs better than the initial smem_stencil kernel,
+ * this is mostly because the kernel resembles the base kernel for higher
+ * stencil depths. This makes the analysis wrong, as I believe the analysis
+ * should contain kernels that maximizes the reuse of shared memory as much
+ * as possible. I do not want to analyze a kernel that behaves as base but
+ * contains an extra fetch-into-smem stage.
+ *
 __device__ inline void accumulate (float *src, unsigned int idx, float* u, int offset) {
 #pragma unroll
     for (unsigned int d=1; d<=STENCIL_DEPTH; d++) *u += src[idx+d*offset];
@@ -70,7 +77,7 @@ __device__ inline void smem_stencil_new(float* smem, float* d_u1, unsigned int s
     if (threadIdx.z+STENCIL_DEPTH < BLOCK_Z) accumulate(smem, sidx, u, (SMEM_X)*BLOCK_Y);
     else                                     accumulate(d_u1, idx, u, NX*NY);
 #endif
-}
+}*/
 
 __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
 			            float* __restrict__ d_u2,
@@ -104,7 +111,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
                                              unsigned int jend)
 {
     unsigned int i, j, s, idx, ioff, d;
-    float u;
+    float u = 0.0f;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     __shared__ float smem[BLOCK_Y][SMEM_X];
@@ -165,6 +172,58 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
     }
 }
 
+__global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
+                                             float* __restrict__ d_u2,
+                                             unsigned int jstart,
+                                             unsigned int jend)
+{
+    unsigned int i, j, idx, sidx, d, si, sj;
+    float u = 0.0f;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    extern __shared__ float smem[];
+    si = threadIdx.x + STENCIL_DEPTH;
+    sj = threadIdx.y + STENCIL_DEPTH;
+    idx = i + j*NX;
+    sidx = si + sj*SMEM_P_X;
+    if (i<NX && j<=NY)
+    {
+        if (threadIdx.x < STENCIL_DEPTH && i >= STENCIL_DEPTH)
+        {
+            smem[sidx-STENCIL_DEPTH] = d_u1[idx-STENCIL_DEPTH];
+        }
+        if (threadIdx.x >= BLOCK_X-STENCIL_DEPTH && i < NX-STENCIL_DEPTH)
+        {
+            smem[sidx+STENCIL_DEPTH] = d_u1[idx+STENCIL_DEPTH];
+        }
+        if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
+        {
+            smem[sidx-STENCIL_DEPTH*SMEM_P_X] = d_u1[idx-STENCIL_DEPTH*NX];
+        }
+        if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j < NY-STENCIL_DEPTH)
+        {
+            smem[sidx+STENCIL_DEPTH*SMEM_P_X] = d_u1[idx+STENCIL_DEPTH*NX];
+        }
+        smem[sidx] = d_u1[idx];
+    }
+    this_thread_block().sync();
+    idx = i + j*NX;
+    sidx = si + sj*SMEM_P_X;
+    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
+        j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH)
+    {
+#pragma unroll
+        for (d=1; d<=STENCIL_DEPTH; d++)
+        {
+            u += smem[sidx-d]
+               + smem[sidx+d]
+               + smem[sidx-d*SMEM_P_X]
+               + smem[sidx+d*SMEM_P_X];
+        }
+        d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
+    }
+}
+
 
 __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
                                                       float* __restrict__ d_u2,
@@ -175,7 +234,6 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
     float u;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
-    //__shared__ float smem[SMEM_P_Y][SMEM_P_X];
     extern __shared__ float smem[];
     si = threadIdx.x + STENCIL_DEPTH;
     sj = threadIdx.y + STENCIL_DEPTH;
@@ -250,9 +308,7 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH &&
         j>=jstart+STENCIL_DEPTH && j<=jend-STENCIL_DEPTH) 
     {
-        //d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx, u) / STENCIL_COEFF - u0;
-        smem_stencil_new(smem, d_u1, sidx, idx, &u);
-        d_u2[idx] = u / STENCIL_COEFF - u0;
+        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx, u) / STENCIL_COEFF - u0;
     }
 }
 

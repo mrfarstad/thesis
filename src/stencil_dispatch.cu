@@ -18,10 +18,11 @@ kernel      get_kernel()      {
                 if (PREFETCH) return gpu_stencil_smem_2d_unrolled_prefetch;
                 else          return gpu_stencil_smem_2d_unrolled;
             }
-            else            return gpu_stencil_smem_2d;
+            if (PREFETCH) return gpu_stencil_smem_2d_prefetch;
+            else          return gpu_stencil_smem_2d;
         }
-        if (UNROLL_X>1)     return gpu_stencil_base_2d_unrolled;
-        else                return gpu_stencil_base_2d;
+        if (UNROLL_X>1) return gpu_stencil_base_2d_unrolled;
+        else            return gpu_stencil_base_2d;
     } else {
         if (SMEM)       return gpu_stencil_smem_1d;
         if (UNROLL_X>1) return gpu_stencil_base_1d_unrolled;
