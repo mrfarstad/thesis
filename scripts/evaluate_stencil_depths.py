@@ -5,7 +5,7 @@ import subprocess
 
 #dimensions = [2, 3]
 dimensions = [2]
-versions = ['base', 'base_unroll_2', 'smem', 'smem_unroll_4', 'smem_prefetch_unroll_4']
+versions = ['base', 'base_unroll_2', 'smem', 'smem_prefetch', 'smem_unroll_4', 'smem_prefetch_unroll_4']
 stencil_depths = [1, 2, 4, 8, 16, 32]
 #versions = ['smem_prefetch_unroll_4']
 #stencil_depths = [16]
