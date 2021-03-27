@@ -9,7 +9,6 @@ __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
                                     unsigned int kstart,
                                     unsigned int kend)
 {
-    float u0;
     unsigned int   i, j, k, idx, sidx;
     extern __shared__ float smem[];
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
@@ -17,13 +16,11 @@ __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     idx = i + j*NX + k*NX*NY;
     sidx = threadIdx.x + threadIdx.y*(BLOCK_X+SMEM_PAD) + threadIdx.z*(BLOCK_X+SMEM_PAD)*BLOCK_Y;
-    if (i<NX && j<NY && k>=kstart && k<=kend) {
-        u0 = d_u1[idx];
-        smem[sidx] = u0;
-    }
+    if (i<NX && j<NY && k>=kstart && k<=kend)
+        smem[sidx] = d_u1[idx];
     this_thread_block().sync();
     if (check_stencil_border_3d(i, j, k))
-        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - u0;
+        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
 __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
@@ -31,7 +28,6 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
                                     unsigned int jstart,
                                     unsigned int jend)
 {
-    float u0;
     unsigned int   i, j, idx, sidx;
     extern __shared__ float smem[];
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
@@ -39,13 +35,10 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
     idx = i + j*NX;
     sidx = threadIdx.x + threadIdx.y*(BLOCK_X+SMEM_PAD);
     if (i<NX && j>=jstart && j<=jend)
-    {
-        u0 = d_u1[idx];
-        smem[sidx] = u0;
-    }
+        smem[sidx] = d_u1[idx];
     this_thread_block().sync();
     if (check_stencil_border_2d(i, j))
-        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - u0;
+        d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
 __global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
@@ -133,15 +126,11 @@ __global__ void gpu_stencil_smem_1d(float* __restrict__ d_u1,
                                     unsigned int istart,
                                     unsigned int iend)
 {
-    float u0;
     unsigned int i = threadIdx.x + blockIdx.x*BLOCK_X;
     extern __shared__ float smem[];
     if (i>=istart && i<=iend)
-    {
-        u0 = d_u1[i];
-        smem[threadIdx.x] = u0;
-    }
+        smem[threadIdx.x] = d_u1[i];
     this_thread_block().sync();
     if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH)
-        d_u2[i] = smem_stencil(smem, d_u1, threadIdx.x, i) / STENCIL_COEFF - u0;
+        d_u2[i] = smem_stencil(smem, d_u1, threadIdx.x, i) / STENCIL_COEFF - smem[threadIdx.x];
 }
