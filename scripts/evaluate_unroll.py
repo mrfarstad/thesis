@@ -5,9 +5,11 @@ import subprocess
 
 #dimensions = [2, 3]
 dimensions = [2]
-unroll_x = [1, 2, 4, 8]
+#unroll_x = [1, 2, 4, 8]
+unroll_x = [1, 2]
 #stencil_depths = [1, 2, 4, 8, 16, 32, 64]
-stencil_depths = [1, 2, 4, 8, 16, 32]
+#stencil_depths = [1, 2, 4, 8, 16, 32]
+stencil_depths = [1]
 
 db = {}
 for dimension in dimensions:
@@ -16,7 +18,8 @@ for dimension in dimensions:
         dims = [256, 512, 1024]
     else:
         #dims = [16384, 32768, 65536]
-        dims = [8192, 16384, 32768]
+        #dims = [8192, 16384, 32768]
+        dims = [8192]
     for dim in dims:
         db[dimension][dim] = {}
         for depth in stencil_depths:
