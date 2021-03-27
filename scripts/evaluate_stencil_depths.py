@@ -19,12 +19,12 @@ for dimension in dimensions:
         for version in versions:
             if version == 'base':
                 unrolls = [1, 2]
-            elif version == 'smem':
+            elif 'smem' in version:
                 unrolls = [1, 4]
             for unroll in unrolls:
                 v = version
                 if unroll > 1:
-                    v += + "_unroll_" + str(unroll)
+                    v += "_unroll_" + str(unroll)
                 db[dimension][dim][v] = {}
                 for depth in stencil_depths:
                     db[dimension][dim][v][depth] = {}
