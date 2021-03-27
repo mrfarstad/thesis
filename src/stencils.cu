@@ -42,14 +42,6 @@ __device__ __inline__ void accumulate_l(float *u, float *smem, float *d_u1, unsi
     for (unsigned int d=1; d<=STENCIL_DEPTH; d++) *u += smem[sidx-d*soffset];
 }
 
-__device__ __inline__ void accumulate_l_l(float *u, float *smem, float *d_u1, unsigned int sidx,
-                                          unsigned int idx, unsigned int t,
-                                          int soffset, int offset)
-{
-#pragma unroll
-    for (unsigned int d=1; d<=STENCIL_DEPTH; d++) *u += (t >= d) ? smem[sidx-d*soffset] : d_u1[idx-d*offset];
-}
-
 __device__ __inline__ void accumulate_l(float *u, float *smem, float *d_u1, unsigned int sidx,
                                         unsigned int idx, unsigned int t,
                                         int soffset, int offset)

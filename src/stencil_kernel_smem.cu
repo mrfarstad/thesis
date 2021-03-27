@@ -93,8 +93,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
             else              accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
             if (s<UNROLL_X-1) accumulate_r(&u, *smem, d_u1, sidx, idx, 1, 1);
             else              accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_X, threadIdx.x, 1, 1);
-            // Somehow faster than accumulate_l
-            accumulate_l_l(&u, *smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
+            accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
             accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_Y, threadIdx.y, SMEM_X, NX);
             d_u2[idx] = u / STENCIL_COEFF - smem[threadIdx.y][threadIdx.x+ioff];
         }
