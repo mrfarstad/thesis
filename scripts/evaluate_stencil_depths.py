@@ -5,7 +5,7 @@ import subprocess
 
 dimensions = [2]
 versions = ['base', 'smem', 'smem_prefetch']
-stencil_depths = [1, 2, 4, 8, 16, 32]
+stencil_depths = [1, 2, 4, 8, 16]
 
 db = {}
 for dimension in dimensions:
