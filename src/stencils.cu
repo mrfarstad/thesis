@@ -2,21 +2,7 @@
 #define STENCILS_CU
 
 #include "../include/constants.h"
-
-__device__ bool check_stencil_border_1d(unsigned int i)
-{
-    return i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH;
-}
-
-__device__ bool check_stencil_border_2d(unsigned int i, unsigned int j)
-{
-    return check_stencil_border_1d(i) && j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH;
-}
-
-__device__ bool check_stencil_border_3d(unsigned int i, unsigned int j, unsigned int k)
-{
-    return check_stencil_border_2d(i, j) && k>=STENCIL_DEPTH && k<NZ-STENCIL_DEPTH;
-}
+#include "stencils_border_check.cu"
 
 __host__ __device__ float stencil(float *d_u1, unsigned int idx) {
     float u = 0.0f, c = (float) (2*DIMENSIONS*STENCIL_DEPTH);
@@ -83,16 +69,18 @@ __device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsig
 
 
 __device__ void apply_stencil_prefetched(
+        float *smem,
+        float *d_u2,
         unsigned int i,
         unsigned int j,
         unsigned int idx,
         unsigned int sidx,
-        float *smem,
-        float *d_u2)
+        unsigned int jstart,
+        unsigned int jend)
 {
     float u = 0.0f;
     unsigned int d;
-    if (check_stencil_border_2d(i, j))
+    if (check_stencil_border_2d(i, j, jstart, jend))
     {
 #pragma unroll
         for (d=1; d<=STENCIL_DEPTH; d++)

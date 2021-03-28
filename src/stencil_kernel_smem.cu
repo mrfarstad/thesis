@@ -2,6 +2,7 @@
 #include "cooperative_groups.h"
 #include "stencils.cu"
 #include "stencil_kernel_smem_prefetch.cu"
+#include "stencils_border_check.cu"
 using namespace cooperative_groups;
 
 __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
@@ -16,10 +17,10 @@ __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
     k  = threadIdx.z + blockIdx.z*BLOCK_Z;
     idx = i + j*NX + k*NX*NY;
     sidx = threadIdx.x + threadIdx.y*(BLOCK_X+SMEM_PAD) + threadIdx.z*(BLOCK_X+SMEM_PAD)*BLOCK_Y;
-    if (i<NX && j<NY && k>=kstart && k<=kend)
+    if (check_domain_border_3d(i, j, k, kstart, kend))
         smem[sidx] = d_u1[idx];
     this_thread_block().sync();
-    if (check_stencil_border_3d(i, j, k))
+    if (check_stencil_border_3d(i, j, k, kstart, kend))
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
@@ -34,10 +35,10 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     idx = i + j*NX;
     sidx = threadIdx.x + threadIdx.y*(BLOCK_X+SMEM_PAD);
-    if (i<NX && j>=jstart && j<=jend)
+    if (check_domain_border_2d(i, j, jstart, jend))
         smem[sidx] = d_u1[idx];
     this_thread_block().sync();
-    if (check_stencil_border_2d(i, j))
+    if (check_stencil_border_2d(i, j, jstart, jend))
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
@@ -52,9 +53,9 @@ __global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
     idx = i + j*NX;
     sidx = (threadIdx.x + STENCIL_DEPTH) + (threadIdx.y + STENCIL_DEPTH)*SMEM_P_X;
-    prefetch(0, i, j, idx, sidx, smem, d_u1);
+    prefetch(smem, d_u1, 0, i, j, idx, sidx, jstart, jend);
     this_thread_block().sync();
-    apply_stencil_prefetched(i, j, idx, sidx, smem, d_u2);
+    apply_stencil_prefetched(smem, d_u2, i, j, idx, sidx, jstart, jend);
 }
 
 __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
@@ -71,7 +72,8 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
     for (s=0; s<UNROLL_X; s++) {
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
-        if ((i+ioff)<NX && j<NY) smem[threadIdx.y][threadIdx.x+ioff] = d_u1[idx];
+        if (check_domain_border_2d(i+ioff, j, jstart, jend))
+            smem[threadIdx.y][threadIdx.x+ioff] = d_u1[idx];
     }
     this_thread_block().sync();
 #pragma unroll
@@ -79,7 +81,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
         sidx = (threadIdx.x+ioff)+threadIdx.y*SMEM_X;
-        if (check_stencil_border_2d(i+ioff, j))
+        if (check_stencil_border_2d(i+ioff, j, jstart, jend))
         {
             u = 0.0f;
             if (s>0)          accumulate_l(&u, *smem, d_u1, sidx, idx, 1, 1);
@@ -109,7 +111,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
         sidx = si+ioff + sj*SMEM_P_X;
-        prefetch(s, i+ioff, j, idx, sidx, smem, d_u1);
+        prefetch(smem, d_u1, s, i+ioff, j, idx, sidx, jstart, jend);
     }
     this_thread_block().sync();
 #pragma unroll
@@ -117,7 +119,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
         ioff = s*BLOCK_X;
         idx = (i+ioff) + j*NX;
         sidx = (si+ioff) + sj*SMEM_P_X;
-        apply_stencil_prefetched(i+ioff, j, idx, sidx, smem, d_u2);
+        apply_stencil_prefetched(smem, d_u2, i+ioff, j, idx, sidx, jstart, jend);
     }
 }
 
@@ -128,9 +130,9 @@ __global__ void gpu_stencil_smem_1d(float* __restrict__ d_u1,
 {
     unsigned int i = threadIdx.x + blockIdx.x*BLOCK_X;
     extern __shared__ float smem[];
-    if (i>=istart && i<=iend)
+    if (check_domain_border_1d(i, istart, iend))
         smem[threadIdx.x] = d_u1[i];
     this_thread_block().sync();
-    if (i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH)
+    if (check_stencil_border_1d(i, istart, iend))
         d_u2[i] = smem_stencil(smem, d_u1, threadIdx.x, i) / STENCIL_COEFF - smem[threadIdx.x];
 }

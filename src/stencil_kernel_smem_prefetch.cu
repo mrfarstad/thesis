@@ -1,4 +1,5 @@
 #include "../include/constants.h"
+#include "stencils_border_check.cu"
 
 __device__ void prefetch_i_left(
     unsigned int i,
@@ -27,23 +28,25 @@ __device__ void prefetch_i_right(
 }
 
 __device__ void prefetch(
+    float *smem,
+    float *d_u1,
     unsigned int s,
     unsigned int i,
     unsigned int j,
     unsigned int idx,
     unsigned int sidx,
-    float *smem,
-    float *d_u1)
+    unsigned int jstart,
+    unsigned int jend)
 {
-    if (i<NX && j<NY)
+    if (check_domain_border_2d(i, j, jstart, jend))
     {
         if(s==0)          prefetch_i_left(i, sidx, idx, smem, d_u1);
         if(s==UNROLL_X-1) prefetch_i_right(i, sidx, idx, smem, d_u1);
-        if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
+        if (threadIdx.y < STENCIL_DEPTH && j >= jstart+STENCIL_DEPTH)
         {
             smem[sidx-STENCIL_DEPTH*SMEM_P_X] = d_u1[idx-STENCIL_DEPTH*NX];
         }
-        if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j < NY-STENCIL_DEPTH)
+        if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j <= jend-STENCIL_DEPTH)
         {
             smem[sidx+STENCIL_DEPTH*SMEM_P_X] = d_u1[idx+STENCIL_DEPTH*NX];
         }
