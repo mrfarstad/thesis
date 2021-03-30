@@ -86,7 +86,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
             u = 0.0f;
             if (s>0)          accumulate_l(&u, *smem, d_u1, sidx, idx, 1, 1);
             else              accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
-            if (s<UNROLL_X-1) accumulate_r(&u, *smem, d_u1, sidx, idx, 1, 1);
+            if (s+1<UNROLL_X) accumulate_r(&u, *smem, d_u1, sidx, idx, 1, 1);
             else              accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_X, threadIdx.x, 1, 1);
             accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
             accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_Y, threadIdx.y, SMEM_X, NX);
