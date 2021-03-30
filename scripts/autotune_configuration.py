@@ -11,7 +11,7 @@ def deep_get(dictionary, keys, default=None):
 
 dimensions = [2]
 versions = ['base', 'smem', 'smem_prefetch']
-unrolls = [1, 2, 4, 8]
+unrolls = [1, 2, 4, 8, 16]
 stencil_depths = [1, 2, 4, 8, 16]
 
 try:

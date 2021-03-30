@@ -44,7 +44,7 @@ int main(int argc, const char **argv) {
         CU(cudaMalloc((void **)&d_u2[i], size));
     }
 
-        int offset;
+    int offset;
     if (NGPUS==1) offset=0;
     else          offset=GHOST_ZONE;
 #pragma omp parallel for num_threads(NGPUS)
