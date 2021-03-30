@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <math.h>
 #include "constants.h"
+#include <stdbool.h>
 
-void check_domain_errors_3d(float *h_u1, float *h_u2)
+void check_domain_errors_3d(float *h_u1, float *h_u2, bool *error)
+
 {
     unsigned long i, j, k, idx;
     double err = 0.0;
@@ -15,9 +17,11 @@ void check_domain_errors_3d(float *h_u1, float *h_u2)
         }
     }
     printf("rms error = %f \n",sqrt(err/ (double)SIZE));
+    *error = err > 10e-6;
 }
 
-void check_domain_errors_2d(float *h_u1, float *h_u2)
+void check_domain_errors_2d(float *h_u1, float *h_u2, bool *error)
+
 {
     unsigned long i, j, idx;
     double err = 0.0;
@@ -28,9 +32,10 @@ void check_domain_errors_2d(float *h_u1, float *h_u2)
         }
     }
     printf("rms error = %f \n",sqrt(err/ (double)SIZE));
+    *error = err > 10e-6;
 }
 
-void check_domain_errors_1d(float *h_u1, float *h_u2)
+void check_domain_errors_1d(float *h_u1, float *h_u2, bool *error)
 {
     unsigned long i;
     double err = 0.0;
@@ -38,11 +43,12 @@ void check_domain_errors_1d(float *h_u1, float *h_u2)
         err += (h_u1[i]-h_u2[i])*(h_u1[i]-h_u2[i]);
     }
     printf("rms error = %f \n",sqrt(err/ (double)SIZE));
+    *error = err > 10e-6;
 }
 
-void check_domain_errors(float *h_u1, float *h_u2)
+void check_domain_errors(float *h_u1, float *h_u2, bool* error)
 {
-    if      (DIMENSIONS==3) return check_domain_errors_3d(h_u1, h_u2);
-    else if (DIMENSIONS==2) return check_domain_errors_2d(h_u1, h_u2);
-    else                    return check_domain_errors_1d(h_u1, h_u2);
+    if      (DIMENSIONS==3) return check_domain_errors_3d(h_u1, h_u2, error);
+    else if (DIMENSIONS==2) return check_domain_errors_2d(h_u1, h_u2, error);
+    else                    return check_domain_errors_1d(h_u1, h_u2, error);
 }

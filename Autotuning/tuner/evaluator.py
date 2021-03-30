@@ -9,18 +9,17 @@ optimisation algorithm. This class handles compilation, execution and cleaning,
 and keeps a log of all tests performed.
 """
 
-# Running shell commands
-from subprocess import Popen, PIPE, STDOUT
-# Timing commands
-import time
 # Maths
 import math
-# Helpers
-from helpers import avg, med, strVarVals, ordinal
+# Timing commands
+import time
+# Running shell commands
+from subprocess import PIPE, STDOUT, Popen
+
 # Control output
 import output
-
-
+# Helpers
+from helpers import avg, med, ordinal, strVarVals
 
 
 # A class to encapsulate the inforamtion about a single test. Used in the log.
@@ -231,7 +230,8 @@ class Evaluator:
                                 print >>output.short, "(FAILED)"
                                 output.short.flush()
                             
-                            continue # This test cannot be run, skip ahead to the next one (poss just the next repetition).
+                            #continue # This test cannot be run, skip ahead to the next one (poss just the next repetition).
+                            break # Instead of running the next test with the same configuration, skip the whole configuration
                         
                         
                         if len(out) == 0:
@@ -436,5 +436,3 @@ class Evaluator:
 
 if __name__ == "__main__":
     print __doc__
-
-

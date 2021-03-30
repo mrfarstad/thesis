@@ -8,6 +8,7 @@
 #include "omp.h"
 
 int main(int argc, const char **argv) {
+    bool error=false;
     float  *h_ref, *d_ref,
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
@@ -36,7 +37,7 @@ int main(int argc, const char **argv) {
 
     unsigned long size = BYTES_PER_GPU;
     if (NGPUS>1) size += HALO_BYTES;
-//#pragma omp parallel for num_threads(NGPUS)
+#pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMalloc((void **)&d_u1[i], size));
@@ -46,7 +47,7 @@ int main(int argc, const char **argv) {
         int offset;
     if (NGPUS==1) offset=0;
     else          offset=GHOST_ZONE;
-//#pragma omp parallel for num_threads(NGPUS)
+#pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpyAsync(&d_u1[i][offset], &d_ref[i * OFFSET], BYTES_PER_GPU, cudaMemcpyHostToDevice, streams[i]));
@@ -70,7 +71,7 @@ int main(int argc, const char **argv) {
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-//    #pragma omp parallel for num_threads(NGPUS)
+#pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);
         CU(cudaMemcpyAsync(&d_ref[i * OFFSET], &d_u1[i][offset], BYTES_PER_GPU, cudaMemcpyDeviceToHost, streams[i]));
@@ -79,7 +80,7 @@ int main(int argc, const char **argv) {
     for (int s=0; s<NGPUS; s++) CU(cudaStreamSynchronize(streams[s]));
 
     if (DEBUG) {
-        check_domain_errors(h_ref, d_ref);
+        check_domain_errors(h_ref, d_ref, &error);
         free(h_ref);
     }
 
@@ -95,4 +96,7 @@ int main(int argc, const char **argv) {
         CU(cudaFree(d_u2[i]));
         cudaDeviceReset();
     }
+
+    if (error) exit(EXIT_FAILURE);
+    else       exit(EXIT_SUCCESS);
 }
