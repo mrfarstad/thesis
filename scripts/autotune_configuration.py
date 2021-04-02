@@ -23,7 +23,7 @@ except FileNotFoundError:
 for dimension in dimensions:
     if deep_get(db, str(dimension)) == None:
         db[str(dimension)] = {}
-    dims = [8192]
+    dims = [8192, 16384, 32768]
     for dim in dims:
         if deep_get(db, ".".join([str(dimension), str(dim)])) == None:
             db[str(dimension)][str(dim)] = {}
