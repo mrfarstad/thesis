@@ -7,8 +7,10 @@ from functools import reduce
 dimensions = [2]
 versions = ['base', 'smem', 'smem_prefetch']
 stencil_depths = [1, 2, 4, 8, 16]
-gpus = [1, 2, 4, 8, 16]
+#gpus = [1, 2, 4, 8, 16]
+gpus = [1]
 autotune = False
+unrolls = [1, 2, 4, 8]
 
 def deep_get(dictionary, keys, default=None):
     return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
@@ -44,12 +46,6 @@ for dimension in dimensions:
             db[str(dimension)][str(dim)] = {}
         for gpu in gpus:
             for version in versions:
-                if version == 'base':
-                    #unrolls = [1, 2]
-                    unrolls = [1]
-                elif 'smem' in version:
-                    #unrolls = [1, 4]
-                    unrolls = [1]
                 for unroll in unrolls:
                     v0 = str(gpu) + "_gpus_" if gpu > 0 else "_gpu_"
                     v = v0 + version
