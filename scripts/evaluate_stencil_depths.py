@@ -4,16 +4,13 @@ import pprint as p
 import subprocess
 from functools import reduce
 
-dimensions = [2]
+dimensions = ['2']
 versions = ['base', 'smem', 'smem_prefetch']
-stencil_depths = [1, 2, 4, 8, 16]
-#gpus = [1, 2, 4, 8, 16]
-gpus = [1]
+stencil_depths = ['1', '2', '4', '8', '16']
+#gpus = ['1', '2', '4', '8', '16']
+gpus = ['1']
 autotune = False
-unrolls = [1, 2, 4, 8]
-
-def deep_get(dictionary, keys, default=None):
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+unrolls = ['1', '2', '4', '8']
 
 #if autotune:
 #    try:
@@ -26,57 +23,65 @@ def deep_get(dictionary, keys, default=None):
 #else:
 #    tune_db = {}
 
+def deep_get(dictionary, keys, default=None):
+    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+
+def entry_exists(nested_list):
+    return deep_get(db, ".".join(list(map(str,nested_list)))) != None
+
 try:
-    with open('results/results_stencil_depths.json', 'r') as jsonfile:
+    with open('results/results_stencil_depths_migrated.json', 'r') as jsonfile:
         db = json.load(jsonfile)
 except FileNotFoundError:
     print("Stencil depth file not found!")
     db = {}
     
 for dimension in dimensions:
-    if deep_get(db, str(dimension)) == None:
-        db[str(dimension)] = {}
+    if not entry_exists([dimension]):
+        db[dimension] = {}
     if dimension == 3:
         dims = [256, 512, 1024]
     else:
         dims = [8192, 32768]
-        #dims = [8192, 16384, 32768]
     for dim in dims:
-        if deep_get(db, ".".join([str(dimension), str(dim)])) == None:
-            db[str(dimension)][str(dim)] = {}
+        if not entry_exists([dimension, dim]):
+            db[dimension][dim] = {}
         for gpu in gpus:
             for version in versions:
                 for unroll in unrolls:
-                    v0 = str(gpu) + "_gpus_" if gpu > 0 else "_gpu_"
+                    v0 = gpu + "_gpus_" if int(gpu) > 0 else "_gpu_"
                     v = v0 + version
-                    if unroll > 1:
-                        v += "_unroll_" + str(unroll)
+                    if int(unroll) > 1:
+                        v += "_unroll_" + unroll
                     v_tune = v[len(v0):]
-                    if deep_get(db, ".".join([str(dimension), str(dim), v])) == None:
-                        db[str(dimension)][str(dim)][v] = {}
+                    if not entry_exists([dimension, dim, v]):
+                        db[dimension][dim][v] = {}
                     for depth in stencil_depths:
-                        if deep_get(db, ".".join([str(dimension), str(dim), v, str(depth)])) != None:
+                        if not entry_exists([dimension, dim, v, depth]):
+                            db[dimension][dim][v][depth] = {}
+                        if entry_exists([dimension, dim, v, depth, 'heuristic']):
                             continue
                         #if deep_get(tune_db, ".".join([str(dimension), str(8192), v_tune, str(depth)])) != None:
                         #    blockdims = tune_db[str(dimension)][str(8192)][v_tune][str(depth)]
                         res = subprocess.run(
                                 ['./scripts/evaluate_configuration.sh',
                                  version,
-                                 str(gpu),
-                                 str(dim),
-                                 str(dimension),
+                                 gpu,
+                                 dim,
+                                 dimension,
                                  #'32' if not autotune else str(blockdims['BLOCK_X']),
                                  #'32' if not autotune else str(blockdims['BLOCK_Y']),
                                  '32',
                                  '32',
                                  '1',
-                                 str(depth),
+                                 depth,
                                  '5',
                                  '0',
-                                 str(unroll)],
+                                 unroll],
                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
+
                         results = list(filter(None, res.split('\n')))
-                        db[str(dimension)][str(dim)][v][str(depth)] = [float(result) for result in results]
+                        db[dimension][dim][v][depth]['heuristic'] = [result for result in results]
                         with open('results.json', 'w') as fp:
                             json.dump(db, fp)
 
