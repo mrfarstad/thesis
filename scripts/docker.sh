@@ -1,4 +1,5 @@
 #!/bin/bash
+cd thesis
 sed -i -re 's/(YME_WORKING_FOLDER=).*/\1..\/usr\/src\/thesis/' ./constants.sh
 source ./constants.sh
 container=thesis
