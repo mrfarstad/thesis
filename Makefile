@@ -44,7 +44,7 @@ endif
 
 all: 		stencil_$(ID)
 
-stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include/stencil_error_checker.h include/constants.h
+stencil_$(ID): src/main.cu include/stencil_utils.h include/stencil_error_checker.h include/constants.h
 	       nvcc src/main.cu -O3 -o bin/stencil_$(ID) -arch $(ARCH) \
 		     $(NVCC_DEBUG) $(INC) $(LIB) $(NVCCFLAGS) $(LIBS)  \
 		      			  -D BLOCK_X=$(BLOCK_X)        \
@@ -56,7 +56,7 @@ stencil_$(ID): src/main.cu src/stencil_kernel.cu include/stencil_utils.h include
 						$(_PREFETCH) $(_DEBUG)
 					     
 
-stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu src/stencil_cpu_kernel.cu
+stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu
 		 gcc src/stencil_cpu.cpp -O3 -o bin/stencil_cpu -D DIM=$(DIM) $(_ITERATIONS)
 
 profile:
