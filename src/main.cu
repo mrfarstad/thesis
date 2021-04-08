@@ -13,6 +13,10 @@ int main(int argc, const char **argv) {
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
 
+    if (SMEM == true && PREFETCH == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) {
+        exit(EXIT_FAILURE);
+    }
+
     if (DEBUG) {
         h_ref = (float *)malloc(BYTES);
         char f[] = SOLUTION;
@@ -30,7 +34,7 @@ int main(int argc, const char **argv) {
 
     if (cudaMallocHost((void**)&d_ref, BYTES) != cudaSuccess) {
         fprintf(stderr, "Error returned from pinned host memory allocation\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     initialize_host_region(d_ref);
