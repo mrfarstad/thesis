@@ -5,7 +5,7 @@ if [[ $# -lt 1 ]] ; then
 fi
 rsync --exclude={'solutions/'} -v -r --delete . heid:~/thesis
 ssh minip -t "
-    srun -N1 -n1 -c1 --gres=gpu:1 --partition=HEID -w heid --time=0 --pty /bin/bash ./thesis/scripts/docker.sh
+    srun -N1 -n1 -c1 --gres=gpu:1 --partition=HEID -w heid --time=0 --pty /bin/bash ./thesis/scripts/docker.sh $1
 "
 rsync -v heid:~/thesis/results.json results/results_$1.json
 
