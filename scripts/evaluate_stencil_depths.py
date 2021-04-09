@@ -35,7 +35,7 @@ def autotune_entry_exists(nested_list):
     return deep_get(tune_db, ".".join(list(map(str,nested_list)))) != None
 
 try:
-    with open('results/results_stencil_depths_migrated.json', 'r') as jsonfile:
+    with open('results/results_stencil_depths.json', 'r') as jsonfile:
         db = json.load(jsonfile)
 except FileNotFoundError:
     print("Stencil depth file not found!")
