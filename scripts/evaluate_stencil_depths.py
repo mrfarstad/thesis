@@ -2,15 +2,19 @@ import json
 import math
 import pprint as p
 import subprocess
+import sys
 from functools import reduce
 
 dimensions = ['2']
 versions = ['base', 'smem', 'smem_prefetch']
 stencil_depths = ['1', '2', '4', '8', '16']
+unrolls = ['1', '2', '4', '8']
 #gpus = ['1', '2', '4', '8', '16']
 gpus = ['1']
-autotune = True
-unrolls = ['1', '2', '4', '8']
+if len(sys.argv) > 1 and sys.argv[1] == "True": 
+    autotune = True
+else:
+    autotune = False
 
 # TODO: Run autotuned executions for unroll factors 1-8 for base, smem, smem_prefetch
 
@@ -86,9 +90,9 @@ for dimension in dimensions:
 
                         results = list(map(float,filter(None, res.split('\n'))))
                         db[dimension][dim][v][depth][config] = results
-                        with open('results.json', 'w') as fp:
+                        with open("results.json", 'w') as fp:
                             json.dump(db, fp)
 
-with open('results.json', 'w') as fp:
+with open("results.json", 'w') as fp:
     json.dump(db, fp)
 p.pprint(db)

@@ -22,10 +22,12 @@ def copy(config, results_json):
                 for version, version_db in domain_dim_db.items():
                     if entry_not_exists([dimension, domain_dim, version]):
                         new_db[dimension][domain_dim][version] = {}
-                    for stencil_depth, times in version_db.items():
+                    for stencil_depth, times_db in version_db.items():
                         if entry_not_exists([dimension, domain_dim, version, stencil_depth]):
                             new_db[dimension][domain_dim][version][stencil_depth] = {}
-                        new_db[dimension][domain_dim][version][stencil_depth][config] = times
+                        for execution_config, times in times_db.items():
+                            if execution_config == config:
+                                new_db[dimension][domain_dim][version][stencil_depth][config] = times
 
 copy("heuristic", "results/results_stencil_depths_heuristic.json")
 copy("autotune", "results/results_stencil_depths_autotuned.json")

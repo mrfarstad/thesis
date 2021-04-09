@@ -1,4 +1,7 @@
 #!/bin/bash
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
-sed -i -re 's/(scripts\/).+(\.py)/\1evaluate_stencil_depths\2/' $project_folder/Dockerfile
-bash $project_folder/scripts/heid/heid_docker.sh stencil_depths
+bash $project_folder/scripts/heid/heid_stencil_depths_heuristic.sh &
+bash $project_folder/scripts/heid/heid_stencil_depths_autotuned.sh &
+wait
+echo "Done!"
+#python3 $project_folder/scripts/migrate_stencil_depths_json.py
