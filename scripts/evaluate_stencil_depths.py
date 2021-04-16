@@ -9,7 +9,7 @@ dimensions = ['2']
 versions = ['base', 'smem', 'smem_prefetch']
 stencil_depths = ['1', '2', '4', '8', '16']
 unrolls = ['1', '2', '4', '8']
-#gpus = ['1', '2', '4', '8', '16']
+#gpus = ['2', '4', '8', '16']
 gpus = ['1']
 if len(sys.argv) > 1 and sys.argv[1] == "True": 
     autotune = True
@@ -17,7 +17,6 @@ else:
     autotune = False
 
 # TODO: Run autotuned executions for unroll factors 1-8 for base, smem, smem_prefetch
-
 if autotune:
     try:
         with open('results/results_autotune.json', 'r') as jsonfile:
@@ -43,7 +42,7 @@ try:
         db = json.load(jsonfile)
 except FileNotFoundError:
     print("Stencil depth file not found!")
-    db = {}
+    sys.exit()
     
 for dimension in dimensions:
     if not entry_exists([dimension]):
@@ -83,11 +82,10 @@ for dimension in dimensions:
                                  '32' if not autotune else str(blockdims['BLOCK_Y']),
                                  '1',
                                  depth,
-                                 '5',
+                                 '30',
                                  '0',
                                  unroll],
                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
-
                         results = list(map(float,filter(None, res.split('\n'))))
                         db[dimension][dim][v][depth][config] = results
                         with open("results.json", 'w') as fp:

@@ -48,7 +48,7 @@ for dimension in dimensions:
                              dim,
                              dimension,
                              depth,
-                             '5',
+                             '30',
                              '0',
                              unroll],
                             stdout=subprocess.PIPE).stdout.decode('utf-8')
