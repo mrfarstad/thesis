@@ -9,12 +9,15 @@ dimensions = ['2']
 versions = ['base', 'smem', 'smem_prefetch']
 stencil_depths = ['1', '2', '4', '8', '16']
 unrolls = ['1', '2', '4', '8']
-#gpus = ['2', '4', '8', '16']
+unrolls = ['1']
+iterations = ['8', '1024']
 gpus = ['1']
+#gpus = ['2', '4', '8', '16']
 if len(sys.argv) > 1 and sys.argv[1] == "True": 
     autotune = True
 else:
     autotune = False
+config = 'autotune' if autotune else 'heuristic'
 
 # TODO: Run autotuned executions for unroll factors 1-8 for base, smem, smem_prefetch
 if autotune:
@@ -67,29 +70,32 @@ for dimension in dimensions:
                     for depth in stencil_depths:
                         if not entry_exists([dimension, dim, v, depth]):
                             db[dimension][dim][v][depth] = {}
-                        config = 'autotune' if autotune else 'heuristic'
-                        if entry_exists([dimension, dim, v, depth, config]):
-                            continue
-                        if autotune_entry_exists([dimension, dim, v_tune, depth]):
-                            blockdims = tune_db[dimension][dim][v_tune][depth]
-                        res = subprocess.run(
-                                ['./scripts/evaluate_configuration.sh',
-                                 version,
-                                 gpu,
-                                 dim,
-                                 dimension,
-                                 '32' if not autotune else str(blockdims['BLOCK_X']),
-                                 '32' if not autotune else str(blockdims['BLOCK_Y']),
-                                 '1',
-                                 depth,
-                                 '30',
-                                 '0',
-                                 unroll],
-                                stdout=subprocess.PIPE).stdout.decode('utf-8')
-                        results = list(map(float,filter(None, res.split('\n'))))
-                        db[dimension][dim][v][depth][config] = results
-                        with open("results.json", 'w') as fp:
-                            json.dump(db, fp)
+                        for iteration in iterations:
+                            if not entry_exists([dimension, dim, v, depth, iteration]):
+                                db[dimension][dim][v][depth][iteration] = {}
+                            if entry_exists([dimension, dim, v, depth, iteration, config]):
+                                continue
+                            if autotune_entry_exists([dimension, dim, v_tune, depth]):
+                                blockdims = tune_db[dimension][dim][v_tune][depth]
+                            res = subprocess.run(
+                                    ['./scripts/evaluate_configuration.sh',
+                                     version,
+                                     gpu,
+                                     dim,
+                                     dimension,
+                                     '32' if not autotune else str(blockdims['BLOCK_X']),
+                                     '32' if not autotune else str(blockdims['BLOCK_Y']),
+                                     '1',
+                                     depth,
+                                     '30',
+                                     '0',
+                                     unroll,
+                                     iteration],
+                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
+                            results = list(map(float,filter(lambda s: not "declare" in s, filter(None, res.split('\n')))))
+                            db[dimension][dim][v][depth][config] = results
+                            with open("results.json", 'w') as fp:
+                                json.dump(db, fp)
 
 with open("results.json", 'w') as fp:
     json.dump(db, fp)

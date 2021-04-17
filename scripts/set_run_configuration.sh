@@ -1,6 +1,6 @@
 #!/bin/bash
-if [[ $# -lt 7 ]] ; then
-    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS STENCIL_DEPTH SMEM_PAD UNROLL_X'
+if [[ $# -lt 8 ]] ; then
+    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS STENCIL_DEPTH SMEM_PAD UNROLL_X ITERATIONS'
     exit 0
 fi
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
@@ -25,5 +25,6 @@ sed -i -re 's/(DIM=)[0-9]+/\1'$3'/'           $configuration_file
 sed -i -re 's/(DIMENSIONS=)[0-9]+/\1'$4'/'    $configuration_file
 sed -i -re 's/(STENCIL_DEPTH=)[0-9]+/\1'$5'/' $configuration_file
 sed -i -re 's/(SMEM_PAD=)[0-9]+/\1'$6'/'      $configuration_file
-sed -i -re 's/(UNROLL_X=)[0-9|,| ]+/\1'$7'/'  $configuration_file
+sed -i -re 's/(UNROLL_X=)[0-9]+/\1'$7'/'      $configuration_file
+sed -i -re 's/(ITERATIONS=)[0-9]+/\1'$8'/'    $configuration_file
 source $configuration_file
