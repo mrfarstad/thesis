@@ -17,4 +17,3 @@ export UNROLL_X=1
 export DIMENSIONS=2
 export SMEM_PAD=0
 export PREFETCH=false
-export 

@@ -8,6 +8,8 @@ ifeq ($(DEBUG), true)
 endif
 ifeq ($(HOST), yme)
     ARCH := sm_70
+else ifeq ($(HOST), idun)
+    ARCH := sm_60
 else
     ARCH := sm_75
 endif

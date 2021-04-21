@@ -6,13 +6,12 @@ import sys
 from functools import reduce
 
 dimensions = ['2']
+iterations = ['8', '1024']
 versions = ['base', 'smem', 'smem_prefetch']
 stencil_depths = ['1', '2', '4', '8', '16']
 unrolls = ['1', '2', '4', '8']
-unrolls = ['1']
-iterations = ['8', '1024']
-gpus = ['1']
-#gpus = ['2', '4', '8', '16']
+host = "heid"
+gpus = ['1', '2', '4', '8', '16']
 if len(sys.argv) > 1 and sys.argv[1] == "True": 
     autotune = True
 else:
@@ -58,6 +57,9 @@ for dimension in dimensions:
         if not entry_exists([dimension, dim]):
             db[dimension][dim] = {}
         for gpu in gpus:
+            if gpu > "1":
+                versions = ["base"]
+                unrolls = ["1"]
             for version in versions:
                 for unroll in unrolls:
                     v0 = gpu + "_gpus_" if int(gpu) > 0 else "_gpu_"
@@ -73,7 +75,9 @@ for dimension in dimensions:
                         for iteration in iterations:
                             if not entry_exists([dimension, dim, v, depth, iteration]):
                                 db[dimension][dim][v][depth][iteration] = {}
-                            if entry_exists([dimension, dim, v, depth, iteration, config]):
+                            if not entry_exists([dimension, dim, v, depth, iteration, host]):
+                                db[dimension][dim][v][depth][iteration][host] = {}
+                            if entry_exists([dimension, dim, v, depth, iteration, host, config]):
                                 continue
                             if autotune_entry_exists([dimension, dim, v_tune, depth]):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
@@ -93,7 +97,7 @@ for dimension in dimensions:
                                      iteration],
                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
                             results = list(map(float,filter(lambda s: not "declare" in s, filter(None, res.split('\n')))))
-                            db[dimension][dim][v][depth][config] = results
+                            db[dimension][dim][v][depth][iteration][host][config] = results
                             with open("results.json", 'w') as fp:
                                 json.dump(db, fp)
 
