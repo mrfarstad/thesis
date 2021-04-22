@@ -1,5 +1,9 @@
 #!/bin/bash
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
-sed -i -re 's/(CUDA_VISIBLE_DEVICES=)[0-9]+/\11/' $project_folder/constants.sh
-sed -i -re 's/(scripts\/).+(\.py).*/\1evaluate_stencil_depths\2", "True"]/' $project_folder/Dockerfile
+
+#gpu_index=all
+#gpu_index=0,1,2,3
+gpu_index=1
+bash $project_folder/scripts/set_cuda_visible_devices.sh $gpu_index
+bash $project_folder/scripts/configure_dockerfile.sh autotune
 bash $project_folder/scripts/heid/heid_docker.sh stencil_depths_autotuned
