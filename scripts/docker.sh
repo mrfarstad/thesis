@@ -5,7 +5,7 @@ if [[ $# -lt 1 ]] ; then
 fi
 
 run_container () {
-  nvidia-docker run -it --name $container $image
+  nvidia-docker run --privileged -it --name $container $image
 }
 
 delete_container () {

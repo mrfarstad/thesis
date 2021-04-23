@@ -18,7 +18,6 @@ else:
     autotune = False
 config = 'autotune' if autotune else 'heuristic'
 
-# TODO: Run autotuned executions for unroll factors 1-8 for base, smem, smem_prefetch
 if autotune:
     try:
         with open('results/results_autotune.json', 'r') as jsonfile:

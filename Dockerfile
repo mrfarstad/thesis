@@ -9,4 +9,4 @@ WORKDIR /usr/src/thesis
 COPY . ./
 
 RUN /bin/bash -c "source ./constants.sh && ./scripts/build.sh profile yme"
-ENTRYPOINT ["nvprof", "-o", "bin/profile.prof", "-f", "./bin/stencil_profile"]
+ENTRYPOINT ["nvprof", "--analysis-metrics", "-o", "bin/profile.prof", "-f", "./bin/stencil_profile"]
