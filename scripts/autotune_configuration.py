@@ -13,7 +13,7 @@ def entry_exists(nested_list):
     return deep_get(db, ".".join(list(map(str,nested_list)))) != None
 
 dimensions = ['2']
-versions = ['base', 'smem', 'smem_prefetch']
+versions = ['base', 'smem', 'smem_padded']
 unrolls = ['1', '2', '4', '8']
 stencil_depths = ['1', '2', '4', '8', '16']
 

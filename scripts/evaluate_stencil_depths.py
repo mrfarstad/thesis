@@ -5,17 +5,26 @@ import subprocess
 import sys
 from functools import reduce
 
-dimensions = ['2']
-iterations = ['8', '1024']
-versions = ['base', 'smem', 'smem_prefetch']
+dimensions     = ['2']
+#iterations     = ['8', '1024']
+iterations     = ['8']
+versions       = ['base', 'smem', 'smem_padded']
 stencil_depths = ['1', '2', '4', '8', '16']
-unrolls = ['1', '2', '4', '8']
-host = "heid"
-gpus = ['1', '2', '4', '8', '16']
+unrolls        = ['1', '2', '4', '8']
+host           = "heid"
+#gpus           = ['1', '2', '4', '8', '16']
+gpus           = ['1']
+
 if len(sys.argv) > 1 and sys.argv[1] == "True": 
     autotune = True
 else:
     autotune = False
+
+if len(sys.argv) > 2 and sys.argv[2] == "True": 
+    profile = True
+else:
+    profile = False
+
 config = 'autotune' if autotune else 'heuristic'
 
 if autotune:
@@ -76,30 +85,57 @@ for dimension in dimensions:
                                 db[dimension][dim][v][depth][iteration] = {}
                             if not entry_exists([dimension, dim, v, depth, iteration, host]):
                                 db[dimension][dim][v][depth][iteration][host] = {}
-                            if entry_exists([dimension, dim, v, depth, iteration, host, config]):
-                                continue
-                            if autotune_entry_exists([dimension, dim, v_tune, depth]):
+                            if not entry_exists([dimension, dim, v, depth, iteration, host, config]):
+                                db[dimension][dim][v][depth][iteration][host][config] = {}
+                            if autotune and autotune_entry_exists([dimension, dim, v_tune, depth]):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
-                            res = subprocess.run(
-                                    ['./scripts/evaluate_configuration.sh',
-                                     version,
-                                     gpu,
-                                     dim,
-                                     dimension,
-                                     '32' if not autotune else str(blockdims['BLOCK_X']),
-                                     '32' if not autotune else str(blockdims['BLOCK_Y']),
-                                     '1',
-                                     depth,
-                                     '30',
-                                     '0',
-                                     unroll,
-                                     iteration],
-                                    stdout=subprocess.PIPE).stdout.decode('utf-8')
-                            results = list(map(float,filter(lambda s: not "declare" in s, filter(None, res.split('\n')))))
-                            db[dimension][dim][v][depth][iteration][host][config] = results
+                            if profile:
+                                if entry_exists([dimension, dim, v, depth, iteration, host, config, "dram_write_throughput"]):
+                                    continue
+                                res = subprocess.run(
+                                        ['./scripts/profile_configuration.sh',
+                                         version,
+                                         gpu,
+                                         dim,
+                                         dimension,
+                                         '32' if not autotune else str(blockdims['BLOCK_X']),
+                                         '32' if not autotune else str(blockdims['BLOCK_Y']),
+                                         '1',
+                                         depth,
+                                         '0',
+                                         unroll,
+                                         iteration],
+                                        stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                with open("profile.txt", 'r') as fp:
+                                    ls = fp.readlines()
+                                    ll = [l.split() for l in ls]
+                                    lll = [(l[1], l[-1]) for l in ll]
+                                for metric, measurement in lll:
+                                    db[dimension][dim][v][depth][iteration][host][config][metric] = measurement
+                            else:
+                                if entry_exists([dimension, dim, v, depth, iteration, host, config, "time"]):
+                                    continue
+                                res = subprocess.run(
+                                        ['./scripts/evaluate_configuration.sh',
+                                         version,
+                                         gpu,
+                                         dim,
+                                         dimension,
+                                         '32' if not autotune else str(blockdims['BLOCK_X']),
+                                         '32' if not autotune else str(blockdims['BLOCK_Y']),
+                                         '1',
+                                         depth,
+                                         '30',
+                                         '0',
+                                         unroll,
+                                         iteration],
+                                        stdout=subprocess.PIPE).stdout.decode('utf-8')
+                                results = list(map(float,filter(lambda s: not "declare" in s, filter(None, res.split('\n')))))
+                                db[dimension][dim][v][depth][iteration][host][config]["time"] = results
                             with open("results.json", 'w') as fp:
                                 json.dump(db, fp)
 
 with open("results.json", 'w') as fp:
     json.dump(db, fp)
-p.pprint(db)
+
+#p.pprint(db)

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ $# -lt 8 ]] ; then
-    echo 'arg: (base/smem/coop/coop_smem) NGPUS DIM DIMENSIONS STENCIL_DEPTH SMEM_PAD UNROLL_X ITERATIONS'
+    echo 'arg: (base/smem/smem_padded/coop) NGPUS DIM DIMENSIONS STENCIL_DEPTH SMEM_PAD UNROLL_X ITERATIONS'
     exit 0
 fi
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
@@ -11,7 +11,7 @@ if [ "$1" = "base" ] ; then
 elif [[ $1 =~ "smem" ]]; then
   sed -i -re 's/(SMEM=)[a-z]+/\1true/'        $configuration_file
   sed -i -re 's/(COOP=)[a-z]+/\1false/'       $configuration_file
-  if [[ $1 =~ "smem_prefetch" ]]; then
+  if [[ $1 =~ "smem_padded" ]]; then
     sed -i -re 's/(PREFETCH=)[a-z]+/\1true/'  $configuration_file
   else
     sed -i -re 's/(PREFETCH=)[a-z]+/\1false/' $configuration_file

@@ -1,7 +1,7 @@
 #include "../include/constants.h"
 #include "cooperative_groups.h"
 #include "stencils.cu"
-#include "stencil_kernel_smem_prefetch.cu"
+#include "stencil_kernel_smem_padded.cu"
 #include "stencils_border_check.cu"
 using namespace cooperative_groups;
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ $# -lt 1 ]] ; then
-    echo 'arg: (stencil_depths_heuristic/unroll/autotune/stencil_depths_autotuned/profile)'
+    echo 'arg: (stencil_depths_heuristic/unroll/autotune/stencil_depths_autotuned/profile/batch_profile)'
     exit 0
 fi
 
@@ -25,6 +25,9 @@ if ! run_container; then
     delete_container
     run_container
 fi
+#if [[ $1 == profile ]];then
+#    nvidia-docker cp $container:/usr/src/thesis/profile.txt .
+#fi
 if [[ $1 == profile ]];then
     nvidia-docker cp $container:/usr/src/thesis/bin/profile.prof bin/profile.prof
 else

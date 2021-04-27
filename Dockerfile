@@ -8,5 +8,4 @@ WORKDIR /usr/src/thesis
 
 COPY . ./
 
-RUN /bin/bash -c "source ./constants.sh && ./scripts/build.sh profile yme"
-ENTRYPOINT ["nvprof", "--analysis-metrics", "-o", "bin/profile.prof", "-f", "./bin/stencil_profile"]
+ENTRYPOINT ["python3", "-u", "./scripts/evaluate_stencil_depths.py", "False", "True"]
