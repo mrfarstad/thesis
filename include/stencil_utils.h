@@ -101,11 +101,12 @@ void print_corners(float *h_u1, float *h_u2) {
 
 void print_program_info() {
     printf("Version: ");
-    if      (COOP && SMEM) printf("coop_smem");
-    else if (SMEM)         printf("smem");
-    else if (COOP)         printf("coop_base");
-    else                   printf("base");
-    printf(" (DIMENSIONS=%d DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d STENCIL_DEPTH=%d)", DIMENSIONS, DIM, BLOCK_X, BLOCK_Y, BLOCK_Z, NGPUS, STENCIL_DEPTH);
+    if      (COOP && SMEM)     printf("coop_smem");
+    else if (SMEM && PREFETCH) printf("smem_padded");
+    else if (SMEM)             printf("smem");
+    else if (COOP)             printf("coop_base");
+    else                       printf("base");
+    printf(" (DIMENSIONS=%d DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d STENCIL_DEPTH=%d UNROLL_X=%d)", DIMENSIONS, DIM, BLOCK_X, BLOCK_Y, BLOCK_Z, NGPUS, STENCIL_DEPTH, UNROLL_X);
     printf("\n");
 }
 

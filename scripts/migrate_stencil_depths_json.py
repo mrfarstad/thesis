@@ -21,7 +21,6 @@ def copy(results_json, host, config):
                 if entry_not_exists(new_db, [dimension, domain_dim]):
                     new_db[dimension][domain_dim] = {}
                 for version, version_db in domain_dim_db.items():
-                    #version = version.replace("smem_prefetch", "smem_padded")
                     if entry_not_exists(new_db, [dimension, domain_dim, version]):
                         new_db[dimension][domain_dim][version] = {}
                     for stencil_depth, stencil_depth_db in version_db.items():
@@ -41,7 +40,7 @@ def copy(results_json, host, config):
                                     new_db[dimension][domain_dim][version][stencil_depth][iteration][host][config][metric] = {}
                                 new_db[dimension][domain_dim][version][stencil_depth][iteration][host][config][metric] = iteration_db[host][config][metric]
 
-copy("results/results_profile.json",                  "heid", "heuristic")
+copy("results/results_batch_profile.json",            "heid", "heuristic")
 copy("results/results_stencil_depths_heuristic.json", "heid", "heuristic")
 copy("results/results_stencil_depths_autotuned.json", "heid", "autotune")
 copy("results/results_stencil_depths_idun.json",      "idun", "heuristic")

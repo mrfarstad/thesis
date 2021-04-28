@@ -90,6 +90,7 @@ for dimension in dimensions:
                             if autotune and autotune_entry_exists([dimension, dim, v_tune, depth]):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
                             if profile:
+                                # Check for a random metric. We gather them all anyways.
                                 if entry_exists([dimension, dim, v, depth, iteration, host, config, "dram_write_throughput"]):
                                     continue
                                 res = subprocess.run(
