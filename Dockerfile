@@ -8,4 +8,4 @@ WORKDIR /usr/src/thesis
 
 COPY . ./
 
-ENTRYPOINT ["python3", "-u", "./scripts/evaluate_stencil_depths.py", "False", "True"]
+ENTRYPOINT ["python3", "-u", "./scripts/evaluate_stencil_depths.py", "True", "True"]
