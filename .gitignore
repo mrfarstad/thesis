@@ -1,7 +1,7 @@
 snapshots
 coop_snapshots
-dimensions/
-bin/
+dimensions
+bin
 *.ncu-rep
 *.txt
 *.png
@@ -14,3 +14,4 @@ results/*
 !results/quad_gpu
 !results/quad_gpu/*.txt
 *.json
+venv
