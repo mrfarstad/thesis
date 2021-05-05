@@ -101,8 +101,8 @@ void print_corners(float *h_u1, float *h_u2) {
 
 void print_program_info() {
     printf("Version: ");
-    if      (COOP && SMEM)     printf("coop_smem");
-    else if (SMEM && PREFETCH) printf("smem_padded");
+    if (SMEM && PREFETCH) printf("smem_padded");
+    else if (SMEM && REGISTER) printf("smem_register");
     else if (SMEM)             printf("smem");
     else if (COOP)             printf("coop_base");
     else                       printf("base");

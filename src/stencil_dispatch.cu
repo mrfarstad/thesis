@@ -15,6 +15,7 @@ kernel get_kernel() {
         return gpu_stencil_base_3d;
     } else if (DIMENSIONS==2) {
         if (SMEM) {
+            if (REGISTER) return gpu_stencil_smem_2d_register;
             if (UNROLL_X>1) {
                 if (PREFETCH) return gpu_stencil_smem_2d_unrolled_prefetch;
                 else          return gpu_stencil_smem_2d_unrolled;
@@ -34,9 +35,10 @@ kernel get_kernel() {
 coop_kernel get_coop_kernel() { return gpu_stencil_coop; }
 
 void set_smem(unsigned int *smem) {
-        if (!SMEM)   {*smem = 0; return;}
-        if (PREFETCH) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
-        else          *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        if (!SMEM)        {*smem = 0; return;}
+        else if (PREFETCH) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
+        else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, *smem);
         // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
 }

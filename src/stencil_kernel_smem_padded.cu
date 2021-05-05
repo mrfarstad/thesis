@@ -1,6 +1,28 @@
 #include "../include/constants.h"
 #include "stencils_border_check.cu"
 
+__device__ void prefetch_reg_j_down(
+    unsigned int j,
+    unsigned int idx,
+    float *yval,
+    float *d_u1)
+{
+    if (j >= STENCIL_DEPTH)
+        for (unsigned int s = 0; s < STENCIL_DEPTH; s++)
+            yval[s] = d_u1[idx + (s - STENCIL_DEPTH) * NX];
+}
+
+__device__ void prefetch_reg_j_up(
+    unsigned int j,
+    unsigned int idx,
+    float *yval,
+    float *d_u1)
+{
+    if (j < NY-STENCIL_DEPTH)
+        for (unsigned int s = STENCIL_DEPTH+1; s < 2*STENCIL_DEPTH+1; s++)
+            yval[s] = d_u1[idx + (s - STENCIL_DEPTH) * NX];
+}
+
 __device__ void prefetch_i_left(
     unsigned int i,
     unsigned int sidx,

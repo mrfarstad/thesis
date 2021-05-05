@@ -42,6 +42,10 @@
 #define PREFETCH false
 #endif
 
+#ifndef REGISTER
+#define REGISTER false
+#endif
+
 #define SMEM_X (BLOCK_X*UNROLL_X+SMEM_PAD)
 #define SMEM_P_X (SMEM_X+2*STENCIL_DEPTH)
 #define SMEM_P_Y (BLOCK_Y+2*STENCIL_DEPTH)

@@ -13,7 +13,9 @@ int main(int argc, const char **argv) {
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
 
-    if (SMEM == true && PREFETCH == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) {
+    if (SMEM == true &&
+           (PREFETCH == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) ||
+           (REGISTER == true && BLOCK_X < STENCIL_DEPTH)) {
         exit(EXIT_FAILURE);
     }
 

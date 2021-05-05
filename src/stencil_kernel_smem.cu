@@ -42,6 +42,34 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
+__global__ void gpu_stencil_smem_2d_register(float* __restrict__ d_u1,
+                                             float* __restrict__ d_u2,
+                                             unsigned int jstart,
+                                             unsigned int jend)
+{
+    unsigned int   i, j, idx, sidx;
+    extern __shared__ float smem[];
+    float yval[2*STENCIL_DEPTH+1];
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    idx = i + j*NX;
+    sidx = (threadIdx.x + STENCIL_DEPTH) + threadIdx.y*SMEM_P_X;
+    if (check_domain_border_2d(i, j, jstart, jend))
+    {
+        prefetch_i_left(i, sidx, idx, smem, d_u1);
+        prefetch_i_right(i, sidx, idx, smem, d_u1);
+        prefetch_reg_j_down(j, idx, yval, d_u1);
+        prefetch_reg_j_up(j, idx, yval, d_u1);
+        yval[STENCIL_DEPTH] = d_u1[idx];
+        smem[sidx] = yval[STENCIL_DEPTH];
+    }
+    this_thread_block().sync();
+    if (check_stencil_border_2d(i, j, jstart, jend))
+    {
+        d_u2[idx] = smem_reg_stencil(smem, yval, sidx) / STENCIL_COEFF - yval[STENCIL_DEPTH];
+    }
+}
+
 __global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
                                              float* __restrict__ d_u2,
                                              unsigned int jstart,
@@ -84,9 +112,9 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
         if (check_stencil_border_2d(i+ioff, j, jstart, jend))
         {
             u = 0.0f;
-            if (s>0)          accumulate_l(&u, *smem, d_u1, sidx, idx, 1, 1);
+            if (s>0)          accumulate_l(&u, *smem, sidx, 1);
             else              accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
-            if (s+1<UNROLL_X) accumulate_r(&u, *smem, d_u1, sidx, idx, 1, 1);
+            if (s+1<UNROLL_X) accumulate_r(&u, *smem, sidx, 1);
             else              accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_X, threadIdx.x, 1, 1);
             accumulate_l(&u, *smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
             accumulate_r(&u, *smem, d_u1, sidx, idx, BLOCK_Y, threadIdx.y, SMEM_X, NX);

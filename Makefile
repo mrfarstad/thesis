@@ -43,6 +43,9 @@ endif
 ifneq ($(PREFETCH),)
     _PREFETCH := -D PREFETCH=$(PREFETCH)
 endif
+ifneq ($(REGISTER),)
+    _REGISTER := -D REGISTER=$(REGISTER)
+endif
 
 all: 		stencil_$(ID)
 
@@ -55,7 +58,7 @@ stencil_$(ID): src/main.cu include/stencil_utils.h include/stencil_error_checker
 		      			  -D DIM=$(DIM)                \
 	  $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
 	       $(_DIMENSIONS) $(_UNROLL_X) $(_UNROLL_DIM) $(_SMEM_PAD) \
-						$(_PREFETCH) $(_DEBUG)
+				   $(_REGISTER) $(_PREFETCH) $(_DEBUG)
 					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu
