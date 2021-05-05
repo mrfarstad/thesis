@@ -5,7 +5,7 @@
 #include "stencils_border_check.cu"
 using namespace cooperative_groups;
 
-__global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
+__global__ void smem_3d(float* __restrict__ d_u1,
 			            float* __restrict__ d_u2,
                                     unsigned int kstart,
                                     unsigned int kend)
@@ -24,7 +24,7 @@ __global__ void gpu_stencil_smem_3d(float* __restrict__ d_u1,
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
-__global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
+__global__ void smem_2d(float* __restrict__ d_u1,
 			            float* __restrict__ d_u2,
                                     unsigned int jstart,
                                     unsigned int jend)
@@ -42,7 +42,7 @@ __global__ void gpu_stencil_smem_2d(float* __restrict__ d_u1,
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
 }
 
-__global__ void gpu_stencil_smem_2d_register(float* __restrict__ d_u1,
+__global__ void smem_register_2d(float* __restrict__ d_u1,
                                              float* __restrict__ d_u2,
                                              unsigned int jstart,
                                              unsigned int jend)
@@ -70,7 +70,7 @@ __global__ void gpu_stencil_smem_2d_register(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_stencil_smem_2d_unrolled_register(float* __restrict__ d_u1,
+__global__ void smem_register_unroll_2d(float* __restrict__ d_u1,
                                                       float* __restrict__ d_u2,
                                                       unsigned int jstart,
                                                       unsigned int jend)
@@ -114,7 +114,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_register(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
+__global__ void smem_prefetch_2d(float* __restrict__ d_u1,
                                              float* __restrict__ d_u2,
                                              unsigned int jstart,
                                              unsigned int jend)
@@ -130,7 +130,7 @@ __global__ void gpu_stencil_smem_2d_prefetch(float* __restrict__ d_u1,
     apply_stencil_prefetched(smem, d_u2, i, j, idx, sidx, jstart, jend);
 }
 
-__global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
+__global__ void smem_unroll_2d(float* __restrict__ d_u1,
 			                     float* __restrict__ d_u2,
                                              unsigned int jstart,
                                              unsigned int jend)
@@ -167,7 +167,7 @@ __global__ void gpu_stencil_smem_2d_unrolled(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
+__global__ void smem_prefetch_unroll_2d(float* __restrict__ d_u1,
                                                       float* __restrict__ d_u2,
                                                       unsigned int jstart,
                                                       unsigned int jend)
@@ -195,7 +195,7 @@ __global__ void gpu_stencil_smem_2d_unrolled_prefetch(float* __restrict__ d_u1,
     }
 }
 
-__global__ void gpu_stencil_smem_1d(float* __restrict__ d_u1,
+__global__ void smem_1d(float* __restrict__ d_u1,
 			            float* __restrict__ d_u2,
                                     unsigned int istart,
                                     unsigned int iend)

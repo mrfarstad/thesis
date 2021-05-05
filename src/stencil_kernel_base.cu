@@ -37,10 +37,10 @@ __device__ inline void calculateBaseStencil(float* __restrict__ d_u1,
         d_u2[idx] = stencil(d_u1, idx);
 }
 
-__global__ void gpu_stencil_base_3d(float* __restrict__ d_u1,
-			            float* __restrict__ d_u2,
-                                    unsigned int kstart,
-                                    unsigned int kend)
+__global__ void base_3d(float* __restrict__ d_u1,
+                        float* __restrict__ d_u2,
+                        unsigned int kstart,
+                        unsigned int kend)
 {
     unsigned int i, j, k;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
@@ -49,10 +49,10 @@ __global__ void gpu_stencil_base_3d(float* __restrict__ d_u1,
     calculateBaseStencil(d_u1, d_u2, i, j, k, kstart, kend);
 }
 
-__global__ void gpu_stencil_base_3d_unrolled(float* __restrict__ d_u1,
-                                             float* __restrict__ d_u2,
-                                             unsigned int kstart,
-                                             unsigned int kend)
+__global__ void base_unroll_3d(float* __restrict__ d_u1,
+                               float* __restrict__ d_u2,
+                               unsigned int kstart,
+                               unsigned int kend)
 {
     unsigned int i, j, k, u;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
@@ -63,10 +63,10 @@ __global__ void gpu_stencil_base_3d_unrolled(float* __restrict__ d_u1,
         calculateBaseStencil(d_u1, d_u2, i+BLOCK_X*u, j, k, kstart, kend);
 }
 
-__global__ void gpu_stencil_base_2d(float* __restrict__ d_u1,
-			            float* __restrict__ d_u2,
-                                    unsigned int jstart,
-                                    unsigned int jend)
+__global__ void base_2d(float* __restrict__ d_u1,
+                        float* __restrict__ d_u2,
+                        unsigned int jstart,
+                        unsigned int jend)
 {
     unsigned int i, j;
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
@@ -74,10 +74,10 @@ __global__ void gpu_stencil_base_2d(float* __restrict__ d_u1,
     calculateBaseStencil(d_u1, d_u2, i, j, jstart, jend);
 }
 
-__global__ void gpu_stencil_base_2d_unrolled(float* __restrict__ d_u1,
-                                             float* __restrict__ d_u2,
-                                             unsigned int kstart,
-                                             unsigned int kend)
+__global__ void base_unroll_2d(float* __restrict__ d_u1,
+                               float* __restrict__ d_u2,
+                               unsigned int kstart,
+                               unsigned int kend)
 {
     unsigned int i, j, u;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
@@ -87,18 +87,18 @@ __global__ void gpu_stencil_base_2d_unrolled(float* __restrict__ d_u1,
         calculateBaseStencil(d_u1, d_u2, i+BLOCK_X*u, j, kstart, kend);
 }
 
-__global__ void gpu_stencil_base_1d(float* __restrict__ d_u1,
-			            float* __restrict__ d_u2,
-                                    unsigned int istart,
-                                    unsigned int iend)
+__global__ void base_1d(float* __restrict__ d_u1,
+                        float* __restrict__ d_u2,
+                        unsigned int istart,
+                        unsigned int iend)
 {
     calculateBaseStencil(d_u1, d_u2, threadIdx.x + blockIdx.x*BLOCK_X, istart, iend);
 }
 
-__global__ void gpu_stencil_base_1d_unrolled(float* __restrict__ d_u1,
-                                             float* __restrict__ d_u2,
-                                             unsigned int istart,
-                                             unsigned int iend)
+__global__ void base_unroll_1d(float* __restrict__ d_u1,
+                               float* __restrict__ d_u2,
+                               unsigned int istart,
+                               unsigned int iend)
 {
     unsigned int i, u;
     i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;

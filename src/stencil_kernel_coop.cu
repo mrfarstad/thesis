@@ -2,8 +2,8 @@
 #include "cooperative_groups.h"
 using namespace cooperative_groups;
 
-__global__ void gpu_stencil_coop(float* __restrict__ d_u1,
-			      float* __restrict__ d_u2)
+__global__ void coop(float* __restrict__ d_u1,
+                     float* __restrict__ d_u2)
 {
     unsigned int i, j, k, q, x, y, z,
                  xskip, yskip, zskip, 
