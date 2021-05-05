@@ -11,10 +11,10 @@ if [ "$1" = "base" ] ; then
 elif [[ $1 =~ "smem" ]]; then
   sed -i -re 's/(SMEM=)[a-z]+/\1true/'        $configuration_file
   sed -i -re 's/(COOP=)[a-z]+/\1false/'       $configuration_file
-  sed -i -re 's/(PREFETCH=)[a-z]+/\1false/'   $configuration_file
+  sed -i -re 's/(PADDED=)[a-z]+/\1false/'     $configuration_file
   sed -i -re 's/(REGISTER=)[a-z]+/\1false/'   $configuration_file
   if [[ $1 =~ "smem_padded" ]]; then
-    sed -i -re 's/(PREFETCH=)[a-z]+/\1true/'  $configuration_file
+    sed -i -re 's/(PADDED=)[a-z]+/\1true/'    $configuration_file
   elif [[ $1 =~ "smem_register" ]]; then
     sed -i -re 's/(REGISTER=)[a-z]+/\1true/'  $configuration_file
   fi 

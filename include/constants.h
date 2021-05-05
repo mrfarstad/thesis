@@ -38,8 +38,8 @@
 #define UNROLL_X 4
 #endif
 
-#ifndef PREFETCH
-#define PREFETCH false
+#ifndef PADDED
+#define PADDED false
 #endif
 
 #ifndef REGISTER

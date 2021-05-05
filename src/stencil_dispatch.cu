@@ -18,11 +18,11 @@ kernel get_kernel() {
     } else if (DIMENSIONS==2) {
         if (SMEM) {
             if (UNROLL_X>1) {
-                if (PREFETCH) return smem_padded_unroll_2d;
+                if (PADDED) return smem_padded_unroll_2d;
                 if (REGISTER) return smem_register_unroll_2d;
                 return smem_unroll_2d;
             }
-            if (PREFETCH) return smem_padded_2d;
+            if (PADDED) return smem_padded_2d;
             if (REGISTER) return smem_register_2d;
             return smem_2d;
         }
@@ -39,7 +39,7 @@ coop_kernel get_coop_kernel() { return coop; }
 
 void set_smem(unsigned int *smem) {
         if (!SMEM)        {*smem = 0; return;}
-        else if (PREFETCH) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
+        else if (PADDED)   *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
         else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, *smem);

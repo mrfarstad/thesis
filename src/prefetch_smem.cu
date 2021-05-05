@@ -78,5 +78,4 @@ __device__ void prefetch(
         smem[sidx] = d_u1[idx];
     }
 }
-
 #endif // PREFETCH_SMEM_CU

@@ -14,7 +14,7 @@ int main(int argc, const char **argv) {
            milli;
 
     if (SMEM == true &&
-           (PREFETCH == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) ||
+           (PADDED == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) ||
            (REGISTER == true && BLOCK_X < STENCIL_DEPTH)) {
         exit(EXIT_FAILURE);
     }
