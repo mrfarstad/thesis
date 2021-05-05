@@ -15,16 +15,17 @@ kernel get_kernel() {
         return gpu_stencil_base_3d;
     } else if (DIMENSIONS==2) {
         if (SMEM) {
-            if (REGISTER) return gpu_stencil_smem_2d_register;
             if (UNROLL_X>1) {
                 if (PREFETCH) return gpu_stencil_smem_2d_unrolled_prefetch;
-                else          return gpu_stencil_smem_2d_unrolled;
+                if (REGISTER) return gpu_stencil_smem_2d_unrolled_register;
+                return gpu_stencil_smem_2d_unrolled;
             }
             if (PREFETCH) return gpu_stencil_smem_2d_prefetch;
-            else          return gpu_stencil_smem_2d;
+            if (REGISTER) return gpu_stencil_smem_2d_register;
+            return gpu_stencil_smem_2d;
         }
         if (UNROLL_X>1) return gpu_stencil_base_2d_unrolled;
-        else            return gpu_stencil_base_2d;
+        return gpu_stencil_base_2d;
     } else {
         if (SMEM)       return gpu_stencil_smem_1d;
         if (UNROLL_X>1) return gpu_stencil_base_1d_unrolled;
