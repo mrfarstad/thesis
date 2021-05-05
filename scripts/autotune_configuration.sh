@@ -12,7 +12,7 @@ constants=$project_folder/constants.sh
 
 bash $project_folder/scripts/set_run_configuration.sh $1 $2 $3 $4 $5 $7 $8 $9
 
-source $project_folder/constants.sh # Required for $REPEAT # But this overrides SMEM, COOP etc..
+source $constants
 
 sed -i -re 's/(BLOCK_X = )[0-9|,| ]+/\11, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $config
 sed -i -re 's/(BLOCK_Y = )[0-9|,| ]+/\11, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024/' $config

@@ -8,7 +8,7 @@ from functools import reduce
 dimensions = ["2"]
 # iterations     = ['8', '1024']
 iterations = ["8"]
-versions = ["base", "smem", "smem_padded"]
+versions = ["base", "smem", "smem_padded", "smem_register"]
 stencil_depths = ["1", "2", "4", "8", "16"]
 unrolls = ["1", "2", "4", "8"]
 host = "heid"

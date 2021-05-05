@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ $# -lt 1 ]] ; then
-    echo 'arg: (heuristic/autotune/profile)'
+    echo 'arg: (heuristic/autotune/...)'
     exit 0
 fi
 
@@ -13,6 +13,8 @@ if [[ $1 == heuristic ]];then
     sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py"\]/' $project_folder/Dockerfile
 elif [[ $1 == autotune ]];then
     sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py", "True"\]/' $project_folder/Dockerfile
+elif [[ $1 == autotune_configuration ]];then
+    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/autotune_configuration\.py"\]/' $project_folder/Dockerfile
 elif [[ $1 == profile ]];then
     sed -i -re 's/(ENTRYPOINT) \[.*\]/RUN \/bin\/bash -c "source .\/constants.sh \&\& .\/scripts\/build.sh profile yme"\nENTRYPOINT ["nvprof", "--analysis-metrics", "-o", "bin\/profile.prof", "-f", ".\/bin\/stencil_profile"]/' $project_folder/Dockerfile
 elif [[ $1 == batch_profile ]];then
