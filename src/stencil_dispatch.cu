@@ -2,6 +2,8 @@
 #include "../include/helper_cuda.h"
 #include "stencil_kernel_base.cu"
 #include "stencil_kernel_smem.cu"
+#include "stencil_kernel_smem_padded.cu"
+#include "stencil_kernel_smem_register.cu"
 #include "stencil_kernel_coop.cu"
 
 typedef void (*kernel)      (float*,float*,unsigned int,unsigned int);
@@ -10,30 +12,30 @@ typedef void (*coop_kernel) (float*,float*);
 
 kernel get_kernel() { 
     if (DIMENSIONS==3) {
-        if (SMEM)       return gpu_stencil_smem_3d;
-        if (UNROLL_X>1) return gpu_stencil_base_3d_unrolled;
-        return gpu_stencil_base_3d;
+        if (SMEM)       return smem_3d;
+        if (UNROLL_X>1) return base_unroll_3d;
+        return base_3d;
     } else if (DIMENSIONS==2) {
         if (SMEM) {
             if (UNROLL_X>1) {
-                if (PREFETCH) return gpu_stencil_smem_2d_unrolled_prefetch;
-                if (REGISTER) return gpu_stencil_smem_2d_unrolled_register;
-                return gpu_stencil_smem_2d_unrolled;
+                if (PREFETCH) return smem_padded_unroll_2d;
+                if (REGISTER) return smem_register_unroll_2d;
+                return smem_unroll_2d;
             }
-            if (PREFETCH) return gpu_stencil_smem_2d_prefetch;
-            if (REGISTER) return gpu_stencil_smem_2d_register;
-            return gpu_stencil_smem_2d;
+            if (PREFETCH) return smem_padded_2d;
+            if (REGISTER) return smem_register_2d;
+            return smem_2d;
         }
-        if (UNROLL_X>1) return gpu_stencil_base_2d_unrolled;
-        return gpu_stencil_base_2d;
+        if (UNROLL_X>1) return base_unroll_2d;
+        return base_2d;
     } else {
-        if (SMEM)       return gpu_stencil_smem_1d;
-        if (UNROLL_X>1) return gpu_stencil_base_1d_unrolled;
-        return gpu_stencil_base_1d;
+        if (SMEM)       return smem_1d;
+        if (UNROLL_X>1) return base_unroll_1d;
+        return base_1d;
     }
 }
 
-coop_kernel get_coop_kernel() { return gpu_stencil_coop; }
+coop_kernel get_coop_kernel() { return coop; }
 
 void set_smem(unsigned int *smem) {
         if (!SMEM)        {*smem = 0; return;}
@@ -41,7 +43,7 @@ void set_smem(unsigned int *smem) {
         else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, *smem);
-        // Max on V100: cudaFuncSetAttribute(gpu_stencil_smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+        // Max on V100: cudaFuncSetAttribute(smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
 }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {

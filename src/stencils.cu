@@ -90,7 +90,7 @@ __device__ float smem_reg_stencil(float* smem, float* yval, unsigned int sidx)
 }
 
 
-__device__ void apply_stencil_prefetched(
+__device__ void smem_padded_stencil(
         float *smem,
         float *d_u2,
         unsigned int i,
