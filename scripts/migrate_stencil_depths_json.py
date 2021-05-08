@@ -36,8 +36,21 @@ def copy(results_json, host, config):
                         ):
                             new_db[dimension][domain_dim][version][stencil_depth] = {}
                         for iteration, iteration_db in stencil_depth_db.items():
-                            if "profile" in results_json:
+                            if config == "autotune" or host == "idun":
                                 if not (iteration == "8" and "1_gpus" in version):
+                                    continue
+                                if (
+                                    config == "autotune"
+                                    and "register" in version
+                                    and not domain_dim == "32768"
+                                ):
+                                    continue
+                            if "profile" in results_json:
+                                if not (
+                                    iteration == "8"
+                                    and "1_gpus" in version
+                                    and domain_dim == "32768"
+                                ):
                                     continue
                             if entry_not_exists(
                                 new_db,
