@@ -21,11 +21,11 @@ def entry_not_exists(db, nested_list):
 with open("results/results_stencil_depths.json") as file:
     db = json.loads(file.read())
 versions = [
-    ("1_gpus_smem_padded", "1", "heuristic"),
-    ("1_gpus_smem_padded", "1", "autotune"),
+    ("1_gpus_smem_register", "8192", "1", "heuristic", "idun"),
+    ("1_gpus_smem_register", "8192", "2", "heuristic", "idun"),
 ]
 
-metrics = [db["2"]["32768"][v][d]["8"]["heid"][c] for v, d, c in versions]
+metrics = [db["2"][dd][v][d]["8"][h][c] for v, dd, d, c, h in versions]
 
 for metric_db, version in zip(metrics, versions):  # [v[0] for v in versions]):
     metric_db["version"] = version[0] + " (%s)" % version[2]
