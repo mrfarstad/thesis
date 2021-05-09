@@ -116,7 +116,7 @@ for dimension in dimensions:
                                         iteration,
                                         host,
                                         config,
-                                        "dram_write_throughput",
+                                        "shared_ld_bank_conflict",
                                     ]
                                 ):
                                     continue
