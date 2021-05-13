@@ -10,7 +10,7 @@ __global__ void smem_3d(float* __restrict__ d_u1,
                         unsigned int kstart,
                         unsigned int kend)
 {
-    unsigned int   i, j, k, idx, sidx;
+    unsigned int i, j, k, idx, sidx;
     extern __shared__ float smem[];
     i  = threadIdx.x + blockIdx.x*BLOCK_X;
     j  = threadIdx.y + blockIdx.y*BLOCK_Y;
@@ -22,6 +22,47 @@ __global__ void smem_3d(float* __restrict__ d_u1,
     this_thread_block().sync();
     if (check_stencil_border_3d(i, j, k, kstart, kend))
         d_u2[idx] = smem_stencil(smem, d_u1, sidx, idx) / STENCIL_COEFF - smem[sidx];
+}
+
+__global__ void smem_unroll_3d(float* __restrict__ d_u1,
+                               float* __restrict__ d_u2,
+                               unsigned int kstart,
+                               unsigned int kend)
+{
+    extern __shared__ float smem[];
+    unsigned int i, j, k, s, idx, sidx, ioff;
+    float u;
+    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        ioff = s*BLOCK_X;
+        idx = (i+ioff) + j*NX + k*NX*NY;
+        sidx = (threadIdx.x+ioff) + threadIdx.y*SMEM_X + threadIdx.z*SMEM_X*BLOCK_Y;
+        if (check_domain_border_3d(i+ioff, j, k, kstart, kend))
+            smem[sidx] = d_u1[idx];
+    }
+    this_thread_block().sync();
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        ioff = s*BLOCK_X;
+        idx = (i+ioff) + j*NX + k*NX*NY;
+        sidx = (threadIdx.x+ioff) + threadIdx.y*SMEM_X + threadIdx.z*SMEM_X*BLOCK_Y;
+        if (check_stencil_border_3d(i+ioff, j, k, kstart, kend))
+        {
+            u = 0.0f;
+            if (s>0)          accumulate_l(&u, smem, sidx, 1);
+            else              accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
+            if (s+1<UNROLL_X) accumulate_r(&u, smem, sidx, 1);
+            else              accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X, 1, 1);
+            accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
+            accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y, SMEM_X, NX);
+            accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.z, SMEM_X*BLOCK_Y, NX*NY);
+            accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z, SMEM_X*BLOCK_Y, NX*NY);
+            d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
+        }
+    }
 }
 
 __global__ void smem_2d(float* __restrict__ d_u1,
