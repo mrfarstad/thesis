@@ -126,6 +126,10 @@ __device__ void smem_padded_stencil(
     accumulate_l(&u, smem, sidx, SMEM_P_X);
     accumulate_r(&u, smem, sidx, SMEM_P_X);
 #endif
+#if DIMENSIONS>2
+    accumulate_l(&u, smem, sidx, SMEM_P_X*SMEM_P_Y);
+    accumulate_r(&u, smem, sidx, SMEM_P_X*SMEM_P_Y);
+#endif
     d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
 }
 

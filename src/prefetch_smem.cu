@@ -75,4 +75,38 @@ __device__ void prefetch(
     }
     smem[sidx] = d_u1[idx];
 }
+
+__device__ void prefetch_3d(
+    float *smem,
+    float *d_u1,
+    unsigned int s,
+    unsigned int i,
+    unsigned int j,
+    unsigned int k,
+    unsigned int idx,
+    unsigned int sidx,
+    unsigned int kstart,
+    unsigned int kend)
+{
+    if(s==0)          prefetch_i_left(i, sidx, idx, smem, d_u1);
+    if(s==UNROLL_X-1) prefetch_i_right(i, sidx, idx, smem, d_u1);
+    if (threadIdx.y < STENCIL_DEPTH && j >= STENCIL_DEPTH)
+    {
+        smem[sidx-STENCIL_DEPTH*SMEM_P_X] = d_u1[idx-STENCIL_DEPTH*NX];
+    }
+    if (threadIdx.y >= BLOCK_Y-STENCIL_DEPTH && j < NY-STENCIL_DEPTH)
+    {
+        smem[sidx+STENCIL_DEPTH*SMEM_P_X] = d_u1[idx+STENCIL_DEPTH*NX];
+    }
+    if (threadIdx.z < STENCIL_DEPTH && k >= kstart+STENCIL_DEPTH)
+    {
+        smem[sidx-STENCIL_DEPTH*SMEM_P_X*SMEM_P_Y] = d_u1[idx-STENCIL_DEPTH*NX*NY];
+    }
+    if (threadIdx.z >= BLOCK_Z-STENCIL_DEPTH && k <= kend-STENCIL_DEPTH)
+    {
+        smem[sidx+STENCIL_DEPTH*SMEM_P_X*SMEM_P_Y] = d_u1[idx+STENCIL_DEPTH*NX*NY];
+    }
+    smem[sidx] = d_u1[idx];
+}
+
 #endif // PREFETCH_SMEM_CU

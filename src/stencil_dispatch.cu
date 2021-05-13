@@ -12,7 +12,16 @@ typedef void (*coop_kernel) (float*,float*);
 
 kernel get_kernel() { 
     if (DIMENSIONS==3) {
-        if (SMEM)       return smem_3d;
+        if (SMEM) {
+            if (UNROLL_X>1) {
+                if (PADDED) return smem_padded_unroll_3d;
+                //if (REGISTER) return smem_register_unroll_3d;
+                return smem_unroll_3d;
+            }
+            if (PADDED) return smem_padded_3d;
+            //if (REGISTER) return smem_register_3d;
+            return smem_3d;
+        }
         if (UNROLL_X>1) return base_unroll_3d;
         return base_3d;
     } else if (DIMENSIONS==2) {
@@ -39,9 +48,15 @@ coop_kernel get_coop_kernel() { return coop; }
 
 void set_smem(unsigned int *smem) {
         if (!SMEM)        {*smem = 0; return;}
-        else if (PADDED)   *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
-        else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
-        else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        if (DIMENSIONS == 3) {
+            if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*SMEM_P_Z*sizeof(float);
+            else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+            else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+        } else {
+            if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*sizeof(float);
+            else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*sizeof(float);
+            else               *smem = SMEM_X*BLOCK_Y*sizeof(float);
+        }
         cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
         // Max on V100: cudaFuncSetAttribute(smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
 }

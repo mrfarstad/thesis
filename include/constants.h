@@ -49,6 +49,7 @@
 #define SMEM_X (BLOCK_X*UNROLL_X+SMEM_PAD)
 #define SMEM_P_X (SMEM_X+2*STENCIL_DEPTH)
 #define SMEM_P_Y (BLOCK_Y+2*STENCIL_DEPTH)
+#define SMEM_P_Z (BLOCK_Z+2*STENCIL_DEPTH)
 #define REG_SIZE (2*STENCIL_DEPTH+1)
 
 #define NX               (DIM)
