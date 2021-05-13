@@ -101,7 +101,7 @@ __device__ void smem_unrolled_stencil(
     d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
 }
 
-__device__ float smem_reg_stencil(float* smem, float* yval, unsigned int sidx)
+__device__ void smem_reg_stencil(float* smem, float* d_u2, float* yval, unsigned int sidx, unsigned int idx)
 {
     float u = 0.0f;
     accumulate_l(&u, smem, sidx, 1);
@@ -110,7 +110,8 @@ __device__ float smem_reg_stencil(float* smem, float* yval, unsigned int sidx)
     accumulate_reg_l(&u, yval);
     accumulate_reg_r(&u, yval);
 #endif
-    return u;
+    //return u;
+    d_u2[idx] = u / STENCIL_COEFF - yval[STENCIL_DEPTH];
 }
 
 __device__ void smem_padded_stencil(

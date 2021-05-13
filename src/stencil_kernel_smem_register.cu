@@ -18,19 +18,10 @@ __global__ void smem_register_2d(float* __restrict__ d_u1,
     idx = i + j*NX;
     sidx = (threadIdx.x + STENCIL_DEPTH) + threadIdx.y*SMEM_P_X;
     if (check_domain_border_2d(i, j, jstart, jend))
-    {
-        prefetch_i_left(i, sidx, idx, smem, d_u1);
-        prefetch_i_right(i, sidx, idx, smem, d_u1);
-        prefetch_reg_j_down(j, idx, yval, d_u1);
-        prefetch_reg_j_up(j, idx, yval, d_u1);
-        yval[STENCIL_DEPTH] = d_u1[idx];
-        smem[sidx] = yval[STENCIL_DEPTH];
-    }
+        prefetch_register(smem, d_u1, yval, i, j, idx, sidx);
     this_thread_block().sync();
     if (check_stencil_border_2d(i, j, jstart, jend))
-    {
-        d_u2[idx] = smem_reg_stencil(smem, yval, sidx) / STENCIL_COEFF - yval[STENCIL_DEPTH];
-    }
+        smem_reg_stencil(smem, d_u2, yval, sidx, idx);
 }
 
 __global__ void smem_register_unroll_2d(float* __restrict__ d_u1,
@@ -53,14 +44,7 @@ __global__ void smem_register_unroll_2d(float* __restrict__ d_u1,
         sidx = (si+ioff) + threadIdx.y*SMEM_P_X;
         ys = yval[s];
         if (check_domain_border_2d(i_off, j, jstart, jend))
-        {
-            if (s==0)          prefetch_i_left(i_off, sidx, idx, smem, d_u1);
-            if (s==UNROLL_X-1) prefetch_i_right(i_off, sidx, idx, smem, d_u1);
-            prefetch_reg_j_down(j, idx, ys, d_u1);
-            prefetch_reg_j_up(j, idx, ys, d_u1);
-            ys[STENCIL_DEPTH] = d_u1[idx];
-            smem[sidx] = ys[STENCIL_DEPTH];
-        }
+            prefetch_register_unroll(smem, d_u1, ys, s, i_off, j, idx, sidx);
     }
     this_thread_block().sync();
 #pragma unroll
@@ -71,9 +55,7 @@ __global__ void smem_register_unroll_2d(float* __restrict__ d_u1,
         sidx = (si+ioff) + threadIdx.y*SMEM_P_X;
         ys = yval[s];
         if (check_stencil_border_2d(i_off, j, jstart, jend))
-        {
-            d_u2[idx] = smem_reg_stencil(smem, ys, sidx) / STENCIL_COEFF - ys[STENCIL_DEPTH];
-        }
+            smem_reg_stencil(smem, d_u2, ys, sidx, idx);
     }
 }
 

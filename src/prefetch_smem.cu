@@ -109,4 +109,39 @@ __device__ void prefetch_3d(
     smem[sidx] = d_u1[idx];
 }
 
+__device__ void prefetch_register(
+    float *smem,
+    float *d_u1,
+    float *yval,
+    unsigned int i,
+    unsigned int j,
+    unsigned int idx,
+    unsigned int sidx)
+{
+    prefetch_i_left(i, sidx, idx, smem, d_u1);
+    prefetch_i_right(i, sidx, idx, smem, d_u1);
+    prefetch_reg_j_down(j, idx, yval, d_u1);
+    prefetch_reg_j_up(j, idx, yval, d_u1);
+    yval[STENCIL_DEPTH] = d_u1[idx];
+    smem[sidx] = yval[STENCIL_DEPTH];
+}
+
+__device__ void prefetch_register_unroll(
+    float *smem,
+    float *d_u1,
+    float *yval,
+    unsigned int s,
+    unsigned int i,
+    unsigned int j,
+    unsigned int idx,
+    unsigned int sidx)
+{
+    if (s==0)          prefetch_i_left(i, sidx, idx, smem, d_u1);
+    if (s==UNROLL_X-1) prefetch_i_right(i, sidx, idx, smem, d_u1);
+    prefetch_reg_j_down(j, idx, yval, d_u1);
+    prefetch_reg_j_up(j, idx, yval, d_u1);
+    yval[STENCIL_DEPTH] = d_u1[idx];
+    smem[sidx] = yval[STENCIL_DEPTH];
+}
+
 #endif // PREFETCH_SMEM_CU
