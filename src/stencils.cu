@@ -61,7 +61,7 @@ __device__ __inline__ void accumulate_r(float *u, float *smem, float *d_u1, unsi
     for (unsigned int d=1; d<=STENCIL_DEPTH; d++) *u += (t+d < l) ? smem[sidx+d*soffset] : d_u1[idx+d*offset];
 }
 
-__device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
+__device__ void smem_stencil(float* smem, float* d_u1, float* d_u2, unsigned int sidx, unsigned int idx)
 {
     float u = 0.0f;
     accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
@@ -74,7 +74,31 @@ __device__ float smem_stencil(float* smem, float* d_u1, unsigned int sidx, unsig
     accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.z, SMEM_X*BLOCK_Y, NX*NY);
     accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z, SMEM_X*BLOCK_Y, NX*NY);
 #endif
-    return u;
+    d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
+}
+
+__device__ void smem_unrolled_stencil(
+        float *d_u1,
+        float *d_u2,
+        float *smem,
+        unsigned int s,
+        unsigned int idx,
+        unsigned int sidx)
+{
+    float u = 0.0f;
+    if (s>0)          accumulate_l(&u, smem, sidx, 1);
+    else              accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
+    if (s+1<UNROLL_X) accumulate_r(&u, smem, sidx, 1);
+    else              accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X, 1, 1);
+#if DIMENSIONS>1
+    accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
+    accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y, SMEM_X, NX);
+#endif
+#if DIMENSIONS>2
+    accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.z, SMEM_X*BLOCK_Y, NX*NY);
+    accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z, SMEM_X*BLOCK_Y, NX*NY);
+#endif
+    d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
 }
 
 __device__ float smem_reg_stencil(float* smem, float* yval, unsigned int sidx)
@@ -89,31 +113,20 @@ __device__ float smem_reg_stencil(float* smem, float* yval, unsigned int sidx)
     return u;
 }
 
-
 __device__ void smem_padded_stencil(
         float *smem,
         float *d_u2,
-        unsigned int i,
-        unsigned int j,
         unsigned int idx,
-        unsigned int sidx,
-        unsigned int jstart,
-        unsigned int jend)
+        unsigned int sidx)
 {
     float u = 0.0f;
-    unsigned int d;
-    if (check_stencil_border_2d(i, j, jstart, jend))
-    {
-#pragma unroll
-        for (d=1; d<=STENCIL_DEPTH; d++)
-        {
-            u += smem[sidx-d]
-               + smem[sidx+d]
-               + smem[sidx-d*SMEM_P_X]
-               + smem[sidx+d*SMEM_P_X];
-        }
-        d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
-    }
+    accumulate_l(&u, smem, sidx, 1);
+    accumulate_r(&u, smem, sidx, 1);
+#if DIMENSIONS>1
+    accumulate_l(&u, smem, sidx, SMEM_P_X);
+    accumulate_r(&u, smem, sidx, SMEM_P_X);
+#endif
+    d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
 }
 
 #endif // STENCILS_CU
