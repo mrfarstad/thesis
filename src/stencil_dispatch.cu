@@ -42,7 +42,7 @@ void set_smem(unsigned int *smem) {
         else if (PADDED)   *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
         else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
-        cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, *smem);
+        cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
         // Max on V100: cudaFuncSetAttribute(smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
 }
 
