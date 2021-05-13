@@ -6,9 +6,9 @@
 using namespace cooperative_groups;
 
 __global__ void smem_3d(float* __restrict__ d_u1,
-			            float* __restrict__ d_u2,
-                                    unsigned int kstart,
-                                    unsigned int kend)
+                        float* __restrict__ d_u2,
+                        unsigned int kstart,
+                        unsigned int kend)
 {
     unsigned int   i, j, k, idx, sidx;
     extern __shared__ float smem[];
@@ -72,9 +72,9 @@ __global__ void smem_unroll_2d(float* __restrict__ d_u1,
             if (s>0)          accumulate_l(&u, smem, sidx, 1);
             else              accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.x, 1, 1);
             if (s+1<UNROLL_X) accumulate_r(&u, smem, sidx, 1);
-            else              accumulate_r(&u, smem, d_u1, sidx, idx, BLOCK_X, threadIdx.x, 1, 1);
+            else              accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X, 1, 1);
             accumulate_l(&u, smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
-            accumulate_r(&u, smem, d_u1, sidx, idx, BLOCK_Y, threadIdx.y, SMEM_X, NX);
+            accumulate_r(&u, smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y, SMEM_X, NX);
             d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
         }
     }
