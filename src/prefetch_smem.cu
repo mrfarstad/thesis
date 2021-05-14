@@ -2,64 +2,64 @@
 #define PREFETCH_SMEM_CU
 
 #include "../include/constants.h"
-#include "stencils_border_check.cu"
+#include "stencil_border_check.cu"
 
-__device__ void prefetch_l(
+__device__ void prefetch_prev(
     float *smem,
     float *d_u1,
     unsigned int sidx,
     unsigned int idx,
-    unsigned int t,
-    unsigned int didx,
-    unsigned int didx_lim,
+    unsigned int thread_id,
+    unsigned int domain_idx,
+    unsigned int domain_idx_limit,
     unsigned int soffset,
     unsigned int offset)
 {
-    if (t < STENCIL_DEPTH && didx >= didx_lim)
+    if (thread_id < STENCIL_DEPTH && domain_idx >= domain_idx_limit)
     {
         smem[sidx-STENCIL_DEPTH*soffset] = d_u1[idx-STENCIL_DEPTH*offset];
     }
 }
 
-__device__ void prefetch_r(
+__device__ void prefetch_next(
     float *smem,
     float *d_u1,
     unsigned int sidx,
     unsigned int idx,
-    unsigned int t,
-    unsigned int t_lim,
-    unsigned int didx,
-    unsigned int didx_lim,
+    unsigned int thread_id,
+    unsigned int thread_id_limit,
+    unsigned int domain_idx,
+    unsigned int domain_idx_limit,
     unsigned int soffset,
     unsigned int offset)
 {
-    if (t >= t_lim && didx <= didx_lim)
+    if (thread_id >= thread_id_limit && domain_idx <= domain_idx_limit)
     {
         smem[sidx+STENCIL_DEPTH*soffset] = d_u1[idx+STENCIL_DEPTH*offset];
     }
 }
 
-__device__ void prefetch_i_left(
+__device__ void prefetch_i_prev(
     float *smem,
     float *d_u1,
     unsigned int sidx,
     unsigned int idx,
     unsigned int i)
 {
-    prefetch_l(smem, d_u1, sidx, idx, threadIdx.x, i, STENCIL_DEPTH, 1, 1);
+    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.x, i, STENCIL_DEPTH, 1, 1);
 }
 
-__device__ void prefetch_i_right(
+__device__ void prefetch_i_next(
     float *smem,
     float *d_u1,
     unsigned int sidx,
     unsigned int idx,
     unsigned int i)
 {
-    prefetch_r(smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X-STENCIL_DEPTH, i, NX-STENCIL_DEPTH-1, 1, 1);
+    prefetch_next(smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X-STENCIL_DEPTH, i, NX-STENCIL_DEPTH-1, 1, 1);
 }
 
-__device__ void prefetch_j_left(
+__device__ void prefetch_j_prev(
     float *smem,
     float *d_u1,
     unsigned int sidx,
@@ -67,10 +67,10 @@ __device__ void prefetch_j_left(
     unsigned int j,
     unsigned int jstart)
 {
-    prefetch_l(smem, d_u1, sidx, idx, threadIdx.y, j, jstart+STENCIL_DEPTH, SMEM_P_X, NX);
+    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.y, j, jstart+STENCIL_DEPTH, SMEM_P_X, NX);
 }
 
-__device__ void prefetch_j_right(
+__device__ void prefetch_j_next(
     float *smem,
     float *d_u1,
     unsigned int sidx,
@@ -78,10 +78,10 @@ __device__ void prefetch_j_right(
     unsigned int j,
     unsigned int jend)
 {
-    prefetch_r(smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y-STENCIL_DEPTH, j, jend-STENCIL_DEPTH, SMEM_P_X, NX);
+    prefetch_next(smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y-STENCIL_DEPTH, j, jend-STENCIL_DEPTH, SMEM_P_X, NX);
 }
 
-__device__ void prefetch_k_left(
+__device__ void prefetch_k_prev(
     float *smem,
     float *d_u1,
     unsigned int sidx,
@@ -89,10 +89,10 @@ __device__ void prefetch_k_left(
     unsigned int k,
     unsigned int kstart)
 {
-    prefetch_l(smem, d_u1, sidx, idx, threadIdx.z, k, kstart+STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
+    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.z, k, kstart+STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
 }
 
-__device__ void prefetch_k_right(
+__device__ void prefetch_k_next(
     float *smem,
     float *d_u1,
     unsigned int sidx,
@@ -100,10 +100,10 @@ __device__ void prefetch_k_right(
     unsigned int k,
     unsigned int kend)
 {
-    prefetch_r(smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z-STENCIL_DEPTH, k, kend-STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
+    prefetch_next(smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z-STENCIL_DEPTH, k, kend-STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
 }
 
-__device__ void prefetch(
+__device__ void prefetch_2d(
     float *smem,
     float *d_u1,
     unsigned int s,
@@ -114,10 +114,10 @@ __device__ void prefetch(
     unsigned int jstart,
     unsigned int jend)
 {
-    if(s==0)          prefetch_i_left(smem, d_u1, sidx, idx, i);
-    if(s==UNROLL_X-1) prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_j_left(smem, d_u1, sidx, idx, j, jstart);
-    prefetch_j_right(smem, d_u1, sidx, idx, j, jend);
+    if(s==0)          prefetch_i_prev(smem, d_u1, sidx, idx, i);
+    if(s==UNROLL_X-1) prefetch_i_next(smem, d_u1, sidx, idx, i);
+    prefetch_j_prev(smem, d_u1, sidx, idx, j, jstart);
+    prefetch_j_next(smem, d_u1, sidx, idx, j, jend);
     smem[sidx] = d_u1[idx];
 }
 
@@ -133,16 +133,16 @@ __device__ void prefetch_3d(
     unsigned int kstart,
     unsigned int kend)
 {
-    if(s==0)          prefetch_i_left(smem, d_u1, sidx, idx, i);
-    if(s==UNROLL_X-1) prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_j_left(smem, d_u1, sidx, idx, j, 0);
-    prefetch_j_right(smem, d_u1, sidx, idx, j, NY-1);
-    prefetch_k_left(smem, d_u1, sidx, idx, k, kstart);
-    prefetch_k_right(smem, d_u1, sidx, idx, k, kend);
+    if(s==0)          prefetch_i_prev(smem, d_u1, sidx, idx, i);
+    if(s==UNROLL_X-1) prefetch_i_next(smem, d_u1, sidx, idx, i);
+    prefetch_j_prev(smem, d_u1, sidx, idx, j, 0);
+    prefetch_j_next(smem, d_u1, sidx, idx, j, NY-1);
+    prefetch_k_prev(smem, d_u1, sidx, idx, k, kstart);
+    prefetch_k_next(smem, d_u1, sidx, idx, k, kend);
     smem[sidx] = d_u1[idx];
 }
 
-__device__ void prefetch_reg_l(
+__device__ void prefetch_register_prev(
     float *yval,
     float *d_u1,
     unsigned int idx,
@@ -155,7 +155,7 @@ __device__ void prefetch_reg_l(
             yval[s] = d_u1[idx + (s - STENCIL_DEPTH) * offset];
 }
 
-__device__ void prefetch_reg_r(
+__device__ void prefetch_register_next(
     float *yval,
     float *d_u1,
     unsigned int idx,
@@ -168,50 +168,51 @@ __device__ void prefetch_reg_r(
             yval[s] = d_u1[idx + (s - STENCIL_DEPTH) * offset];
 }
 
-__device__ void prefetch_reg_j_down(
+__device__ void prefetch_register_j_prev(
     float *yval,
     float *d_u1,
     unsigned int idx,
     unsigned int j,
     unsigned int jstart)
 {
-    prefetch_reg_l(yval, d_u1, idx, j, jstart+STENCIL_DEPTH, NX);
+    prefetch_register_prev(yval, d_u1, idx, j, jstart+STENCIL_DEPTH, NX);
 }
 
-__device__ void prefetch_reg_k_down(
+__device__ void prefetch_register_k_prev(
     float *yval,
     float *d_u1,
     unsigned int idx,
     unsigned int k,
     unsigned int kstart)
 {
-    prefetch_reg_l(yval, d_u1, idx, k, kstart+STENCIL_DEPTH, NX*NY);
+    prefetch_register_prev(yval, d_u1, idx, k, kstart+STENCIL_DEPTH, NX*NY);
 }
 
-__device__ void prefetch_reg_j_up(
+__device__ void prefetch_register_j_next(
     float *yval,
     float *d_u1,
     unsigned int idx,
     unsigned int j,
     unsigned int jend)
 {
-    prefetch_reg_r(yval, d_u1, idx, j, jend-STENCIL_DEPTH, NX);
+    prefetch_register_next(yval, d_u1, idx, j, jend-STENCIL_DEPTH, NX);
 }
 
-__device__ void prefetch_reg_k_up(
+__device__ void prefetch_register_k_next(
     float *yval,
     float *d_u1,
     unsigned int idx,
     unsigned int k,
     unsigned int kend)
 {
-    prefetch_reg_r(yval, d_u1, idx, k, kend-STENCIL_DEPTH, NX*NY);
+    prefetch_register_next(yval, d_u1, idx, k, kend-STENCIL_DEPTH, NX*NY);
 }
 
 __device__ void prefetch_register_3d(
     float *smem,
     float *d_u1,
     float *yval,
+    unsigned int s,
     unsigned int idx,
     unsigned int sidx,
     unsigned int i,
@@ -220,12 +221,12 @@ __device__ void prefetch_register_3d(
     unsigned int start,
     unsigned int end)
 {
-    prefetch_i_left(smem, d_u1, sidx, idx, i);
-    prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_j_left(smem, d_u1, sidx, idx, j, 0);
-    prefetch_j_right(smem, d_u1, sidx, idx, j, NY-1);
-    prefetch_reg_k_down(yval, d_u1, idx, k, start);
-    prefetch_reg_k_up(yval, d_u1, idx, k, end);
+    if (s==0)          prefetch_i_prev(smem, d_u1, sidx, idx, i);
+    if (s==UNROLL_X-1) prefetch_i_next(smem, d_u1, sidx, idx, i);
+    prefetch_j_prev(smem, d_u1, sidx, idx, j, 0);
+    prefetch_j_next(smem, d_u1, sidx, idx, j, NY-1);
+    prefetch_register_k_prev(yval, d_u1, idx, k, start);
+    prefetch_register_k_next(yval, d_u1, idx, k, end);
     yval[STENCIL_DEPTH] = d_u1[idx];
     smem[sidx] = yval[STENCIL_DEPTH];
 }
@@ -234,6 +235,7 @@ __device__ void prefetch_register(
     float *smem,
     float *d_u1,
     float *yval,
+    unsigned int s,
     unsigned int idx,
     unsigned int sidx,
     unsigned int i,
@@ -241,53 +243,10 @@ __device__ void prefetch_register(
     unsigned int start,
     unsigned int end)
 {
-    prefetch_i_left(smem, d_u1, sidx, idx, i);
-    prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_reg_j_down(yval, d_u1, idx, j, start);
-    prefetch_reg_j_up(yval, d_u1, idx, j, end);
-    yval[STENCIL_DEPTH] = d_u1[idx];
-    smem[sidx] = yval[STENCIL_DEPTH];
-}
-
-__device__ void prefetch_register_unroll_3d(
-    float *smem,
-    float *d_u1,
-    float *yval,
-    unsigned int s,
-    unsigned int idx,
-    unsigned int sidx,
-    unsigned int i,
-    unsigned int j,
-    unsigned int k,
-    unsigned int kstart,
-    unsigned int kend)
-{
-    if (s==0)          prefetch_i_left(smem, d_u1, sidx, idx, i);
-    if (s==UNROLL_X-1) prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_j_left(smem, d_u1, sidx, idx, j, 0);
-    prefetch_j_right(smem, d_u1, sidx, idx, j, NY-1);
-    prefetch_reg_k_down(yval, d_u1, idx, k, kstart);
-    prefetch_reg_k_up(yval, d_u1, idx, k, kend);
-    yval[STENCIL_DEPTH] = d_u1[idx];
-    smem[sidx] = yval[STENCIL_DEPTH];
-}
-
-__device__ void prefetch_register_unroll(
-    float *smem,
-    float *d_u1,
-    float *yval,
-    unsigned int s,
-    unsigned int idx,
-    unsigned int sidx,
-    unsigned int i,
-    unsigned int j,
-    unsigned int jstart,
-    unsigned int jend)
-{
-    if (s==0)          prefetch_i_left(smem, d_u1, sidx, idx, i);
-    if (s==UNROLL_X-1) prefetch_i_right(smem, d_u1, sidx, idx, i);
-    prefetch_reg_j_down(yval, d_u1, idx, j, jstart);
-    prefetch_reg_j_up(yval, d_u1, idx, j, jend);
+    if (s==0)          prefetch_i_prev(smem, d_u1, sidx, idx, i);
+    if (s==UNROLL_X-1) prefetch_i_next(smem, d_u1, sidx, idx, i);
+    prefetch_register_j_prev(yval, d_u1, idx, j, start);
+    prefetch_register_j_next(yval, d_u1, idx, j, end);
     yval[STENCIL_DEPTH] = d_u1[idx];
     smem[sidx] = yval[STENCIL_DEPTH];
 }

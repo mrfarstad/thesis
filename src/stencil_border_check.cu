@@ -1,5 +1,5 @@
-#ifndef STENCILS_BORDER_CHECK_CU
-#define STENCILS_BORDER_CHECK_CU
+#ifndef STENCIL_BORDER_CHECK_CU
+#define STENCIL_BORDER_CHECK_CU
 
 #include "../include/constants.h"
 
@@ -84,4 +84,4 @@ __device__ bool check_domain_border_3d(
     return check_domain_border_3d(i, j, k);
 }
 
-#endif // STENCILS_BORDER_CHECK_CU
+#endif // STENCIL_BORDER_CHECK_CU

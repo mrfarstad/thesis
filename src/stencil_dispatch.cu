@@ -24,7 +24,7 @@ kernel get_kernel() {
         }
         if (UNROLL_X>1) return base_unroll_3d;
         return base_3d;
-    } else if (DIMENSIONS==2) {
+    } else {
         if (SMEM) {
             if (UNROLL_X>1) {
                 if (PADDED) return smem_padded_unroll_2d;
@@ -37,17 +37,13 @@ kernel get_kernel() {
         }
         if (UNROLL_X>1) return base_unroll_2d;
         return base_2d;
-    } else {
-        if (SMEM)       return smem_1d;
-        if (UNROLL_X>1) return base_unroll_1d;
-        return base_1d;
     }
 }
 
 coop_kernel get_coop_kernel() { return coop; }
 
 void set_smem(unsigned int *smem) {
-        if (!SMEM)        {*smem = 0; return;}
+        if (!SMEM)            {*smem = 0; return;}
         if (DIMENSIONS == 3) {
             if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*SMEM_P_Z*sizeof(float);
             else if (REGISTER) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
@@ -58,7 +54,6 @@ void set_smem(unsigned int *smem) {
             else               *smem = SMEM_X*BLOCK_Y*sizeof(float);
         }
         cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
-        // Max on V100: cudaFuncSetAttribute(smem, cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
 }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {

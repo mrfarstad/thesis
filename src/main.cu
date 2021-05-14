@@ -13,10 +13,15 @@ int main(int argc, const char **argv) {
            *d_u1[NGPUS], *d_u2[NGPUS],
            milli;
 
-    if (SMEM == true &&
-           (PADDED == true && (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH)) ||
-           (REGISTER == true && BLOCK_X < STENCIL_DEPTH)) {
-        exit(EXIT_FAILURE);
+    if (SMEM == true) {
+        if (PADDED) {
+           if (BLOCK_X < STENCIL_DEPTH || BLOCK_Y < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && BLOCK_Z < STENCIL_DEPTH) exit(EXIT_FAILURE);
+        }
+        if (REGISTER) {
+           if (BLOCK_X < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && BLOCK_Y < STENCIL_DEPTH) exit(EXIT_FAILURE);
+        }
     }
 
     if (DEBUG) {

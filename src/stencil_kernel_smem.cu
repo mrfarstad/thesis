@@ -2,7 +2,7 @@
 #include "cooperative_groups.h"
 #include "stencils.cu"
 #include "prefetch_smem.cu"
-#include "stencils_border_check.cu"
+#include "stencil_border_check.cu"
 using namespace cooperative_groups;
 
 __global__ void smem_3d(float* __restrict__ d_u1,
