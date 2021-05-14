@@ -106,11 +106,14 @@ __device__ void smem_reg_stencil(float* smem, float* d_u2, float* yval, unsigned
     float u = 0.0f;
     accumulate_l(&u, smem, sidx, 1);
     accumulate_r(&u, smem, sidx, 1);
+#if DIMENSIONS>2
+    accumulate_l(&u, smem, sidx, SMEM_P_X);
+    accumulate_r(&u, smem, sidx, SMEM_P_X);
+#endif
 #if DIMENSIONS>1
     accumulate_reg_l(&u, yval);
     accumulate_reg_r(&u, yval);
 #endif
-    //return u;
     d_u2[idx] = u / STENCIL_COEFF - yval[STENCIL_DEPTH];
 }
 

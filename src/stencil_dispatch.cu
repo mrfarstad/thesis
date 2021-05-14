@@ -19,7 +19,7 @@ kernel get_kernel() {
                 return smem_unroll_3d;
             }
             if (PADDED) return smem_padded_3d;
-            //if (REGISTER) return smem_register_3d;
+            if (REGISTER) return smem_register_3d;
             return smem_3d;
         }
         if (UNROLL_X>1) return base_unroll_3d;
@@ -50,7 +50,7 @@ void set_smem(unsigned int *smem) {
         if (!SMEM)        {*smem = 0; return;}
         if (DIMENSIONS == 3) {
             if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*SMEM_P_Z*sizeof(float);
-            else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+            else if (REGISTER) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
             else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
         } else {
             if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*sizeof(float);

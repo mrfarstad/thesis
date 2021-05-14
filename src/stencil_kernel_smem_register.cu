@@ -5,6 +5,28 @@
 #include "stencils_border_check.cu"
 using namespace cooperative_groups;
 
+__global__ void smem_register_3d(float* __restrict__ d_u1,
+                                 float* __restrict__ d_u2,
+                                 unsigned int kstart,
+                                 unsigned int kend)
+{
+    unsigned int i, j, k, idx, sidx;
+    extern __shared__ float smem[];
+    float yval[2*STENCIL_DEPTH+1];
+    i  = threadIdx.x + blockIdx.x*BLOCK_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+    idx = i + j*NX + k*NX*NY;
+    sidx = (threadIdx.x + STENCIL_DEPTH)
+         + (threadIdx.y + STENCIL_DEPTH)*SMEM_P_X
+         + (threadIdx.z)*SMEM_P_X*SMEM_P_Y; // only x, y in smem, so no padding
+    if (check_domain_border_3d(i, j, k, kstart, kend))
+        prefetch_register_3d(smem, d_u1, yval, idx, sidx, i, j, k, kstart, kend);
+    this_thread_block().sync();
+    if (check_stencil_border_3d(i, j, k, kstart, kend))
+        smem_reg_stencil(smem, d_u2, yval, sidx, idx);
+}
+
 __global__ void smem_register_2d(float* __restrict__ d_u1,
                                  float* __restrict__ d_u2,
                                  unsigned int jstart,
