@@ -15,7 +15,7 @@ kernel get_kernel() {
         if (SMEM) {
             if (UNROLL_X>1) {
                 if (PADDED) return smem_padded_unroll_3d;
-                //if (REGISTER) return smem_register_unroll_3d;
+                if (REGISTER) return smem_register_unroll_3d;
                 return smem_unroll_3d;
             }
             if (PADDED) return smem_padded_3d;

@@ -249,6 +249,29 @@ __device__ void prefetch_register(
     smem[sidx] = yval[STENCIL_DEPTH];
 }
 
+__device__ void prefetch_register_unroll_3d(
+    float *smem,
+    float *d_u1,
+    float *yval,
+    unsigned int s,
+    unsigned int idx,
+    unsigned int sidx,
+    unsigned int i,
+    unsigned int j,
+    unsigned int k,
+    unsigned int kstart,
+    unsigned int kend)
+{
+    if (s==0)          prefetch_i_left(smem, d_u1, sidx, idx, i);
+    if (s==UNROLL_X-1) prefetch_i_right(smem, d_u1, sidx, idx, i);
+    prefetch_j_left(smem, d_u1, sidx, idx, j, 0);
+    prefetch_j_right(smem, d_u1, sidx, idx, j, NY-1);
+    prefetch_reg_k_down(yval, d_u1, idx, k, kstart);
+    prefetch_reg_k_up(yval, d_u1, idx, k, kend);
+    yval[STENCIL_DEPTH] = d_u1[idx];
+    smem[sidx] = yval[STENCIL_DEPTH];
+}
+
 __device__ void prefetch_register_unroll(
     float *smem,
     float *d_u1,

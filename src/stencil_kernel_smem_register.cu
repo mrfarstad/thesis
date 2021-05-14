@@ -27,6 +27,40 @@ __global__ void smem_register_3d(float* __restrict__ d_u1,
         smem_reg_stencil(smem, d_u2, yval, sidx, idx);
 }
 
+__global__ void smem_register_unroll_3d(float* __restrict__ d_u1,
+                                        float* __restrict__ d_u2,
+                                        unsigned int kstart,
+                                        unsigned int kend)
+{
+    unsigned int i, j, k, s, si, sj, i_off, si_off, idx, sidx;
+    extern __shared__ float smem[];
+    float yval[UNROLL_X][REG_SIZE];
+    i  = threadIdx.x + blockIdx.x*BLOCK_X*UNROLL_X;
+    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
+    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
+    si = threadIdx.x + STENCIL_DEPTH;
+    sj = threadIdx.y + STENCIL_DEPTH;
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        i_off = i + s*BLOCK_X;
+        idx = i_off + j*NX + k*NX*NY;
+        si_off = si + s*BLOCK_X;
+        sidx = si_off + sj*SMEM_P_X + threadIdx.z*SMEM_P_X*SMEM_P_Y;
+        if (check_domain_border_3d(i_off, j, k, kstart, kend))
+            prefetch_register_unroll_3d(smem, d_u1, yval[s], s, idx, sidx, i_off, j, k, kstart, kend);
+    }
+    this_thread_block().sync();
+#pragma unroll
+    for (s=0; s<UNROLL_X; s++) {
+        i_off = i + s*BLOCK_X;
+        idx = i_off + j*NX + k*NX*NY;
+        si_off = si + s*BLOCK_X;
+        sidx = si_off + sj*SMEM_P_X + threadIdx.z*SMEM_P_X*SMEM_P_Y;
+        if (check_stencil_border_3d(i_off, j, k, kstart, kend))
+            smem_reg_stencil(smem, d_u2, yval[s], sidx, idx);
+    }
+}
+
 __global__ void smem_register_2d(float* __restrict__ d_u1,
                                  float* __restrict__ d_u2,
                                  unsigned int jstart,
