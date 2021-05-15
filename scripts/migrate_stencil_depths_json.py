@@ -42,14 +42,16 @@ def copy(results_json, host, config):
                                 if (
                                     config == "autotune"
                                     and "register" in version
-                                    and not domain_dim == "32768"
+                                    and not any(
+                                        domain_dim == d for d in ["1024", "32768"]
+                                    )
                                 ):
                                     continue
                             if "profile" in results_json:
                                 if not (
                                     iteration == "8"
                                     and "1_gpus" in version
-                                    and domain_dim == "32768"
+                                    and any(domain_dim == d for d in ["1024", "32768"])
                                 ):
                                     continue
                             if entry_not_exists(
