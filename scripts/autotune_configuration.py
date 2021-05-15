@@ -18,7 +18,7 @@ def entry_exists(nested_list):
     return deep_get(db, ".".join(list(map(str, nested_list)))) != None
 
 
-dimensions = ["2"]
+dimensions = ["3"]
 versions = ["base", "smem", "smem_padded", "smem_register"]
 unrolls = ["1", "2", "4", "8"]
 stencil_depths = ["1", "2", "4", "8", "16"]
@@ -32,8 +32,12 @@ except FileNotFoundError:
 for dimension in dimensions:
     if not entry_exists([dimension]):
         db[dimension] = {}
-    # dims = ["8192", "32768"]
-    dims = ["32768"]
+    if dimension == "3":
+        dims = ["1024"]
+        stencil_depths.pop()  # Remove R=16 for 3D
+    else:
+        # dims = ["8192", "32768"]
+        dims = ["32768"]
     for dim in dims:
         if not entry_exists([dimension, dim]):
             db[dimension][dim] = {}
@@ -65,7 +69,8 @@ for dimension in dimensions:
                     ).stdout.decode("utf-8")
                     results = list(filter(None, res.split("\n")))
                     blockdims = results[1].split(",")
-                    blockdims.pop()
+                    if dimension == "2":
+                        blockdims.pop()
                     blockdims = [b.strip() for b in blockdims]
                     blockdims = [b.split(" = ") for b in blockdims]
                     blockdims = {b[0]: int(b[1]) for b in blockdims}

@@ -5,8 +5,7 @@ import subprocess
 import sys
 from functools import reduce
 
-dimensions = ["2"]
-# iterations     = ['8', '1024']
+dimensions = ["3"]
 iterations = ["8"]
 versions = ["base", "smem", "smem_padded", "smem_register"]
 stencil_depths = ["1", "2", "4", "8", "16"]
@@ -65,8 +64,9 @@ except FileNotFoundError:
 for dimension in dimensions:
     if not entry_exists([dimension]):
         db[dimension] = {}
-    if dimension == 3:
-        dims = ["256", "512", "1024"]
+    if dimension == "3":
+        dims = ["1024"]
+        stencil_depths.pop()  # Remove R=16 for 3D
     else:
         dims = ["8192", "32768"]
     for dim in dims:
@@ -105,6 +105,9 @@ for dimension in dimensions:
                                 [dimension, dim, v_tune, depth]
                             ):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
+                            bx_heuristic = "32" if dimension == "2" else "32"
+                            by_heuristic = "32" if dimension == "2" else "8"
+                            bz_heuristic = "1" if dimension == "2" else "4"
                             if profile:
                                 # Check for a random metric. We gather them all anyways.
                                 if entry_exists(
@@ -127,13 +130,13 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
-                                        "32"
+                                        bx_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_X"]),
-                                        "32"
+                                        by_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_Y"]),
-                                        "1",
+                                        bz_heuristic,
                                         depth,
                                         "0",
                                         unroll,
@@ -170,13 +173,13 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
-                                        "32"
+                                        bx_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_X"]),
-                                        "32"
+                                        by_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_Y"]),
-                                        "1",
+                                        bz_heuristic,
                                         depth,
                                         "30",
                                         "0",
