@@ -54,20 +54,6 @@ __device__ __inline__ void smem_unrolled_stencil(
     d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
 }
 
-__device__ __inline__ void smem_register_stencil(float* smem, float* d_u2, float* yval, unsigned int sidx, unsigned int idx)
-{
-    float u = 0.0f;
-    accumulate_smem_i_prev(&u, smem, sidx);
-    accumulate_smem_i_next(&u, smem, sidx);
-#if DIMENSIONS>2
-    accumulate_smem_j_prev(&u, smem, sidx);
-    accumulate_smem_j_next(&u, smem, sidx);
-#endif
-    accumulate_register_prev(&u, yval);
-    accumulate_register_next(&u, yval);
-    d_u2[idx] = u / STENCIL_COEFF - yval[STENCIL_DEPTH];
-}
-
 __device__ __inline__ void smem_padded_stencil(float *smem, float *d_u2, unsigned int idx, unsigned int sidx)
 {
     float u = 0.0f;
@@ -80,6 +66,20 @@ __device__ __inline__ void smem_padded_stencil(float *smem, float *d_u2, unsigne
     accumulate_smem_k_next(&u, smem, sidx);
 #endif
     d_u2[idx] = u / STENCIL_COEFF - smem[sidx];
+}
+
+__device__ __inline__ void smem_register_stencil(float* smem, float* d_u2, float* yval, unsigned int sidx, unsigned int idx)
+{
+    float u = 0.0f;
+    accumulate_smem_i_prev(&u, smem, sidx);
+    accumulate_smem_i_next(&u, smem, sidx);
+#if DIMENSIONS>2
+    accumulate_smem_j_prev(&u, smem, sidx);
+    accumulate_smem_j_next(&u, smem, sidx);
+#endif
+    accumulate_register_prev(&u, yval);
+    accumulate_register_next(&u, yval);
+    d_u2[idx] = u / STENCIL_COEFF - yval[STENCIL_DEPTH];
 }
 
 #endif // STENCILS_CU
