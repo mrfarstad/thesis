@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# -lt 12 ]] ; then
-    echo 'arg: VERSION NGPUS DIM DIMENSIONS BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT SMEM_PAD UNROLL_X ITERATIONS'
+if [[ $# -lt 13 ]] ; then
+    echo 'arg: VERSION NGPUS DIM DIMENSIONS HEURISTIC BLOCK_X BLOCK_Y BLOCK_Z STENCIL_DEPTH REPEAT SMEM_PAD UNROLL_X ITERATIONS'
     exit 0
 fi
 
@@ -10,13 +10,14 @@ project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
 config=$project_folder/configs/yme/general.conf
 constants=$project_folder/constants.sh
 
-bash $project_folder/scripts/set_run_configuration.sh $1 $2 $3 $4 $8 ${10} ${11} ${12}
+bash $project_folder/scripts/set_run_configuration.sh $1 $2 $3 $4 $9 ${11} ${12} ${13}
 source $constants
 
-sed -i -re 's/(BLOCK_X = )[0-9|,| ]+/\1'$5'/'     $config
-sed -i -re 's/(BLOCK_Y = )[0-9|,| ]+/\1'$6'/'     $config
-sed -i -re 's/(BLOCK_Z = )[0-9|,| ]+/\1'$7'/'     $config
-sed -i -re 's/(repeat = )[0-9]+,/\1'$9',/'        $config
+sed -i -re 's/(HEURISTIC = )[0-1]+/\1'$5'/'   $config
+sed -i -re 's/(BLOCK_X = )[0-9|,| ]+/\1'$6'/' $config
+sed -i -re 's/(BLOCK_Y = )[0-9|,| ]+/\1'$7'/' $config
+sed -i -re 's/(BLOCK_Z = )[0-9|,| ]+/\1'$8'/' $config
+sed -i -re 's/(repeat = )[0-9]+,/\1'${10}',/' $config
 
 # Extract all numerical results from run
 # This output is used in in scripts/find_halo_depth.py

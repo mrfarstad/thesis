@@ -68,7 +68,8 @@ for dimension in dimensions:
         dims = ["1024"]
         stencil_depths.pop()  # Remove R=16 for 3D
     else:
-        dims = ["8192", "32768"]
+        # dims = ["8192", "32768"]
+        dims = ["32768"]
     for dim in dims:
         if not entry_exists([dimension, dim]):
             db[dimension][dim] = {}
@@ -106,8 +107,10 @@ for dimension in dimensions:
                             ):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
                             bx_heuristic = "32" if dimension == "2" else "32"
-                            by_heuristic = "32" if dimension == "2" else "8"
+                            by_heuristic = "1" if dimension == "2" else "8"
                             bz_heuristic = "1" if dimension == "2" else "4"
+                            # heuristic = "0" if autotune else "1"
+                            heuristic = "0"
                             if profile:
                                 # Check for a random metric. We gather them all anyways.
                                 if entry_exists(
@@ -130,6 +133,7 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
+                                        heuristic,
                                         bx_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_X"]),
@@ -173,6 +177,7 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
+                                        heuristic,
                                         bx_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_X"]),

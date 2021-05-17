@@ -1,7 +1,7 @@
 INC       := -I$(CUDA_HOME)/include -I.
 LIB       := -L$(CUDA_HOME)/lib64  
 LIBS      := -lcudart -lcudadevrt -Xcompiler -fopenmp
-NVCCFLAGS := -lineinfo -rdc=true #-Xptxas -dlcm=cg #--use_fast_math -lgomp  #--ptxas-options=-v #-arch=$(ARCH)
+NVCCFLAGS := -lineinfo -rdc=true #--ptxas-options=-v #-Xptxas -dlcm=cg #--use_fast_math -lgomp #-arch=$(ARCH)
 ifeq ($(DEBUG), true)
     #NVCC_DEBUG := -g -G # Causes troubles with floating point numbers if uncommented
     _DEBUG := -D DEBUG=true
@@ -46,6 +46,9 @@ endif
 ifneq ($(REGISTER),)
     _REGISTER := -D REGISTER=$(REGISTER)
 endif
+ifneq ($(HEURISTIC),)
+    _HEURISTIC := -D HEURISTIC=$(HEURISTIC)
+endif
 
 all: 		stencil_$(ID)
 
@@ -58,7 +61,7 @@ stencil_$(ID): src/main.cu include/stencil_utils.h include/stencil_error_checker
 		      			  -D DIM=$(DIM)                \
 	  $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
 	       $(_DIMENSIONS) $(_UNROLL_X) $(_UNROLL_DIM) $(_SMEM_PAD) \
-				   $(_REGISTER) $(_PADDED) $(_DEBUG)
+		       $(_REGISTER) $(_PADDED) $(_HEURISTIC) $(_DEBUG)
 					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu

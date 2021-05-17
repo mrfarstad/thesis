@@ -1,5 +1,6 @@
 #include "../include/constants.h"
 #include "../include/helper_cuda.h"
+#include "../include/stencil_utils.h"
 #include "stencil_kernel_base.cu"
 #include "stencil_kernel_smem.cu"
 #include "stencil_kernel_smem_padded.cu"
@@ -42,52 +43,100 @@ kernel get_kernel() {
 
 coop_kernel get_coop_kernel() { return coop; }
 
-void set_smem(unsigned int *smem) {
-        if (!SMEM)            {*smem = 0; return;}
+void set_smem(unsigned int *smem, unsigned int bx, unsigned int by, unsigned int bz) {
+    if (!SMEM) {*smem = 0; return;}
+    unsigned int smem_x   = bx*UNROLL_X;
+    unsigned int smem_p_x = smem_x + 2*STENCIL_DEPTH;
+    unsigned int smem_p_y = by + 2*STENCIL_DEPTH;
+    unsigned int smem_p_z = bz + 2*STENCIL_DEPTH;
+    if (DIMENSIONS == 3) {
+        if (PADDED)        *smem = smem_p_x*smem_p_y*smem_p_z*sizeof(float);
+        else if (REGISTER) *smem = smem_p_x*smem_p_y*bz*sizeof(float);
+        else               *smem = smem_x*by*bz*sizeof(float);
+    } else {
+        if (PADDED)        *smem = smem_p_x*smem_p_y*sizeof(float);
+        else if (REGISTER) *smem = smem_p_x*by*sizeof(float);
+        else               *smem = smem_x*by*sizeof(float);
+    }
+}
+
+struct calculate_smem: std::unary_function<int, int> {
+    __host__ __device__ int operator()(int i) const {
+        if (!SMEM) return 0;
+        unsigned int bx = BLOCK_X;
+        unsigned int by = i/BLOCK_X;
+        unsigned int bz = 1;
+        unsigned int smem_x   = bx*UNROLL_X;
+        unsigned int smem_p_x = smem_x + 2*STENCIL_DEPTH;
+        unsigned int smem_p_y = by + 2*STENCIL_DEPTH;
+        unsigned int smem_p_z = bz + 2*STENCIL_DEPTH;
+        unsigned int smem;
         if (DIMENSIONS == 3) {
-            if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*SMEM_P_Z*sizeof(float);
-            else if (REGISTER) *smem = SMEM_P_X*SMEM_P_Y*BLOCK_Z*sizeof(float);
-            else               *smem = SMEM_X*BLOCK_Y*BLOCK_Z*sizeof(float);
+            if (PADDED)        smem = smem_p_x*smem_p_y*smem_p_z*sizeof(float);
+            else if (REGISTER) smem = smem_p_x*smem_p_y*bz*sizeof(float);
+            else               smem = smem_x*by*bz*sizeof(float);
         } else {
-            if (PADDED)        *smem = SMEM_P_X*SMEM_P_Y*sizeof(float);
-            else if (REGISTER) *smem = SMEM_P_X*BLOCK_Y*sizeof(float);
-            else               *smem = SMEM_X*BLOCK_Y*sizeof(float);
+            if (PADDED)        smem = smem_p_x*smem_p_y*sizeof(float);
+            else if (REGISTER) smem = smem_p_x*by*sizeof(float);
+            else               smem = smem_x*by*sizeof(float);
         }
-        cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+        return smem;
+    }
+};
+
+void set_block_dims(int *bx, int *by, int *bz, int b) {
+    if (HEURISTIC) {
+        if (DIMENSIONS==2) {
+            *bx = BLOCK_X;
+            *by = b/BLOCK_X;
+            *bz = 1;
+        } else {
+            *bx = BLOCK_X;
+            *by = b/(BLOCK_X*4);
+            *bz = 4;
+        }
+    } else {
+        *bx = BLOCK_X;
+        *by = BLOCK_Y;
+        *bz = BLOCK_Z;
+    }
 }
 
 void dispatch_kernels(float *d_u1, float *d_u2) {
-    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid((1+(NX-1)/BLOCK_X)/UNROLL_X);
-    if (DIMENSIONS>1) grid.y = 1+(NY-1)/BLOCK_Y;
-    if (DIMENSIONS>2) grid.z = 1+(NZ-1)/BLOCK_Z;
+    calculate_smem calc_smem;
+    int g, b, bx, by, bz;
+    cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem, 0);
+    set_block_dims(&bx, &by, &bz, b);
+    print_program_info(bx, by, bz);
+    dim3 block(bx, by, bz);
+    dim3 grid((1+(NX-1)/bx)/UNROLL_X);
+    if (DIMENSIONS>1) grid.y = 1+(NY-1)/by;
+    if (DIMENSIONS>2) grid.z = 1+(NZ-1)/bz;
     float *d_tmp;
-    unsigned int smem;
-    set_smem(&smem);
     for (int i=0; i<ITERATIONS; i++) {
-        get_kernel()<<<grid, block, smem>>>(d_u1, d_u2, 0, NZ-1);
+        get_kernel()<<<grid, block, calc_smem(bx*by*bz)>>>(d_u1, d_u2, 0, NZ-1);
         getLastCudaError("kernel execution failed\n");
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }
 }
 
 void dispatch_cooperative_groups_kernels(float *d_u1, float *d_u2) {
-    int device = 0;
-    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    int numBlocksPerSm = 0;
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, device);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm,
-                                                  get_coop_kernel(),
-                                                  BLOCK_X*BLOCK_Y*BLOCK_Z,
-                                                  0);
-    dim3 grid(deviceProp.multiProcessorCount*numBlocksPerSm, 1, 1);
-    void *args[] = { &d_u1, &d_u2 };
-    cudaLaunchCooperativeKernel((void*)get_coop_kernel(),
-                                grid,
-                                block,
-                                args);
-    getLastCudaError("kernel execution failed\n");
+//    int device = 0;
+//    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
+//    int numBlocksPerSm = 0;
+//    cudaDeviceProp deviceProp;
+//    cudaGetDeviceProperties(&deviceProp, device);
+//    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm,
+//                                                  get_coop_kernel(),
+//                                                  BLOCK_X*BLOCK_Y*BLOCK_Z,
+//                                                  0);
+//    dim3 grid(deviceProp.multiProcessorCount*numBlocksPerSm, 1, 1);
+//    void *args[] = { &d_u1, &d_u2 };
+//    cudaLaunchCooperativeKernel((void*)get_coop_kernel(),
+//                                grid,
+//                                block,
+//                                args);
+//    getLastCudaError("kernel execution failed\n");
 }
 
 void send_upper_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* streams) {
@@ -109,19 +158,20 @@ void send_lower_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* streams
 }
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
-    dim3 block(BLOCK_X,BLOCK_Y,BLOCK_Z);
-    dim3 grid((1+(NX-1)/BLOCK_X)/UNROLL_X);
-    if      (DIMENSIONS==2) grid.y = 1+(NY/NGPUS+2*HALO_DEPTH-1)/BLOCK_Y;
+    calculate_smem calc_smem;
+    int g, b, bx, by, bz;
+    cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem, 0);
+    set_block_dims(&bx, &by, &bz, b);
+    print_program_info(bx, by, bz);
+    dim3 block(bx, by, bz);
+    dim3 grid((1+(NX-1)/bx)/UNROLL_X);
+    if      (DIMENSIONS==2) grid.y = 1+(NY/NGPUS+2*HALO_DEPTH-1)/by;
     else if (DIMENSIONS==3) {
-        grid.y = 1+(NY-1)/BLOCK_Y;
-        grid.z = 1+(NZ/NGPUS+2*HALO_DEPTH-1)/BLOCK_Z;
+        grid.y = 1+(NY-1)/by;
+        grid.z = 1+(NZ/NGPUS+2*HALO_DEPTH-1)/bz;
     }
-
     float **d_tmp;
-    //int i, s, n, kstart, kend;
-    int i, s;
-    unsigned int smem, kstart, kend;
-    set_smem(&smem);
+    unsigned int i, s, kstart, kend;
     //for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
     for (i=0; i<ITERATIONS; i++) {
         for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);
@@ -134,7 +184,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
             kend   = INTERNAL_END-1+HALO_DEPTH;
             if      (s==0)       kstart = INTERNAL_START;
             else if (s==NGPUS-1) kend   = INTERNAL_END-1;
-            get_kernel()<<<grid, block, smem, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
+            get_kernel()<<<grid, block, calc_smem(bx*by*bz), streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
             getLastCudaError("kernel execution failed\n");
         }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2

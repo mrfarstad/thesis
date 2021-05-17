@@ -1,3 +1,7 @@
+#ifndef HEURISTIC
+#define HEURISTIC false
+#endif
+
 #ifndef BLOCK_X
 #define BLOCK_X 32
 #endif

@@ -5,7 +5,7 @@
 #include "stencil_border_check.cu"
 #include "stencil_accumulators.cu"
 
-__host__ __device__ __inline__ void stencil(float *d_u1, float *d_u2, unsigned int idx) {
+__device__ __host__  __inline__ void stencil(float *d_u1, float *d_u2, unsigned int idx) {
     float u = 0.0f;
     accumulate_global_i_prev(&u, d_u1, idx);
     accumulate_global_i_next(&u, d_u1, idx);

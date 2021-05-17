@@ -110,27 +110,27 @@ __device__ __inline__ void accumulate_hybrid_i_prev(float* u, float* smem, float
 
 __device__ __inline__ void accumulate_hybrid_i_next(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
 {
-    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.x, BLOCK_X, 1, 1);
+    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.x, blockDim.x, 1, 1);
 }
 
 __device__ __inline__ void accumulate_hybrid_j_prev(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
 {
-    accumulate_hybrid_prev(u, smem, d_u1, sidx, idx, threadIdx.y, SMEM_X, NX);
+    accumulate_hybrid_prev(u, smem, d_u1, sidx, idx, threadIdx.y, blockDim.x*UNROLL_X, NX);
 }
 
 __device__ __inline__ void accumulate_hybrid_j_next(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
 {
-    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.y, BLOCK_Y, SMEM_X, NX);
+    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.y, blockDim.y, blockDim.x*UNROLL_X, NX);
 }
 
 __device__ __inline__ void accumulate_hybrid_k_prev(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
 {
-    accumulate_hybrid_prev(u, smem, d_u1, sidx, idx, threadIdx.z, SMEM_X*BLOCK_Y, NX*NY);
+    accumulate_hybrid_prev(u, smem, d_u1, sidx, idx, threadIdx.z, blockDim.x*UNROLL_X*blockDim.y, NX*NY);
 }
 
 __device__ __inline__ void accumulate_hybrid_k_next(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)
 {
-    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.z, BLOCK_Z, SMEM_X*BLOCK_Y, NX*NY);
+    accumulate_hybrid_next(u, smem, d_u1, sidx, idx, threadIdx.z, blockDim.z, blockDim.x*UNROLL_X*blockDim.y, NX*NY);
 }
 
 #endif // STENCIL_ACCUMULATORS_CU

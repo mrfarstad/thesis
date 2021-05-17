@@ -10,12 +10,12 @@ __global__ void coop(float* __restrict__ d_u1,
                  idx;
     unsigned int s;
     float *d_tmp, u, u0;
-    i  = threadIdx.x + blockIdx.x*BLOCK_X;
-    j  = threadIdx.y + blockIdx.y*BLOCK_Y;
-    k  = threadIdx.z + blockIdx.z*BLOCK_Z;
-    xskip = BLOCK_X * gridDim.x;
-    yskip = BLOCK_Y * gridDim.y;
-    zskip = BLOCK_Z * gridDim.z;
+    i  = threadIdx.x + blockIdx.x*blockDim.x;
+    j  = threadIdx.y + blockIdx.y*blockDim.y;
+    k  = threadIdx.z + blockIdx.z*blockDim.z;
+    xskip = blockDim.x * gridDim.x;
+    yskip = blockDim.y * gridDim.y;
+    zskip = blockDim.z * gridDim.z;
     grid_group grid = this_grid();
     // TODO: I believe this is inefficient as each thread skips so many positions when handling multiple elements..
     // I would argue against this, and try to let each thread handle a consecutive block.
