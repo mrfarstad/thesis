@@ -40,17 +40,17 @@ def copy(results_json, v="all", dim="2"):
                         ][domain_dim][version][stencil_depth]
 
 
-# copy("results/results_autotune.json", "base")
-# copy("results/results_autotune_0.json", "smem")
-# copy("results/results_autotune_1.json", "smem_padded")
-# copy("results/results_autotune.json", "smem_register")
 copy("results/results_autotune.json")
 copy("results/results_autotune_base.json", "base", "3")
 copy("results/results_autotune_smem.json", "smem", "3")
 copy("results/results_autotune_smem_padded.json", "smem_padded", "3")
 copy("results/results_autotune_smem_register.json", "smem_register", "3")
+copy("results/results_autotune_base.json", "base", "2")
+copy("results/results_autotune_smem.json", "smem", "2")
+copy("results/results_autotune_smem_padded.json", "smem_padded", "2")
+copy("results/results_autotune_smem_register_2d.json", "smem_register", "2")
 
-# with open("results/results_autotune.json", "w") as fp:
-#    json.dump(new_db, fp)
+with open("results/results_autotune.json", "w") as fp:
+    json.dump(new_db, fp)
 
 p.pprint(new_db)

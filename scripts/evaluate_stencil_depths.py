@@ -5,8 +5,8 @@ import subprocess
 import sys
 from functools import reduce
 
-dimensions = ["3"]
-iterations = ["8"]
+dimensions = ["2", "3"]
+iterations = ["8", "1024"]
 versions = ["base", "smem", "smem_padded", "smem_register"]
 stencil_depths = ["1", "2", "4", "8", "16"]
 unrolls = ["1", "2", "4", "8"]
@@ -68,8 +68,7 @@ for dimension in dimensions:
         dims = ["1024"]
         stencil_depths.pop()  # Remove R=16 for 3D
     else:
-        # dims = ["8192", "32768"]
-        dims = ["32768"]
+        dims = ["8192", "32768"]
     for dim in dims:
         if not entry_exists([dimension, dim]):
             db[dimension][dim] = {}
@@ -90,6 +89,8 @@ for dimension in dimensions:
                         if not entry_exists([dimension, dim, v, depth]):
                             db[dimension][dim][v][depth] = {}
                         for iteration in iterations:
+                            if iteration == "1024" and dim not in ["1024", "32768"]:
+                                continue
                             if not entry_exists([dimension, dim, v, depth, iteration]):
                                 db[dimension][dim][v][depth][iteration] = {}
                             if not entry_exists(
@@ -109,8 +110,7 @@ for dimension in dimensions:
                             bx_heuristic = "32" if dimension == "2" else "32"
                             by_heuristic = "1" if dimension == "2" else "8"
                             bz_heuristic = "1" if dimension == "2" else "4"
-                            # heuristic = "0" if autotune else "1"
-                            heuristic = "0"
+                            heuristic = "0" if autotune else "1"
                             if profile:
                                 # Check for a random metric. We gather them all anyways.
                                 if entry_exists(
