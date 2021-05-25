@@ -26,4 +26,5 @@ sed -i -re 's/(repeat = )[0-9]+,/\1'${10}',/' $config
 #stdbuf -o 0 -e 0 python -u $project_folder/Autotuning/tuner/tune.py $config | tee /dev/tty | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
 
 # Use when running on idun or heid
-stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee /dev/pts/0 | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
+pts=$(ls -l /dev/pts/ | grep martinrf | awk -F" " '{print $NF}')
+stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee /dev/pts/$pts | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
