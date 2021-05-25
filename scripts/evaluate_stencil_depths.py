@@ -134,6 +134,7 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
+                                        host,
                                         heuristic,
                                         bx_heuristic
                                         if not autotune
@@ -186,6 +187,7 @@ for dimension in dimensions:
                                         gpu,
                                         dim,
                                         dimension,
+                                        host,
                                         heuristic,
                                         bx_heuristic
                                         if not autotune
