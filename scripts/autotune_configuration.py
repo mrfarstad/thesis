@@ -19,7 +19,7 @@ def entry_exists(nested_list):
 
 
 dimensions = ["3"]
-versions = ["base", "smem", "smem_padded", "smem_register"]
+versions = ["base", "smem", "smem_padded"]
 unrolls = ["1", "2", "4", "8"]
 stencil_depths = ["1", "2", "4", "8", "16"]
 
@@ -35,6 +35,7 @@ for dimension in dimensions:
     if dimension == "3":
         dims = ["1024"]
         stencil_depths.pop()  # Remove R=16 for 3D
+        stencil_depths.pop()  # Remove R=8 for 3D
     else:
         # dims = ["8192", "32768"]
         dims = ["32768"]

@@ -5,9 +5,9 @@ import subprocess
 import sys
 from functools import reduce
 
-dimensions = ["2", "3"]
-iterations = ["8", "1024"]
-versions = ["base", "smem", "smem_padded", "smem_register"]
+dimensions = ["3"]
+iterations = ["8"]
+versions = ["base", "smem", "smem_padded"]
 stencil_depths = ["1", "2", "4", "8", "16"]
 unrolls = ["1", "2", "4", "8"]
 host = "heid"
@@ -67,6 +67,7 @@ for dimension in dimensions:
     if dimension == "3":
         dims = ["1024"]
         stencil_depths.pop()  # Remove R=16 for 3D
+        stencil_depths.pop()  # Remove R=8 for 3D
     else:
         dims = ["8192", "32768"]
     for dim in dims:
@@ -108,7 +109,7 @@ for dimension in dimensions:
                             ):
                                 blockdims = tune_db[dimension][dim][v_tune][depth]
                             bx_heuristic = "32" if dimension == "2" else "32"
-                            by_heuristic = "1" if dimension == "2" else "8"
+                            by_heuristic = "32" if dimension == "2" else "8"
                             bz_heuristic = "1" if dimension == "2" else "4"
                             heuristic = "0" if autotune else "1"
                             if profile:
@@ -140,7 +141,15 @@ for dimension in dimensions:
                                         by_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_Y"]),
-                                        bz_heuristic,
+                                        bz_heuristic
+                                        if not autotune
+                                        else (
+                                            str(
+                                                blockdims["BLOCK_Z"]
+                                                if dimension == "3"
+                                                else "1"
+                                            )
+                                        ),
                                         depth,
                                         "0",
                                         unroll,
@@ -184,7 +193,15 @@ for dimension in dimensions:
                                         by_heuristic
                                         if not autotune
                                         else str(blockdims["BLOCK_Y"]),
-                                        bz_heuristic,
+                                        bz_heuristic
+                                        if not autotune
+                                        else (
+                                            str(
+                                                blockdims["BLOCK_Z"]
+                                                if dimension == "3"
+                                                else "1"
+                                            )
+                                        ),
                                         depth,
                                         "30",
                                         "0",
