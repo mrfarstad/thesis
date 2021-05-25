@@ -60,12 +60,47 @@ void set_smem(unsigned int *smem, unsigned int bx, unsigned int by, unsigned int
     }
 }
 
+int comp (const void * elem1, const void * elem2) 
+{
+    int f = *((int*)elem1);
+    int s = *((int*)elem2);
+    if (f > s) return -1;
+    if (f < s) return 1;
+    return 0;
+}
+
+__host__ __device__ void swap(int *x, int*y) {
+    int tmp = *x;
+    *x = *y;
+    *y = tmp;
+}
+
+__host__ __device__ void sort3_desc(int *b0, int *b1, int *b2) {
+    if (*b0 < *b2) swap(b0, b2);
+    if (*b0 < *b1) swap(b0, b1);
+    if (*b1 < *b2) swap(b1, b2);
+}
+
+__host__ __device__ void find_3d_block_dimensions(int *bx, int *by, int *bz, int b) {
+        int b0 = BLOCK_X;
+        while (SMEM && PADDED && b / (b0*STENCIL_DEPTH*STENCIL_DEPTH) == 0 && b0 > 1)
+            b0 = b0/2;
+        int b1 = MIN(MAX(2, STENCIL_DEPTH), 8);
+        int b2 = b/(b0*b1);
+        sort3_desc(&b0, &b1, &b2);
+        *bx = b0, *by = b1, *bz = b2;
+}
+
+__host__ __device__ void set_max_occupancy_block_dimensions(int *bx, int *by, int *bz, int threads) {
+        if (DIMENSIONS==3) find_3d_block_dimensions(bx,by,bz,threads);
+        else *bx = BLOCK_X, *by = threads/BLOCK_X, *bz=1;
+}
+
 struct calculate_smem: std::unary_function<int, int> {
-    __host__ __device__ int operator()(int i) const {
+    __host__ __device__ int operator()(int threads) const {
         if (!SMEM) return 0;
-        unsigned int bx = BLOCK_X;
-        unsigned int by = i/BLOCK_X;
-        unsigned int bz = 1;
+        int bx, by, bz;
+        set_max_occupancy_block_dimensions(&bx, &by, &bz, threads);
         unsigned int smem_x   = bx*UNROLL_X;
         unsigned int smem_p_x = smem_x + 2*STENCIL_DEPTH;
         unsigned int smem_p_y = by + 2*STENCIL_DEPTH;
@@ -84,17 +119,9 @@ struct calculate_smem: std::unary_function<int, int> {
     }
 };
 
-void set_block_dims(int *bx, int *by, int *bz, int b) {
+void set_block_dims(int *bx, int *by, int *bz, int threads) {
     if (HEURISTIC) {
-        if (DIMENSIONS==2) {
-            *bx = BLOCK_X;
-            *by = b/BLOCK_X;
-            *bz = 1;
-        } else {
-            *bx = BLOCK_X;
-            *by = b/(BLOCK_X*4);
-            *bz = 4;
-        }
+        set_max_occupancy_block_dimensions(bx, by, bz, threads);
     } else {
         *bx = BLOCK_X;
         *by = BLOCK_Y;
@@ -105,7 +132,9 @@ void set_block_dims(int *bx, int *by, int *bz, int b) {
 void dispatch_kernels(float *d_u1, float *d_u2) {
     calculate_smem calc_smem;
     int g, b, bx, by, bz;
-    cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem, 0);
+    unsigned int smem;
+    if (SMEM) cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+    if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
     print_program_info(bx, by, bz);
     dim3 block(bx, by, bz);
@@ -113,8 +142,9 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     if (DIMENSIONS>1) grid.y = 1+(NY-1)/by;
     if (DIMENSIONS>2) grid.z = 1+(NZ-1)/bz;
     float *d_tmp;
+    set_smem(&smem, bx, by, bz);
     for (int i=0; i<ITERATIONS; i++) {
-        get_kernel()<<<grid, block, calc_smem(bx*by*bz)>>>(d_u1, d_u2, 0, NZ-1);
+        get_kernel()<<<grid, block, smem>>>(d_u1, d_u2, 0, NZ-1);
         getLastCudaError("kernel execution failed\n");
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
     }
@@ -159,19 +189,21 @@ void send_lower_ghost_zone(float **d_u1, unsigned int dev, cudaStream_t* streams
 
 void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *streams) {
     calculate_smem calc_smem;
-    int g, b, bx, by, bz;
-    cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem, 0);
+    float **d_tmp;
+    int g, b, bx, by, bz, s;
+    unsigned int i, kstart, kend, smem;
+    if (SMEM) cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+    if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
     print_program_info(bx, by, bz);
     dim3 block(bx, by, bz);
     dim3 grid((1+(NX-1)/bx)/UNROLL_X);
-    if      (DIMENSIONS==2) grid.y = 1+(NY/NGPUS+2*HALO_DEPTH-1)/by;
+    if (DIMENSIONS==2) grid.y = 1+(NY/NGPUS+2*HALO_DEPTH-1)/by;
     else if (DIMENSIONS==3) {
         grid.y = 1+(NY-1)/by;
         grid.z = 1+(NZ/NGPUS+2*HALO_DEPTH-1)/bz;
     }
-    float **d_tmp;
-    unsigned int i, s, kstart, kend;
+    set_smem(&smem, bx, by, bz);
     //for (i=0; i<ITERATIONS/HALO_DEPTH; i++) {
     for (i=0; i<ITERATIONS; i++) {
         for (s=0; s<NGPUS-1; s++) send_upper_ghost_zone(d_u1, s, streams);
@@ -184,7 +216,7 @@ void dispatch_multi_gpu_kernels(float **d_u1, float **d_u2, cudaStream_t *stream
             kend   = INTERNAL_END-1+HALO_DEPTH;
             if      (s==0)       kstart = INTERNAL_START;
             else if (s==NGPUS-1) kend   = INTERNAL_END-1;
-            get_kernel()<<<grid, block, calc_smem(bx*by*bz), streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
+            get_kernel()<<<grid, block, smem, streams[s]>>>(d_u1[s], d_u2[s], kstart, kend);
             getLastCudaError("kernel execution failed\n");
         }
         d_tmp = d_u1; d_u1 = d_u2; d_u2 = d_tmp; // swap d_u1 and d_u2
