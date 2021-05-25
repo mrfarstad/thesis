@@ -85,22 +85,28 @@ __device__ __inline__ void accumulate_smem_i_next(float* u, float* smem, unsigne
 
 __device__ __inline__ void accumulate_smem_j_prev(float* u, float* smem, unsigned int sidx)
 {
-    accumulate_prev(u, smem, sidx, SMEM_P_X);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    accumulate_prev(u, smem, sidx, smem_p_x);
 }
 
 __device__ __inline__ void accumulate_smem_j_next(float* u, float* smem, unsigned int sidx)
 {
-    accumulate_next(u, smem, sidx, SMEM_P_X);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    accumulate_next(u, smem, sidx, smem_p_x);
 }
 
 __device__ __inline__ void accumulate_smem_k_prev(float* u, float* smem, unsigned int sidx)
 {
-    accumulate_prev(u, smem, sidx, SMEM_P_X*SMEM_P_Y);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    int smem_p_y = blockDim.y+2*STENCIL_DEPTH;
+    accumulate_prev(u, smem, sidx, smem_p_x*smem_p_y);
 }
 
 __device__ __inline__ void accumulate_smem_k_next(float* u, float* smem, unsigned int sidx)
 {
-    accumulate_next(u, smem, sidx, SMEM_P_X*SMEM_P_Y);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    int smem_p_y = blockDim.y+2*STENCIL_DEPTH;
+    accumulate_next(u, smem, sidx, smem_p_x*smem_p_y);
 }
 
 __device__ __inline__ void accumulate_hybrid_i_prev(float* u, float* smem, float* d_u1, unsigned int sidx, unsigned int idx)

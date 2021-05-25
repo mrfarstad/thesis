@@ -16,7 +16,9 @@ __global__ void smem_3d(float* __restrict__ d_u1,
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     k  = threadIdx.z + blockIdx.z*blockDim.z;
     idx = i + j*NX + k*NX*NY;
-    sidx = threadIdx.x + threadIdx.y*blockDim.x*UNROLL_X + threadIdx.z*SMEM_X*blockDim.y;
+    sidx = threadIdx.x
+         + threadIdx.y*blockDim.x*UNROLL_X
+         + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
     if (check_domain_border_3d(i, j, k, kstart, kend))
         smem[sidx] = d_u1[idx];
     this_thread_block().sync();
@@ -38,7 +40,9 @@ __global__ void smem_unroll_3d(float* __restrict__ d_u1,
     for (s=0; s<UNROLL_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX + k*NX*NY;
-        sidx = (threadIdx.x+ioff) + threadIdx.y*blockDim.x*UNROLL_X + threadIdx.z*SMEM_X*blockDim.y;
+        sidx = (threadIdx.x+ioff)
+             + threadIdx.y*blockDim.x*UNROLL_X
+             + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
         if (check_domain_border_3d(i+ioff, j, k, kstart, kend))
             smem[sidx] = d_u1[idx];
     }
@@ -47,7 +51,9 @@ __global__ void smem_unroll_3d(float* __restrict__ d_u1,
     for (s=0; s<UNROLL_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX + k*NX*NY;
-        sidx = (threadIdx.x+ioff) + threadIdx.y*blockDim.x*UNROLL_X + threadIdx.z*SMEM_X*blockDim.y;
+        sidx = (threadIdx.x+ioff)
+             + threadIdx.y*blockDim.x*UNROLL_X
+             + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
         if (check_stencil_border_3d(i+ioff, j, k, kstart, kend))
             smem_unrolled_stencil(d_u1, d_u2, smem, s, idx, sidx);
     }

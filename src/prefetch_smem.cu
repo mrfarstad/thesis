@@ -67,7 +67,8 @@ __device__ void prefetch_j_prev(
     unsigned int j,
     unsigned int jstart)
 {
-    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.y, j, jstart+STENCIL_DEPTH, SMEM_P_X, NX);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.y, j, jstart+STENCIL_DEPTH, smem_p_x, NX);
 }
 
 __device__ void prefetch_j_next(
@@ -78,7 +79,8 @@ __device__ void prefetch_j_next(
     unsigned int j,
     unsigned int jend)
 {
-    prefetch_next(smem, d_u1, sidx, idx, threadIdx.y, blockDim.y-STENCIL_DEPTH, j, jend-STENCIL_DEPTH, SMEM_P_X, NX);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    prefetch_next(smem, d_u1, sidx, idx, threadIdx.y, blockDim.y-STENCIL_DEPTH, j, jend-STENCIL_DEPTH, smem_p_x, NX);
 }
 
 __device__ void prefetch_k_prev(
@@ -89,7 +91,9 @@ __device__ void prefetch_k_prev(
     unsigned int k,
     unsigned int kstart)
 {
-    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.z, k, kstart+STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    int smem_p_y = blockDim.y+2*STENCIL_DEPTH;
+    prefetch_prev(smem, d_u1, sidx, idx, threadIdx.z, k, kstart+STENCIL_DEPTH, smem_p_x*smem_p_y, NX*NY);
 }
 
 __device__ void prefetch_k_next(
@@ -100,7 +104,9 @@ __device__ void prefetch_k_next(
     unsigned int k,
     unsigned int kend)
 {
-    prefetch_next(smem, d_u1, sidx, idx, threadIdx.z, blockDim.z-STENCIL_DEPTH, k, kend-STENCIL_DEPTH, SMEM_P_X*SMEM_P_Y, NX*NY);
+    int smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    int smem_p_y = blockDim.y+2*STENCIL_DEPTH;
+    prefetch_next(smem, d_u1, sidx, idx, threadIdx.z, blockDim.z-STENCIL_DEPTH, k, kend-STENCIL_DEPTH, smem_p_x*smem_p_y, NX*NY);
 }
 
 __device__ void prefetch_2d(
