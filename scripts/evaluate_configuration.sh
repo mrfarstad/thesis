@@ -27,9 +27,10 @@ sed -i -re 's/(repeat = )[0-9]+,/\1'${11}',/' $config
 #stdbuf -o 0 -e 0 python -u $project_folder/Autotuning/tuner/tune.py $config | tee /dev/tty | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
 
 # Use when running on idun or heid
-if [[ $5 == idun ]];then
-    pts=$(ls -l /dev/pts/ | grep martinrf | awk -F" " '{print $NF}')
+if [[ $5 == idun ]]; then
+    #pts=$(ls -l /dev/pts/ | grep martinrf | awk -F" " '{print $NF}')
+    out=thesis_output.out
 else
-    pts=0
+    out=/dev/pts/0
 fi
-stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee /dev/pts/$pts | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
+stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee $out | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'

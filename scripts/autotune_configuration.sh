@@ -22,6 +22,7 @@ else
     sed -i -re 's/(BLOCK_Z = )[0-9|,| ]+/\11/'                                           $config
 fi
 sed -i -re 's/(repeat = )[0-9]*,/\1'$6',/'                                               $config
+sed -i -re 's/(HEURISTIC = )[0-9]+/\10/'                                                 $config
 
 # Extract all numerical results from run
 # This output is used in in scripts/find_halo_depth.py

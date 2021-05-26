@@ -22,6 +22,8 @@ def copy(results_json, host, config):
     with open(results_json) as file:
         db = json.loads(file.read())
         for dimension, dimension_db in db.items():
+            if "2d" in results_json and not dimension == "2":
+                continue
             if "3d" in results_json and not dimension == "3":
                 continue
             if entry_not_exists(new_db, [dimension]):
@@ -35,6 +37,8 @@ def copy(results_json, host, config):
                     if v.replace("1_gpus_", "") in results_json:
                         v_found = v
                 for version, version_db in domain_dim_db.items():
+                    if "smem_register" in version:
+                        continue
                     if v_found is not None and not v_found in version:
                         continue
                     if entry_not_exists(new_db, [dimension, domain_dim, version]):
@@ -44,6 +48,8 @@ def copy(results_json, host, config):
                             new_db, [dimension, domain_dim, version, stencil_depth]
                         ):
                             new_db[dimension][domain_dim][version][stencil_depth] = {}
+                        if dimension == "3" and int(stencil_depth) > 4:
+                            continue
                         for iteration, iteration_db in stencil_depth_db.items():
                             if config == "autotune" or host == "idun":
                                 if not (iteration == "8" and "1_gpus" in version):
@@ -138,21 +144,36 @@ def copy(results_json, host, config):
 # TODO: Find out why smem_padded fails so hard for autotuning in 3D
 # copy("results/results_stencil_depths_autotuned.json", "heid", "autotune") # 3D autotune is not present in this file
 
+# copy("results/results_batch_profile_2d.json", "heid", "heuristic")
+# copy("results/results_stencil_depths_heuristic_2d.json", "heid", "heuristic")
 # copy("results/results_batch_profile.json", "heid", "heuristic")
 copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
+#
 
+# copy(
+#    "results/results_stencil_depths_idun_heuristic_improved_3d.json",
+#    "idun",
+#    "heuristic",
+# )
 copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
 copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
 copy(
     "results/results_stencil_depths_heuristic_smem_padded_3d.json", "heid", "heuristic"
 )
-# copy("results/results_stencil_depths_idun.json", "idun", "heuristic")
-
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_2d.json",
+    "idun",
+    "heuristic",
+)
+copy("results/results_stencil_depths_heuristic_improved.json", "heid", "heuristic")
+copy("results/results_stencil_depths_autotuned.json", "heid", "autotune")
+copy("results/results_stencil_depths_autotuned_2d.json", "heid", "autotune")
 # copy("results/results_stencil_depths_autotuned_base_3d.json", "heid", "autotune")
 # copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
 # copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
+
 
 # with open("results/results_stencil_depths_heuristic.json", 'w') as fp:
 # with open("results/results_stencil_depths_autotuned.json", 'w') as fp:

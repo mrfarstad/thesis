@@ -15,7 +15,7 @@ delete_container () {
 cd thesis_$1
 sed -i -re 's/(YME_WORKING_FOLDER=).*/\1..\/usr\/src\/thesis/' ./constants.sh
 source ./constants.sh
-container=thesis_$1
+container=thesis_$1_GPU_$CUDA_VISIBLE_DEVICES
 image=martinrf/thesis/$1
 if [[ "$(docker images -q $image)" == "" ]]; then
     nvidia-docker rmi $image -f
