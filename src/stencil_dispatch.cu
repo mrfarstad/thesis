@@ -142,8 +142,8 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     }
     if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
-    check_early_exit(bx, by, bz);
     print_program_info(bx, by, bz);
+    check_early_exit(bx, by, bz);
     dim3 block(bx, by, bz);
     dim3 grid((1+(NX-1)/bx)/UNROLL_X);
     if (DIMENSIONS>1) grid.y = 1+(NY-1)/by;
