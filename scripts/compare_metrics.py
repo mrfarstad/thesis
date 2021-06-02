@@ -21,11 +21,12 @@ def entry_not_exists(db, nested_list):
 with open("results/results_stencil_depths.json") as file:
     db = json.loads(file.read())
 versions = [
-    ("1_gpus_smem_register", "8192", "1", "heuristic", "idun"),
-    ("1_gpus_smem_register", "8192", "2", "heuristic", "idun"),
+    # (Version, Dimension, Domain dim, Radius, Block dimensions, Host)
+    ("1_gpus_base_unroll_2", "2", "4096", "4", "heuristic", "idun"),
+    ("1_gpus_smem_padded_unroll_2", "2", "4096", "4", "heuristic", "idun"),
 ]
 
-metrics = [db["2"][dd][v][d]["8"][h][c] for v, dd, d, c, h in versions]
+metrics = [db[dim][dd][v][d]["8"][h][c] for v, dim, dd, d, c, h in versions]
 
 for metric_db, version in zip(metrics, versions):  # [v[0] for v in versions]):
     metric_db["version"] = version[0] + " (%s)" % version[2]
@@ -33,12 +34,16 @@ for metric_db, version in zip(metrics, versions):  # [v[0] for v in versions]):
     for k, v in metric_db.items():
         metric_db[k] = [v]
 
+# Calculate speedup (Used for writing the results section)
+# ts = [m["time"][0] for m in metrics]
+# print(ts[0] / ts[1])
+
 dfs = list(map(pd.DataFrame, metrics))
 pd.set_option("display.max_rows", None)
 df = pd.concat(dfs)
 df.set_index("version", inplace=True)
 df = df.reindex(sorted(df.columns), axis=1)
 df = df.transpose()
-# pd.options.display.width = 0
+pd.options.display.width = 0
 
 print(df)

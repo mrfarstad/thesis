@@ -65,11 +65,11 @@ for dimension in dimensions:
     if not entry_exists([dimension]):
         db[dimension] = {}
     if dimension == "3":
-        dims = ["1024"]
+        dims = ["256", "1024"]
         stencil_depths.pop()  # Remove R=16 for 3D
         stencil_depths.pop()  # Remove R=8 for 3D
     else:
-        dims = ["8192", "32768"]
+        dims = ["4096", "32768"]
     for dim in dims:
         if not entry_exists([dimension, dim]):
             db[dimension][dim] = {}

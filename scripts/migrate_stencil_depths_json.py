@@ -31,7 +31,6 @@ def copy(results_json, host, config):
             for domain_dim, domain_dim_db in dimension_db.items():
                 if entry_not_exists(new_db, [dimension, domain_dim]):
                     new_db[dimension][domain_dim] = {}
-
                 v_found = None
                 for v in domain_dim_db.keys():
                     if v.replace("1_gpus_", "") in results_json:
@@ -39,8 +38,11 @@ def copy(results_json, host, config):
                 for version, version_db in domain_dim_db.items():
                     if "smem_register" in version:
                         continue
-                    if v_found is not None and not v_found in version:
-                        continue
+                    if v_found is not None:
+                        if v_found not in version:
+                            continue
+                        if "padded" not in v_found and "padded" in version:
+                            continue
                     if entry_not_exists(new_db, [dimension, domain_dim, version]):
                         new_db[dimension][domain_dim][version] = {}
                     for stencil_depth, stencil_depth_db in version_db.items():
@@ -139,45 +141,76 @@ def copy(results_json, host, config):
                                 ]
 
 
-# copy("results/results_batch_profile_autotune.json", "heid", "autotune")
-# copy("results/results_stencil_depths_heuristic.json", "heid", "heuristic")
-# TODO: Find out why smem_padded fails so hard for autotuning in 3D
-# copy("results/results_stencil_depths_autotuned.json", "heid", "autotune") # 3D autotune is not present in this file
+# Two dimensions
+copy("results/results_stencil_depths_heuristic_base_2d.json", "heid", "heuristic")
+copy("results/results_stencil_depths_heuristic_smem_2d.json", "heid", "heuristic")
+copy(
+    "results/results_stencil_depths_heuristic_smem_padded_2d.json", "heid", "heuristic"
+)
 
-# copy("results/results_batch_profile_2d.json", "heid", "heuristic")
-# copy("results/results_stencil_depths_heuristic_2d.json", "heid", "heuristic")
-# copy("results/results_batch_profile.json", "heid", "heuristic")
-copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
+copy("results/results_stencil_depths_autotuned_2d.json", "heid", "autotune")
+
+# copy("results/results_batch_profile_improved_2d.json", "heid", "heuristic")
+copy("results/results_batch_profile_base_2d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
-#
+copy("results/results_batch_profile_autotune_2d.json", "heid", "heuristic")
 
-# copy(
-#    "results/results_stencil_depths_idun_heuristic_improved_3d.json",
-#    "idun",
-#    "heuristic",
-# )
-copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
-copy(
-    "results/results_stencil_depths_heuristic_smem_padded_3d.json", "heid", "heuristic"
-)
+# 2D IDUN (domain_dim=8192 [512 MiB], 32768 [8 GiB])
 copy(
     "results/results_stencil_depths_idun_heuristic_improved_2d.json",
     "idun",
     "heuristic",
 )
-copy("results/results_stencil_depths_heuristic_improved.json", "heid", "heuristic")
-copy("results/results_stencil_depths_autotuned.json", "heid", "autotune")
-copy("results/results_stencil_depths_autotuned_2d.json", "heid", "autotune")
-# copy("results/results_stencil_depths_autotuned_base_3d.json", "heid", "autotune")
-# copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
-# copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
+# 2D IDUN (domain_dim=4096 [128 MiB])
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_new_dim_2d.json",
+    "idun",
+    "heuristic",
+)
 
+# 3D IDUN (The others did not have unroll=8 for smem, smem_padded)
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_2d_test.json",
+    "idun",
+    "heuristic",
+)
 
-# with open("results/results_stencil_depths_heuristic.json", 'w') as fp:
-# with open("results/results_stencil_depths_autotuned.json", 'w') as fp:
-# with open("results/results_stencil_depths_idun.json", 'w') as fp:
+# Three dimensions
+copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
+copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
+copy(
+    "results/results_stencil_depths_heuristic_smem_padded_3d.json", "heid", "heuristic"
+)
+
+copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
+copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
+copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
+
+copy("results/results_batch_profile_autotune_base_3d.json", "heid", "autotune")
+copy("results/results_batch_profile_autotune_smem_3d.json", "heid", "autotune")
+copy("results/results_batch_profile_autotune_smem_padded_3d.json", "heid", "autotune")
+
+# 3D IDUN (The others did not have unroll=8 for smem, smem_padded)
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_3d_test.json",
+    "idun",
+    "heuristic",
+)
+
+# 3D IDUN (domain_dim=1024 [8 GiB])
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_3d.json",
+    "idun",
+    "heuristic",
+)
+# #D IDUN (domain_dim=256 [128 MiB])
+copy(
+    "results/results_stencil_depths_idun_heuristic_improved_new_dim_3d.json",
+    "idun",
+    "heuristic",
+)
+
 with open("results/results_stencil_depths.json", "w") as fp:
     json.dump(new_db, fp)
 
