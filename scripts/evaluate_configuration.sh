@@ -33,4 +33,4 @@ if [[ $5 == idun ]]; then
 else
     out=/dev/pts/0
 fi
-stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee $out | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'
+stdbuf -o 0 -e 0 python2 -u $project_folder/Autotuning/tuner/tune.py $config | tee -a $out | awk '/Version/{x=NR+1}(NR<=x){print}' | awk '$0==($0+0)'

@@ -35,20 +35,25 @@ def copy(results_json, v="all", dim="2"):
                     if entry_not_exists(new_db, [dimension, domain_dim, version]):
                         new_db[dimension][domain_dim][version] = {}
                     for stencil_depth, stencil_depth_db in version_db.items():
-                        new_db[dimension][domain_dim][version][stencil_depth] = db[
-                            dimension
-                        ][domain_dim][version][stencil_depth]
+                        if dim == "3" and int(stencil_depth) > 4:
+                            continue
+                        new_db[dimension][domain_dim][version][stencil_depth] = {
+                            k: v
+                            for k, v in db[dimension][domain_dim][version][
+                                stencil_depth
+                            ].items()
+                            # Handle case where HEURISTIC gets stored in json file
+                            if not "HEURISTIC" in k
+                        }
 
 
-copy("results/results_autotune.json")
-copy("results/results_autotune_base.json", "base", "3")
-copy("results/results_autotune_smem.json", "smem", "3")
-copy("results/results_autotune_smem_padded.json", "smem_padded", "3")
-copy("results/results_autotune_smem_register.json", "smem_register", "3")
-copy("results/results_autotune_base.json", "base", "2")
-copy("results/results_autotune_smem.json", "smem", "2")
-copy("results/results_autotune_smem_padded.json", "smem_padded", "2")
-copy("results/results_autotune_smem_register_2d.json", "smem_register", "2")
+copy("results/results_autotune_base_2d.json", "base", "2")
+copy("results/results_autotune_smem_2d.json", "smem", "2")
+copy("results/results_autotune_smem_padded_2d.json", "smem_padded", "2")
+
+copy("results/results_autotune_base_3d.json", "base", "3")
+copy("results/results_autotune_smem_3d.json", "smem", "3")
+copy("results/results_autotune_smem_padded_3d.json", "smem_padded", "3")
 
 with open("results/results_autotune.json", "w") as fp:
     json.dump(new_db, fp)
