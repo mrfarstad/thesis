@@ -50,8 +50,8 @@ def copy(results_json, host, config):
                             new_db, [dimension, domain_dim, version, stencil_depth]
                         ):
                             new_db[dimension][domain_dim][version][stencil_depth] = {}
-                        if dimension == "3" and int(stencil_depth) > 4:
-                            continue
+                        # if dimension == "3" and int(stencil_depth) > 4:
+                        #    continue
                         for iteration, iteration_db in stencil_depth_db.items():
                             if "1024" in results_json and not iteration == "1024":
                                 continue
@@ -197,6 +197,10 @@ copy(
 )
 
 # Three dimensions
+copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
+copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
+copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
+
 copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
 copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
 copy(
@@ -206,10 +210,6 @@ copy(
 copy("results/results_stencil_depths_autotuned_base_3d.json", "heid", "autotune")
 copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
 copy("results/results_stencil_depths_autotuned_smem_padded_3d.json", "heid", "autotune")
-
-copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
-copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
-copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
 
 copy("results/results_batch_profile_autotune_base_3d.json", "heid", "autotune")
 copy("results/results_batch_profile_autotune_smem_3d.json", "heid", "autotune")
@@ -222,7 +222,7 @@ copy(
     "heuristic",
 )
 
-# #D IDUN (domain_dim=256 [128 MiB])
+# 3D IDUN (domain_dim=256 [128 MiB])
 copy(
     "results/results_stencil_depths_idun_heuristic_improved_new_dim_3d.json",
     "idun",

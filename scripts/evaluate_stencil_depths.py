@@ -47,7 +47,10 @@ def deep_get(dictionary, keys, default=None):
 
 
 def entry_exists(nested_list):
-    return deep_get(db, ".".join(list(map(str, nested_list)))) != None
+    item = deep_get(db, ".".join(list(map(str, nested_list))))
+    if not item:
+        return False
+    return item != None
 
 
 def autotune_entry_exists(nested_list):
@@ -66,8 +69,6 @@ for dimension in dimensions:
         db[dimension] = {}
     if dimension == "3":
         dims = ["256", "1024"]
-        stencil_depths.pop()  # Remove R=16 for 3D
-        stencil_depths.pop()  # Remove R=8 for 3D
     else:
         dims = ["4096", "32768"]
     for dim in dims:
