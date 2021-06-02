@@ -37,7 +37,6 @@ for dimension in dimensions:
         stencil_depths.pop()  # Remove R=16 for 3D
         stencil_depths.pop()  # Remove R=8 for 3D
     else:
-        # dims = ["8192", "32768"]
         dims = ["32768"]
     for dim in dims:
         if not entry_exists([dimension, dim]):
@@ -75,6 +74,8 @@ for dimension in dimensions:
                     blockdims = [b.strip() for b in blockdims]
                     blockdims = [b.split(" = ") for b in blockdims]
                     blockdims = {b[0]: int(b[1]) for b in blockdims}
+                    if "HEURISTIC" in blockdims:
+                        del blockdims["HEURISTIC"]
                     db[dimension][dim][v][depth] = blockdims
                     with open("results.json", "w") as fp:
                         json.dump(db, fp)

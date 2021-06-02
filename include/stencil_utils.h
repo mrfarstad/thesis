@@ -110,6 +110,19 @@ void print_program_info(int bx, int by, int bz) {
     printf("\n");
 }
 
+void check_early_exit(int bx, int by, int bz) {
+    if (SMEM == true) {
+        if (PADDED) {
+           if (bx < STENCIL_DEPTH || by < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && bz < STENCIL_DEPTH) exit(EXIT_FAILURE);
+        }
+        if (REGISTER) {
+           if (bx < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && by < STENCIL_DEPTH) exit(EXIT_FAILURE);
+        }
+    }
+}
+
 
 /*
  * enable P2P memcopies between GPUs (all GPUs must be compute capability 2.0 or

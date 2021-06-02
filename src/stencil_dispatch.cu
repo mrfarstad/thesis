@@ -133,9 +133,16 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     calculate_smem calc_smem;
     int g, b, bx, by, bz;
     unsigned int smem;
-    if (SMEM) cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+    if (SMEM) {
+        const char* arch = STR(ARCH);
+        if (strcmp(arch, "volta")==0)
+            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+        else if (strcmp(arch, "pascal")==0)
+            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 49152);
+    }
     if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
+    check_early_exit(bx, by, bz);
     print_program_info(bx, by, bz);
     dim3 block(bx, by, bz);
     dim3 grid((1+(NX-1)/bx)/UNROLL_X);

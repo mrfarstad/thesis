@@ -15,6 +15,9 @@ else ifeq ($(HOST), idun)
 else
     ARCH := sm_75
 endif
+ifeq ($(ARCH), sm_60)
+    _ARCH := -D ARCH=pascal
+endif
 ifeq ($(SMEM), true)
     _SMEM := -D SMEM=true
 endif
@@ -63,7 +66,7 @@ stencil_$(ID): src/main.cu include/stencil_utils.h include/stencil_error_checker
 		      			  -D DIM=$(DIM)                \
 	  $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
 	       $(_DIMENSIONS) $(_UNROLL_X) $(_UNROLL_DIM) $(_SMEM_PAD) \
-		       $(_REGISTER) $(_PADDED) $(_HEURISTIC) $(_DEBUG)
+	      $(_ARCH) $(_REGISTER) $(_PADDED) $(_HEURISTIC) $(_DEBUG)
 					     
 
 stencil_cpu:   include/stencil_initializer.h src/stencil_cpu.cu
