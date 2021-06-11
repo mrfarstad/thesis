@@ -54,6 +54,9 @@
 #define REGISTER false
 #endif
 
+#define VOLTA_SMEM 98304
+#define PASCAL_SMEM 49152
+
 #define SMEM_X (BLOCK_X*UNROLL_X+SMEM_PAD)
 #define SMEM_P_X (SMEM_X+2*STENCIL_DEPTH)
 #define SMEM_P_Y (BLOCK_Y+2*STENCIL_DEPTH)

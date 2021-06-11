@@ -43,7 +43,12 @@ kernel get_kernel() {
 
 coop_kernel get_coop_kernel() { return coop; }
 
-void set_smem(unsigned int *smem, unsigned int bx, unsigned int by, unsigned int bz) {
+__host__ __device__ void set_smem(
+        unsigned int *smem,
+        unsigned int bx,
+        unsigned int by,
+        unsigned int bz)
+{
     if (!SMEM) {*smem = 0; return;}
     unsigned int smem_x   = bx*UNROLL_X;
     unsigned int smem_p_x = smem_x + 2*STENCIL_DEPTH;
@@ -81,19 +86,18 @@ __host__ __device__ void sort3_desc(int *b0, int *b1, int *b2) {
     if (*b1 < *b2) swap(b1, b2);
 }
 
-__host__ __device__ void find_3d_block_dimensions(int *bx, int *by, int *bz, int b) {
+__host__ __device__ void set_max_occupancy_block_dimensions(int *bx, int *by, int *bz, int threads) {
+    if (DIMENSIONS==3) {
         int b0 = BLOCK_X;
-        while (SMEM && PADDED && b / (b0*STENCIL_DEPTH*STENCIL_DEPTH) == 0 && b0 > 1)
+        while (SMEM && PADDED && threads / (b0*STENCIL_DEPTH*STENCIL_DEPTH) == 0 && b0 > 1)
             b0 = b0/2;
         int b1 = MIN(MAX(2, STENCIL_DEPTH), 8);
-        int b2 = b/(b0*b1);
+        int b2 = threads/(b0*b1);
         sort3_desc(&b0, &b1, &b2);
         *bx = b0, *by = b1, *bz = b2;
-}
-
-__host__ __device__ void set_max_occupancy_block_dimensions(int *bx, int *by, int *bz, int threads) {
-        if (DIMENSIONS==3) find_3d_block_dimensions(bx,by,bz,threads);
-        else *bx = BLOCK_X, *by = threads/BLOCK_X, *bz=1;
+    }
+    else
+        *bx = BLOCK_X, *by = threads/BLOCK_X, *bz=1;
 }
 
 struct calculate_smem: std::unary_function<int, int> {
@@ -101,20 +105,8 @@ struct calculate_smem: std::unary_function<int, int> {
         if (!SMEM) return 0;
         int bx, by, bz;
         set_max_occupancy_block_dimensions(&bx, &by, &bz, threads);
-        unsigned int smem_x   = bx*UNROLL_X;
-        unsigned int smem_p_x = smem_x + 2*STENCIL_DEPTH;
-        unsigned int smem_p_y = by + 2*STENCIL_DEPTH;
-        unsigned int smem_p_z = bz + 2*STENCIL_DEPTH;
         unsigned int smem;
-        if (DIMENSIONS == 3) {
-            if (PADDED)        smem = smem_p_x*smem_p_y*smem_p_z*sizeof(float);
-            else if (REGISTER) smem = smem_p_x*smem_p_y*bz*sizeof(float);
-            else               smem = smem_x*by*bz*sizeof(float);
-        } else {
-            if (PADDED)        smem = smem_p_x*smem_p_y*sizeof(float);
-            else if (REGISTER) smem = smem_p_x*by*sizeof(float);
-            else               smem = smem_x*by*sizeof(float);
-        }
+        set_smem(&smem, bx, by, bz);
         return smem;
     }
 };
@@ -136,9 +128,9 @@ void dispatch_kernels(float *d_u1, float *d_u2) {
     if (SMEM) {
         const char* arch = STR(ARCH);
         if (strcmp(arch, "volta")==0)
-            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 98304);
+            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, VOLTA_SMEM);
         else if (strcmp(arch, "pascal")==0)
-            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, 49152);
+            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, PASCAL_SMEM);
     }
     if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
