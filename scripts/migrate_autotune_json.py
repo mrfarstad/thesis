@@ -35,8 +35,8 @@ def copy(results_json, v="all", dim="2"):
                     if entry_not_exists(new_db, [dimension, domain_dim, version]):
                         new_db[dimension][domain_dim][version] = {}
                     for stencil_depth, stencil_depth_db in version_db.items():
-                        if dim == "3" and int(stencil_depth) > 4:
-                            continue
+                        # if dim == "3" and int(stencil_depth) > 4:
+                        #    continue
                         new_db[dimension][domain_dim][version][stencil_depth] = {
                             k: v
                             for k, v in db[dimension][domain_dim][version][

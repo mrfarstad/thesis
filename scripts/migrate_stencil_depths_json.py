@@ -200,12 +200,16 @@ copy(
 copy("results/results_batch_profile_base_3d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_3d.json", "heid", "heuristic")
 copy("results/results_batch_profile_smem_padded_3d.json", "heid", "heuristic")
+del new_db["3"]["1024"]["1_gpus_smem_padded_unroll_4"][
+    "8"
+]  # This fails for heuristic. We should probably regenerate batch_profiles, but the results seems to overlap
 
 copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
 copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
 copy(
     "results/results_stencil_depths_heuristic_smem_padded_3d.json", "heid", "heuristic"
 )
+
 
 copy("results/results_stencil_depths_autotuned_base_3d.json", "heid", "autotune")
 copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
@@ -233,6 +237,23 @@ copy(
 copy(
     "results/results_stencil_depths_idun_heuristic_improved_3d.json",
     "idun",
+    "heuristic",
+)
+
+# 3D HEID (iterations=1024 domain_dim=1024 [8 GiB])
+copy(
+    "results/results_stencil_depths_heuristic_improved_base_3d_1024_iterations.json",
+    "heid",
+    "heuristic",
+)
+copy(
+    "results/results_stencil_depths_heuristic_improved_smem_3d_1024_iterations.json",
+    "heid",
+    "heuristic",
+)
+copy(
+    "results/results_stencil_depths_heuristic_improved_smem_padded_3d_1024_iterations.json",
+    "heid",
     "heuristic",
 )
 

@@ -34,8 +34,6 @@ for dimension in dimensions:
         db[dimension] = {}
     if dimension == "3":
         dims = ["1024"]
-        stencil_depths.pop()  # Remove R=16 for 3D
-        stencil_depths.pop()  # Remove R=8 for 3D
     else:
         dims = ["32768"]
     for dim in dims:

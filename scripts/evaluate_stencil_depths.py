@@ -54,7 +54,10 @@ def entry_exists(nested_list):
 
 
 def autotune_entry_exists(nested_list):
-    return deep_get(tune_db, ".".join(list(map(str, nested_list)))) != None
+    item = deep_get(tune_db, ".".join(list(map(str, nested_list))))
+    if not item:
+        return False
+    return item != None
 
 
 try:
