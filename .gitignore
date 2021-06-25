@@ -3,7 +3,6 @@ coop_snapshots
 dimensions
 bin
 *.ncu-rep
-*.txt
 *.png
 *.pyc
 result
