@@ -1,7 +1,9 @@
+import re
 import json
 import pprint as p
 import sys
 from functools import reduce
+from itertools import takewhile
 
 new_db = {}
 
@@ -36,6 +38,11 @@ def copy(results_json, host, config):
                     if v.replace("1_gpus_", "") in results_json:
                         v_found = v
                 for version, version_db in domain_dim_db.items():
+                    if "multi_gpu" in results_json:
+                        tmp = re.sub("[^0-9]", "_", results_json).strip("_").split("_")
+                        gpus = "".join(list(takewhile(lambda x: x.isdigit(), version)))
+                        if gpus not in tmp:
+                            continue
                     if "smem_register" in version:
                         continue
                     if v_found is not None:
@@ -143,6 +150,13 @@ def copy(results_json, host, config):
                                 ]
 
 
+# 16 GPU results
+# copy("results/results_stencil_depths_heuristic_improved.json", "heid", "heuristic")
+copy("results/results_stencil_depths_heuristic_multi_gpu_2_4.json", "heid", "heuristic")
+copy("results/results_stencil_depths_heuristic_multi_gpu_8.json", "heid", "heuristic")
+copy("results/results_stencil_depths_heuristic_multi_gpu_16.json", "heid", "heuristic")
+# print(new_db["3"]["1024"]["16_gpus_base"])
+
 # Two dimensions
 copy("results/results_stencil_depths_heuristic_base_2d.json", "heid", "heuristic")
 copy("results/results_stencil_depths_heuristic_smem_2d.json", "heid", "heuristic")
@@ -220,20 +234,20 @@ copy("results/results_batch_profile_autotune_smem_3d.json", "heid", "autotune")
 copy("results/results_batch_profile_autotune_smem_padded_3d.json", "heid", "autotune")
 
 # 3D IDUN (The others did not have unroll=8 for smem, smem_padded)
-copy(
-    "results/results_stencil_depths_idun_heuristic_improved_3d_test.json",
-    "idun",
-    "heuristic",
-)
+# copy(
+#    "results/results_stencil_depths_idun_heuristic_improved_3d_test.json",
+#    "idun",
+#    "heuristic",
+# )
+#
+## 3D IDUN (domain_dim=256 [128 MiB])
+# copy(
+#    "results/results_stencil_depths_idun_heuristic_improved_new_dim_3d.json",
+#    "idun",
+#    "heuristic",
+# )
 
-# 3D IDUN (domain_dim=256 [128 MiB])
-copy(
-    "results/results_stencil_depths_idun_heuristic_improved_new_dim_3d.json",
-    "idun",
-    "heuristic",
-)
-
-# 3D IDUN (domain_dim=1024 [8 GiB])
+# 3D IDUN (domain_dim=256 [128 MiB], 1024 [8 GiB])
 copy(
     "results/results_stencil_depths_idun_heuristic_improved_3d.json",
     "idun",
@@ -259,5 +273,3 @@ copy(
 
 with open("results/results_stencil_depths.json", "w") as fp:
     json.dump(new_db, fp)
-
-p.pprint(new_db)

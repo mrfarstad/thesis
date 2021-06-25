@@ -85,7 +85,7 @@
 #else
 #define BORDER_SIZE      (1)
 #endif
-#define GHOST_ZONE       (HALO_DEPTH*BORDER_SIZE)
+#define GHOST_ZONE       (STENCIL_DEPTH*BORDER_SIZE)
 #define GHOST_ZONE_BYTES (GHOST_ZONE*sizeof(float))
 #define HALO_BYTES       (2*GHOST_ZONE_BYTES)
 

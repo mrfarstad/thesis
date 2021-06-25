@@ -14,7 +14,20 @@ def calculate_smem(kernel, unroll, block_x, block_y):
             * sizeof_float
         )
     elif kernel == "smem":
-        return block_x * unroll * block_y * sizeof_float
+        return (block_x * unroll) * block_y * sizeof_float
+
+
+def calculate_smem_3d(kernel, unroll, block_x, block_y, block_z):
+    sizeof_float = 4
+    if kernel == "smem_padded":
+        return (
+            (block_x * unroll + 2 * stencil_radius)
+            * (block_y + 2 * stencil_radius)
+            * (block_z + 2 * stencil_radius)
+            * sizeof_float
+        )
+    elif kernel == "smem":
+        return (block_x * unroll) * block_y * block_z * sizeof_float
 
 
 def create_alias(kernel, unroll):
@@ -30,11 +43,15 @@ smem_size_db = {
 }
 
 for kernel in kernels:
-    block_x, block_y = 32, 32
+    # block_x, block_y = 32, 32
+    block_x, block_y, block_z = 32, 8, 4
     for stencil_radius in stencil_radiuses:
         for k in kernels:
             for u in unrolls:
-                smem_size_db[stencil_radius][create_alias(k, u)] = calculate_smem(
-                    k, u, block_x, block_y
+                # smem_size_db[stencil_radius][create_alias(k, u)] = calculate_smem(
+                #    k, u, block_x, block_y
+                # )
+                smem_size_db[stencil_radius][create_alias(k, u)] = calculate_smem_3d(
+                    k, u, block_x, block_y, block_z
                 )
 pprint(smem_size_db)

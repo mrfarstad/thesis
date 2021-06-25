@@ -155,7 +155,7 @@ class Optimisation:
             and int(d["BLOCK_X"]) * int(d["BLOCK_Y"]) * int(d["BLOCK_Z"]) <= 1024
             and int(d["BLOCK_X"]) >= int(d["BLOCK_Y"])
             and int(d["BLOCK_Y"]) >= int(d["BLOCK_Z"])
-            and int(d["BLOCK_X"]) >= 16
+            and int(d["BLOCK_X"]) >= 8
         ]
 
         # These dictionaries only contain mappings for variables at this level.
