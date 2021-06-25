@@ -121,17 +121,25 @@ void set_block_dims(int *bx, int *by, int *bz, int threads) {
     }
 }
 
+void set_max_dynamic_shared_memory_size() {
+    if (SMEM) {
+        const char* arch = STR(ARCH);
+        if (strcmp(arch, "volta")==0)
+            cudaFuncSetAttribute(
+                get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, VOLTA_SMEM
+            );
+        else if (strcmp(arch, "pascal")==0)
+            cudaFuncSetAttribute(
+                get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, PASCAL_SMEM
+            );
+    }
+}
+
 void dispatch_kernels(float *d_u1, float *d_u2) {
     calculate_smem calc_smem;
     int g, b, bx, by, bz;
     unsigned int smem;
-    if (SMEM) {
-        const char* arch = STR(ARCH);
-        if (strcmp(arch, "volta")==0)
-            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, VOLTA_SMEM);
-        else if (strcmp(arch, "pascal")==0)
-            cudaFuncSetAttribute(get_kernel(), cudaFuncAttributeMaxDynamicSharedMemorySize, PASCAL_SMEM);
-    }
+    if (SMEM) set_max_dynamic_shared_memory_size();
     if (HEURISTIC) cudaOccupancyMaxPotentialBlockSizeVariableSMem(&g, &b, get_kernel(), calc_smem);
     set_block_dims(&bx, &by, &bz, b);
     print_program_info(bx, by, bz);
