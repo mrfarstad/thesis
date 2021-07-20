@@ -64,8 +64,7 @@ try:
     with open("results/results_stencils.json", "r") as jsonfile:
         db = json.load(jsonfile)
 except FileNotFoundError:
-    print("Stencil depth file not found!")
-    sys.exit()
+    db = {}
 
 for dimension in dimensions:
     if not entry_exists([dimension]):
