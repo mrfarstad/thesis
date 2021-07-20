@@ -7,7 +7,7 @@ with open("results/results_autotune.json", "r") as file:
     db = json.loads(file.read())
 
 versions = []
-stencil_depths = []
+stencils = []
 unrolls = [[] for i in range(4)]
 
 dimension = "2"
@@ -22,7 +22,7 @@ for version, version_db in domain_dim_db.items():
             u_idx = int(log(unroll) / log(2))
         else:
             versions.append(v)
-            stencil_depths.append(stencil_depth)
+            stencils.append(stencil_depth)
         if stencil_depth in version_db:
             stencil_depth_db = version_db[stencil_depth]
             unrolls[u_idx].append(
@@ -43,7 +43,7 @@ for version, version_db in domain_dim_db.items():
 df = pd.DataFrame(
     {
         "Kernel": versions,
-        "Radius": stencil_depths,
+        "Radius": stencils,
         "CF=1": unrolls[0],
         "CF=2": unrolls[1],
         "CF=4": unrolls[2],

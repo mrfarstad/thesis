@@ -8,7 +8,7 @@ from functools import reduce
 dimensions = ["3"]
 iterations = ["8"]
 versions = ["base", "smem", "smem_padded"]
-stencil_depths = ["1", "2", "4", "8", "16"]
+stencils = ["1", "2", "4", "8", "16"]
 unrolls = ["1", "2", "4", "8"]
 host = "heid"
 # gpus           = ['1', '2', '4', '8', '16']
@@ -61,7 +61,7 @@ def autotune_entry_exists(nested_list):
 
 
 try:
-    with open("results/results_stencil_depths.json", "r") as jsonfile:
+    with open("results/results_stencils.json", "r") as jsonfile:
         db = json.load(jsonfile)
 except FileNotFoundError:
     print("Stencil depth file not found!")
@@ -90,7 +90,7 @@ for dimension in dimensions:
                     v_tune = v[len(v0) :]
                     if not entry_exists([dimension, dim, v]):
                         db[dimension][dim][v] = {}
-                    for depth in stencil_depths:
+                    for depth in stencils:
                         if not entry_exists([dimension, dim, v, depth]):
                             db[dimension][dim][v][depth] = {}
                         for iteration in iterations:

@@ -18,7 +18,7 @@ def entry_not_exists(db, nested_list):
     return deep_get(db, ".".join(nested_list)) == None
 
 
-with open("results/results_stencil_depths.json") as file:
+with open("results/results_stencils.json") as file:
     db = json.loads(file.read())
 versions = [
     # (Version, Dimension, Domain dim, Radius, Iterations, Block dimensions, Host)

@@ -21,7 +21,7 @@ def entry_exists(nested_list):
 dimensions = ["3"]
 versions = ["base", "smem", "smem_padded"]
 unrolls = ["1", "2", "4", "8"]
-stencil_depths = ["1", "2", "4", "8", "16"]
+stencils = ["1", "2", "4", "8", "16"]
 
 try:
     with open("results/results_autotune.json", "r") as jsonfile:
@@ -46,7 +46,7 @@ for dimension in dimensions:
                     v += "_unroll_" + unroll
                 if not entry_exists([dimension, dim, v]):
                     db[dimension][dim][v] = {}
-                for depth in stencil_depths:
+                for depth in stencils:
                     if entry_exists([dimension, dim, v, depth]):
                         continue
                     db[dimension][dim][v][depth] = {}

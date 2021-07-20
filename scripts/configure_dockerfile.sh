@@ -10,17 +10,17 @@ project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
 sed -i -re '/RUN \/bin\/bash -c "source .\/constants.sh \&\& .\/scripts\/build.sh profile yme"/d' $project_folder/Dockerfile
 
 if [[ $1 == heuristic ]];then
-    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py"\]/' $project_folder/Dockerfile
+    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencils\.py"\]/' $project_folder/Dockerfile
 elif [[ $1 == autotune ]];then
-    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py", "True"\]/' $project_folder/Dockerfile
+    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencils\.py", "True"\]/' $project_folder/Dockerfile
 elif [[ $1 == autotune_configuration ]];then
     sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/autotune_configuration\.py"\]/' $project_folder/Dockerfile
 elif [[ $1 == profile ]];then
     sed -i -re 's/(ENTRYPOINT) \[.*\]/RUN \/bin\/bash -c "source .\/constants.sh \&\& .\/scripts\/build.sh profile yme"\nENTRYPOINT ["nvprof", "--analysis-metrics", "-o", "bin\/profile.prof", "-f", ".\/bin\/stencil_profile"]/' $project_folder/Dockerfile
 elif [[ $1 == batch_profile ]];then
-    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py", "False", "True"\]/' $project_folder/Dockerfile
+    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencils\.py", "False", "True"\]/' $project_folder/Dockerfile
 elif [[ $1 == batch_profile_autotune ]];then
-    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencil_depths\.py", "True", "True"\]/' $project_folder/Dockerfile
+    sed -i -re 's/(ENTRYPOINT) \[.*\]/\1 \["python3", "-u", "\.\/scripts\/evaluate_stencils\.py", "True", "True"\]/' $project_folder/Dockerfile
 fi
 
     #sed -i -re 's/(ENTRYPOINT) \[.*\]/RUN \/bin\/bash -c "source .\/constants.sh \&\& .\/scripts\/build.sh profile yme"\nENTRYPOINT ["nvprof", "--analysis-metrics", "-o", "bin\/profile.prof", "-f", ".\/bin\/stencil_profile"]/' $project_folder/Dockerfile

@@ -13,4 +13,4 @@ module load CUDA/10.1.243-GCC-8.3.0
 module load Python/2.7.16-GCCcore-8.3.0
 
 cd thesis
-python3 ./scripts/evaluate_stencil_depths.py False False
+python3 ./scripts/evaluate_stencils.py False False

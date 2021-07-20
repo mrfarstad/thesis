@@ -101,11 +101,11 @@ ylabels = {
     "stall_memory_dependency": "stall_memory_dependency",
 }
 
-with open("results_stencil_depths.json", "r") as f:
+with open("results_stencils.json", "r") as f:
     db = json.loads(f.read())
 
 if is_opt("heuristic_occupancy"):
-    with open("results_stencil_depths_improved.json", "r") as f:
+    with open("results_stencils_improved.json", "r") as f:
         heuristic_db = json.loads(f.read())
 
 

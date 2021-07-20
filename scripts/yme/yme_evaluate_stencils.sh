@@ -4,5 +4,5 @@ source $project_folder/constants.sh
 rsync --exclude={'solutions/','results/'} -v -r ./* yme:~/$YME_WORKING_FOLDER
 ssh yme -t "
     cd $YME_WORKING_FOLDER;
-    python3 ./scripts/evaluate_stencil_depths.py
+    python3 ./scripts/evaluate_stencils.py
     "

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ $# -lt 1 ]] ; then
-    echo 'arg: (stencil_depths_heuristic/unroll/autotune/stencil_depths_autotuned/profile/batch_profile)'
+    echo 'arg: (stencils_heuristic/unroll/autotune/stencils_autotuned/profile/batch_profile)'
     exit 0
 fi
 rsync --exclude={'solutions/','venv/'} -r --delete . heid:~/thesis_$1

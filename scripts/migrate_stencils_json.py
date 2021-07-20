@@ -151,20 +151,20 @@ def copy(results_json, host, config):
 
 
 # 16 GPU results
-# copy("results/results_stencil_depths_heuristic_improved.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_multi_gpu_2_4.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_multi_gpu_8.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_multi_gpu_16.json", "heid", "heuristic")
+# copy("results/results_stencils_heuristic_improved.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_multi_gpu_2_4.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_multi_gpu_8.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_multi_gpu_16.json", "heid", "heuristic")
 # print(new_db["3"]["1024"]["16_gpus_base"])
 
 # Two dimensions
-copy("results/results_stencil_depths_heuristic_base_2d.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_smem_2d.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_base_2d.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_smem_2d.json", "heid", "heuristic")
 copy(
-    "results/results_stencil_depths_heuristic_smem_padded_2d.json", "heid", "heuristic"
+    "results/results_stencils_heuristic_smem_padded_2d.json", "heid", "heuristic"
 )
 
-copy("results/results_stencil_depths_autotuned_2d.json", "heid", "autotune")
+copy("results/results_stencils_autotuned_2d.json", "heid", "autotune")
 
 # copy("results/results_batch_profile_improved_2d.json", "heid", "heuristic")
 copy("results/results_batch_profile_base_2d.json", "heid", "heuristic")
@@ -174,17 +174,17 @@ copy("results/results_batch_profile_smem_padded_2d.json", "heid", "heuristic")
 copy("results/results_batch_profile_autotune_2d.json", "heid", "autotune")
 
 copy(
-    "results/results_stencil_depths_heuristic_improved_base_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_base_1024_iterations.json",
     "heid",
     "heuristic",
 )
 copy(
-    "results/results_stencil_depths_heuristic_improved_smem_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_smem_1024_iterations.json",
     "heid",
     "heuristic",
 )
 copy(
-    "results/results_stencil_depths_heuristic_improved_smem_padded_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_smem_padded_1024_iterations.json",
     "heid",
     "heuristic",
 )
@@ -192,20 +192,20 @@ copy(
 
 # 2D IDUN (domain_dim=8192 [512 MiB], 32768 [8 GiB])
 copy(
-    "results/results_stencil_depths_idun_heuristic_improved_2d.json",
+    "results/results_stencils_idun_heuristic_improved_2d.json",
     "idun",
     "heuristic",
 )
 # 2D IDUN (domain_dim=4096 [128 MiB])
 copy(
-    "results/results_stencil_depths_idun_heuristic_improved_new_dim_2d.json",
+    "results/results_stencils_idun_heuristic_improved_new_dim_2d.json",
     "idun",
     "heuristic",
 )
 
 # 3D IDUN (The others did not have unroll=8 for smem, smem_padded)
 copy(
-    "results/results_stencil_depths_idun_heuristic_improved_2d_test.json",
+    "results/results_stencils_idun_heuristic_improved_2d_test.json",
     "idun",
     "heuristic",
 )
@@ -218,16 +218,16 @@ del new_db["3"]["1024"]["1_gpus_smem_padded_unroll_4"][
     "8"
 ]  # This fails for heuristic. We should probably regenerate batch_profiles, but the results seems to overlap
 
-copy("results/results_stencil_depths_heuristic_base_3d.json", "heid", "heuristic")
-copy("results/results_stencil_depths_heuristic_smem_3d.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_base_3d.json", "heid", "heuristic")
+copy("results/results_stencils_heuristic_smem_3d.json", "heid", "heuristic")
 copy(
-    "results/results_stencil_depths_heuristic_smem_padded_3d.json", "heid", "heuristic"
+    "results/results_stencils_heuristic_smem_padded_3d.json", "heid", "heuristic"
 )
 
 
-copy("results/results_stencil_depths_autotuned_base_3d.json", "heid", "autotune")
-copy("results/results_stencil_depths_autotuned_smem_3d.json", "heid", "autotune")
-copy("results/results_stencil_depths_autotuned_smem_padded_3d.json", "heid", "autotune")
+copy("results/results_stencils_autotuned_base_3d.json", "heid", "autotune")
+copy("results/results_stencils_autotuned_smem_3d.json", "heid", "autotune")
+copy("results/results_stencils_autotuned_smem_padded_3d.json", "heid", "autotune")
 
 copy("results/results_batch_profile_autotune_base_3d.json", "heid", "autotune")
 copy("results/results_batch_profile_autotune_smem_3d.json", "heid", "autotune")
@@ -235,41 +235,41 @@ copy("results/results_batch_profile_autotune_smem_padded_3d.json", "heid", "auto
 
 # 3D IDUN (The others did not have unroll=8 for smem, smem_padded)
 # copy(
-#    "results/results_stencil_depths_idun_heuristic_improved_3d_test.json",
+#    "results/results_stencils_idun_heuristic_improved_3d_test.json",
 #    "idun",
 #    "heuristic",
 # )
 #
 ## 3D IDUN (domain_dim=256 [128 MiB])
 # copy(
-#    "results/results_stencil_depths_idun_heuristic_improved_new_dim_3d.json",
+#    "results/results_stencils_idun_heuristic_improved_new_dim_3d.json",
 #    "idun",
 #    "heuristic",
 # )
 
 # 3D IDUN (domain_dim=256 [128 MiB], 1024 [8 GiB])
 copy(
-    "results/results_stencil_depths_idun_heuristic_improved_3d.json",
+    "results/results_stencils_idun_heuristic_improved_3d.json",
     "idun",
     "heuristic",
 )
 
 # 3D HEID (iterations=1024 domain_dim=1024 [8 GiB])
 copy(
-    "results/results_stencil_depths_heuristic_improved_base_3d_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_base_3d_1024_iterations.json",
     "heid",
     "heuristic",
 )
 copy(
-    "results/results_stencil_depths_heuristic_improved_smem_3d_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_smem_3d_1024_iterations.json",
     "heid",
     "heuristic",
 )
 copy(
-    "results/results_stencil_depths_heuristic_improved_smem_padded_3d_1024_iterations.json",
+    "results/results_stencils_heuristic_improved_smem_padded_3d_1024_iterations.json",
     "heid",
     "heuristic",
 )
 
-with open("results/results_stencil_depths.json", "w") as fp:
+with open("results/results_stencils.json", "w") as fp:
     json.dump(new_db, fp)

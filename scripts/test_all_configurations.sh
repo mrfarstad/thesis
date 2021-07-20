@@ -4,7 +4,7 @@ source $project_folder/constants.sh
 host=yme
 out_path=results/out.txt
 gpus=(1 2 4)
-stencil_depths=(1 2 4 8 16 32 64 128)
+stencils=(1 2 4 8 16 32 64 128)
 
 for g in "${gpus[@]}"
 do
@@ -17,7 +17,7 @@ do
     for v in "${versions[@]}"
     do
       :
-        for d in "${stencil_depths[@]}"
+        for d in "${stencils[@]}"
         do
           :
           bash $project_folder/scripts/set_run_configuration.sh $v $g $d

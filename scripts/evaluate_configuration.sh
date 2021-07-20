@@ -7,7 +7,7 @@ fi
 
 project_folder=$(echo ${PWD} | sed 's/thesis.*/thesis/')
 
-config=$project_folder/configs/yme/general.conf
+config=$project_folder/configs/heid/general.conf
 constants=$project_folder/constants.sh
 
 bash $project_folder/scripts/set_run_configuration.sh $1 $2 $3 $4 ${10} ${12} ${13} ${14}
