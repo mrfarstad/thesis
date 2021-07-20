@@ -26,7 +26,7 @@ do
           if [[ ! -z $(echo "$error" | awk '!/rms error = 0.000000/') ]] ; then
               echo "#############################"
               echo "ERROR"
-              echo "$g GPU[s] $v STENCIL_DEPTH=$d"
+              echo "$g GPU[s] $v RADIUS=$d"
               echo "$error"
               echo "#############################"
               exit

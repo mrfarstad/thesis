@@ -33,11 +33,11 @@ endif
 ifneq ($(NGPUS),)
     _NGPUS := -D NGPUS=$(NGPUS)
 endif
-ifneq ($(STENCIL_DEPTH),)
-    _STENCIL_DEPTH := -D STENCIL_DEPTH=$(STENCIL_DEPTH)
+ifneq ($(RADIUS),)
+    _RADIUS := -D RADIUS=$(RADIUS)
 endif
-ifneq ($(UNROLL_X),)
-    _UNROLL_X := -D UNROLL_X=$(UNROLL_X)
+ifneq ($(COARSEN_X),)
+    _COARSEN_X := -D COARSEN_X=$(COARSEN_X)
 endif
 ifneq ($(DIMENSIONS),)
     _DIMENSIONS := -D DIMENSIONS=$(DIMENSIONS)
@@ -64,8 +64,8 @@ stencil_$(ID): src/main.cu include/stencil_utils.h include/stencil_error_checker
 		      			  -D BLOCK_Y=$(BLOCK_Y)        \
 		      			  -D BLOCK_Z=$(BLOCK_Z)        \
 		      			  -D DIM=$(DIM)                \
-	  $(_STENCIL_DEPTH) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
-	       $(_DIMENSIONS) $(_UNROLL_X) $(_UNROLL_DIM) $(_SMEM_PAD) \
+		 $(_RADIUS) $(_SMEM) $(_COOP) $(_NGPUS) $(_ITERATIONS) \
+			     $(_DIMENSIONS) $(_COARSEN_X) $(_SMEM_PAD) \
 	      $(_ARCH) $(_REGISTER) $(_PADDED) $(_HEURISTIC) $(_DEBUG)
 					     
 

@@ -17,8 +17,8 @@ __global__ void smem_3d(float* __restrict__ d_u1,
     k  = threadIdx.z + blockIdx.z*blockDim.z;
     idx = i + j*NX + k*NX*NY;
     sidx = threadIdx.x
-         + threadIdx.y*blockDim.x*UNROLL_X
-         + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
+         + threadIdx.y*blockDim.x*COARSEN_X
+         + threadIdx.z*blockDim.x*COARSEN_X*blockDim.y;
     if (check_domain_border_3d(i, j, k, kstart, kend))
         smem[sidx] = d_u1[idx];
     this_thread_block().sync();
@@ -33,27 +33,27 @@ __global__ void smem_unroll_3d(float* __restrict__ d_u1,
 {
     extern __shared__ float smem[];
     unsigned int i, j, k, s, idx, sidx, ioff;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     k  = threadIdx.z + blockIdx.z*blockDim.z;
 #pragma unroll
-    for (s=0; s<UNROLL_X; s++) {
+    for (s=0; s<COARSEN_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX + k*NX*NY;
         sidx = (threadIdx.x+ioff)
-             + threadIdx.y*blockDim.x*UNROLL_X
-             + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
+             + threadIdx.y*blockDim.x*COARSEN_X
+             + threadIdx.z*blockDim.x*COARSEN_X*blockDim.y;
         if (check_domain_border_3d(i+ioff, j, k, kstart, kend))
             smem[sidx] = d_u1[idx];
     }
     this_thread_block().sync();
 #pragma unroll
-    for (s=0; s<UNROLL_X; s++) {
+    for (s=0; s<COARSEN_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX + k*NX*NY;
         sidx = (threadIdx.x+ioff)
-             + threadIdx.y*blockDim.x*UNROLL_X
-             + threadIdx.z*blockDim.x*UNROLL_X*blockDim.y;
+             + threadIdx.y*blockDim.x*COARSEN_X
+             + threadIdx.z*blockDim.x*COARSEN_X*blockDim.y;
         if (check_stencil_border_3d(i+ioff, j, k, kstart, kend))
             smem_unrolled_stencil(d_u1, d_u2, smem, s, idx, sidx);
     }
@@ -69,7 +69,7 @@ __global__ void smem_2d(float* __restrict__ d_u1,
     i  = threadIdx.x + blockIdx.x*blockDim.x;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     idx = i + j*NX;
-    sidx = threadIdx.x + threadIdx.y*blockDim.x*UNROLL_X;
+    sidx = threadIdx.x + threadIdx.y*blockDim.x*COARSEN_X;
     if (check_domain_border_2d(i, j, jstart, jend))
         smem[sidx] = d_u1[idx];
     this_thread_block().sync();
@@ -84,22 +84,22 @@ __global__ void smem_unroll_2d(float* __restrict__ d_u1,
 {
     extern __shared__ float smem[];
     unsigned int i, j, s, idx, sidx, ioff;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
 #pragma unroll
-    for (s=0; s<UNROLL_X; s++) {
+    for (s=0; s<COARSEN_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX;
-        sidx = (threadIdx.x+ioff)+threadIdx.y*blockDim.x*UNROLL_X;
+        sidx = (threadIdx.x+ioff)+threadIdx.y*blockDim.x*COARSEN_X;
         if (check_domain_border_2d(i+ioff, j, jstart, jend))
             smem[sidx] = d_u1[idx];
     }
     this_thread_block().sync();
 #pragma unroll
-    for (s=0; s<UNROLL_X; s++) {
+    for (s=0; s<COARSEN_X; s++) {
         ioff = s*blockDim.x;
         idx = (i+ioff) + j*NX;
-        sidx = (threadIdx.x+ioff)+threadIdx.y*blockDim.x*UNROLL_X;
+        sidx = (threadIdx.x+ioff)+threadIdx.y*blockDim.x*COARSEN_X;
         if (check_stencil_border_2d(i+ioff, j, jstart, jend))
             smem_unrolled_stencil(d_u1, d_u2, smem, s, idx, sidx);
     }
