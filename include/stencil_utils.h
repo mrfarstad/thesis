@@ -13,7 +13,7 @@
 #define STRLEN 35
 #define STR_INDIR(x) #x
 #define STR(x) STR_INDIR(x)
-#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS) "_" STR(STENCIL_DEPTH) "_" STR(DIMENSIONS) "d"
+#define SUFFIX "_" STR(DIM) "_" STR(ITERATIONS) "_" STR(RADIUS) "_" STR(DIMENSIONS) "d"
 #define SOLUTION "solutions/solution" SUFFIX
 #define RESULT "results/result" SUFFIX
 
@@ -106,19 +106,19 @@ void print_program_info(int bx, int by, int bz) {
     else if (SMEM)             printf("smem");
     else if (COOP)             printf("coop_base");
     else                       printf("base");
-    printf(" (DIMENSIONS=%d DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d STENCIL_DEPTH=%d UNROLL_X=%d)", DIMENSIONS, DIM, bx, by, bz, NGPUS, STENCIL_DEPTH, UNROLL_X);
+    printf(" (DIMENSIONS=%d DIM=%d BLOCK_X=%d BLOCK_Y=%d BLOCK_Z=%d NGPUS=%d RADIUS=%d COARSEN_X=%d)", DIMENSIONS, DIM, bx, by, bz, NGPUS, RADIUS, COARSEN_X);
     printf("\n");
 }
 
 void check_early_exit(int bx, int by, int bz) {
     if (SMEM == true) {
         if (PADDED) {
-           if (bx < STENCIL_DEPTH || by < STENCIL_DEPTH) exit(EXIT_FAILURE);
-           if (DIMENSIONS == 3 && bz < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (bx < RADIUS || by < RADIUS) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && bz < RADIUS) exit(EXIT_FAILURE);
         }
         if (REGISTER) {
-           if (bx < STENCIL_DEPTH) exit(EXIT_FAILURE);
-           if (DIMENSIONS == 3 && by < STENCIL_DEPTH) exit(EXIT_FAILURE);
+           if (bx < RADIUS) exit(EXIT_FAILURE);
+           if (DIMENSIONS == 3 && by < RADIUS) exit(EXIT_FAILURE);
         }
     }
 }

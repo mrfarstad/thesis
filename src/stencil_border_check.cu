@@ -5,40 +5,40 @@
 
 __device__ bool check_stencil_border_1d(unsigned int i)
 {
-    return i>=STENCIL_DEPTH && i<NX-STENCIL_DEPTH;
+    return i>=RADIUS && i<NX-RADIUS;
 }
 
 __device__ bool check_stencil_border_1d(unsigned int i, unsigned int istart, unsigned int iend)
 {
 #if NGPUS>1
-    return i>=istart+STENCIL_DEPTH && i<=iend-STENCIL_DEPTH;
+    return i>=istart+RADIUS && i<=iend-RADIUS;
 #endif
     return check_stencil_border_1d(i);
 }
 
 __device__ bool check_stencil_border_2d(unsigned int i, unsigned int j)
 {
-    return check_stencil_border_1d(i) && j>=STENCIL_DEPTH && j<NY-STENCIL_DEPTH;
+    return check_stencil_border_1d(i) && j>=RADIUS && j<NY-RADIUS;
 }
 
 __device__ bool check_stencil_border_2d(unsigned int i, unsigned int j, unsigned int jstart, unsigned int jend)
 {
 #if NGPUS>1
-    return check_stencil_border_1d(i) && j>=jstart+STENCIL_DEPTH && j<=jend-STENCIL_DEPTH;
+    return check_stencil_border_1d(i) && j>=jstart+RADIUS && j<=jend-RADIUS;
 #endif
     return check_stencil_border_2d(i, j);
 }
 
 __device__ bool check_stencil_border_3d(unsigned int i, unsigned int j, unsigned int k)
 {
-    return check_stencil_border_2d(i, j) && k>=STENCIL_DEPTH && k<NZ-STENCIL_DEPTH;
+    return check_stencil_border_2d(i, j) && k>=RADIUS && k<NZ-RADIUS;
 }
 
 __device__ bool check_stencil_border_3d(
         unsigned int i, unsigned int j, unsigned int k, unsigned int kstart, unsigned int kend)
 {
 #if NGPUS>1
-    return check_stencil_border_2d(i, j) && k>=kstart+STENCIL_DEPTH && k<=kend-STENCIL_DEPTH;
+    return check_stencil_border_2d(i, j) && k>=kstart+RADIUS && k<=kend-RADIUS;
 #endif
     return check_stencil_border_3d(i, j, k);
 }

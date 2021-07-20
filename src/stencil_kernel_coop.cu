@@ -21,25 +21,25 @@ __global__ void coop(float* __restrict__ d_u1,
     // I would argue against this, and try to let each thread handle a consecutive block.
     // The version we have from before is obviously simpler, but its simplicitly impacts the performance negatively.
     for (q = 1; q <= ITERATIONS; q++) {
-        for (z=k+STENCIL_DEPTH; z<NZ-STENCIL_DEPTH; z+=zskip) {
-            for (y=j+STENCIL_DEPTH; y<NY-STENCIL_DEPTH; y+=yskip) {
-                for (x=i+STENCIL_DEPTH; x<NX-STENCIL_DEPTH; x+=xskip) {
+        for (z=k+RADIUS; z<NZ-RADIUS; z+=zskip) {
+            for (y=j+RADIUS; y<NY-RADIUS; y+=yskip) {
+                for (x=i+RADIUS; x<NX-RADIUS; x+=xskip) {
                     idx = x + y*NX + z*NX*NY;
                     u = 0.0f;
                     u0 = d_u1[idx];
-                    for (s=STENCIL_DEPTH; s>=1; s--)
+                    for (s=RADIUS; s>=1; s--)
                         u+=d_u1[idx-s];
-                    for (s=1; s<=STENCIL_DEPTH; s++)
+                    for (s=1; s<=RADIUS; s++)
                         u+=d_u1[idx+s];
-                    for (s=STENCIL_DEPTH; s>=1; s--)
+                    for (s=RADIUS; s>=1; s--)
                         u+=d_u1[idx-s*NX];
-                    for (s=1; s<=STENCIL_DEPTH; s++)
+                    for (s=1; s<=RADIUS; s++)
                         u+=d_u1[idx+s*NX];
-                    for (s=STENCIL_DEPTH; s>=1; s--)
+                    for (s=RADIUS; s>=1; s--)
                         u+=d_u1[idx-s*NX*NY];
-                    for (s=1; s<=STENCIL_DEPTH; s++)
+                    for (s=1; s<=RADIUS; s++)
                         u+=d_u1[idx+s*NX*NY];
-                    d_u2[idx] = u / (float) (6 * STENCIL_DEPTH) - u0;
+                    d_u2[idx] = u / (float) (6 * RADIUS) - u0;
                 }
             }
         }

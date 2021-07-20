@@ -13,15 +13,15 @@ __global__ void smem_padded_3d(float* __restrict__ d_u1,
 
     extern __shared__ float smem[];
     unsigned int i, j, k, idx, sidx, smem_p_x, smem_p_y;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     k  = threadIdx.z + blockIdx.z*blockDim.z;
     idx = i + j*NX + k*NX*NY;
-    smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
-    smem_p_y = blockDim.y+2*STENCIL_DEPTH;
-    sidx = (threadIdx.x + STENCIL_DEPTH)
-         + (threadIdx.y + STENCIL_DEPTH)*smem_p_x
-         + (threadIdx.z + STENCIL_DEPTH)*smem_p_x*smem_p_y;
+    smem_p_x = blockDim.x*COARSEN_X+2*RADIUS;
+    smem_p_y = blockDim.y+2*RADIUS;
+    sidx = (threadIdx.x + RADIUS)
+         + (threadIdx.y + RADIUS)*smem_p_x
+         + (threadIdx.z + RADIUS)*smem_p_x*smem_p_y;
     if (check_domain_border_3d(i, j, k, kstart, kend))
         prefetch_3d(smem, d_u1, 0, i, j, k, idx, sidx, kstart, kend);
     this_thread_block().sync();
@@ -36,16 +36,16 @@ __global__ void smem_padded_unroll_3d(float* __restrict__ d_u1,
 {
     extern __shared__ float smem[];
     unsigned int i, j, k, si, sj, sk, i_off, si_off, u, idx, sidx, smem_p_x, smem_p_y;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     k  = threadIdx.z + blockIdx.z*blockDim.z;
-    si = threadIdx.x + STENCIL_DEPTH;
-    sj = threadIdx.y + STENCIL_DEPTH;
-    sk = threadIdx.z + STENCIL_DEPTH;
-    smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
-    smem_p_y = blockDim.y+2*STENCIL_DEPTH;
+    si = threadIdx.x + RADIUS;
+    sj = threadIdx.y + RADIUS;
+    sk = threadIdx.z + RADIUS;
+    smem_p_x = blockDim.x*COARSEN_X+2*RADIUS;
+    smem_p_y = blockDim.y+2*RADIUS;
 #pragma unroll
-    for (u=0; u<UNROLL_X; u++) {
+    for (u=0; u<COARSEN_X; u++) {
         i_off  = i+u*blockDim.x;
         si_off = si+u*blockDim.x;
         idx    = i_off+j*NX+k*NX*NY;
@@ -55,7 +55,7 @@ __global__ void smem_padded_unroll_3d(float* __restrict__ d_u1,
     }
     this_thread_block().sync();
 #pragma unroll
-    for (u=0; u<UNROLL_X; u++) {
+    for (u=0; u<COARSEN_X; u++) {
         i_off  = i+u*blockDim.x;
         idx    = i_off+j*NX+k*NX*NY;
         si_off = si+u*blockDim.x;
@@ -72,12 +72,12 @@ __global__ void smem_padded_2d(float* __restrict__ d_u1,
 {
     extern __shared__ float smem[];
     unsigned int i, j, idx, sidx, smem_p_x;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
     idx = i + j*NX;
-    smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
-    sidx = (threadIdx.x + STENCIL_DEPTH)
-         + (threadIdx.y + STENCIL_DEPTH)*smem_p_x;
+    smem_p_x = blockDim.x*COARSEN_X+2*RADIUS;
+    sidx = (threadIdx.x + RADIUS)
+         + (threadIdx.y + RADIUS)*smem_p_x;
     if (check_domain_border_2d(i, j, jstart, jend))
         prefetch_2d(smem, d_u1, 0, i, j, idx, sidx, jstart, jend);
     this_thread_block().sync();
@@ -92,13 +92,13 @@ __global__ void smem_padded_unroll_2d(float* __restrict__ d_u1,
 {
     extern __shared__ float smem[];
     unsigned int i, j, si, sj, i_off, si_off, u, idx, sidx, smem_p_x;
-    i  = threadIdx.x + blockIdx.x*blockDim.x*UNROLL_X;
+    i  = threadIdx.x + blockIdx.x*blockDim.x*COARSEN_X;
     j  = threadIdx.y + blockIdx.y*blockDim.y;
-    si = threadIdx.x + STENCIL_DEPTH;
-    sj = threadIdx.y + STENCIL_DEPTH;
-    smem_p_x = blockDim.x*UNROLL_X+2*STENCIL_DEPTH;
+    si = threadIdx.x + RADIUS;
+    sj = threadIdx.y + RADIUS;
+    smem_p_x = blockDim.x*COARSEN_X+2*RADIUS;
 #pragma unroll
-    for (u=0; u<UNROLL_X; u++) {
+    for (u=0; u<COARSEN_X; u++) {
         i_off  = i+u*blockDim.x;
         si_off = si+u*blockDim.x;
         idx    = i_off+j*NX;
@@ -108,7 +108,7 @@ __global__ void smem_padded_unroll_2d(float* __restrict__ d_u1,
     }
     this_thread_block().sync();
 #pragma unroll
-    for (u=0; u<UNROLL_X; u++) {
+    for (u=0; u<COARSEN_X; u++) {
         i_off  = i+u*blockDim.x;
         idx    = i_off+j*NX;
         si_off = si+u*blockDim.x;

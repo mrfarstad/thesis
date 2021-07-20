@@ -38,7 +38,7 @@ int main(int argc, const char **argv) {
     initialize_host_region(d_ref);
 
     unsigned long size = BYTES_PER_GPU;
-    if (NGPUS>1) size += HALO_BYTES;
+    if (NGPUS>1) size += 2*GHOST_ZONE_BYTES;
 #pragma omp parallel for num_threads(NGPUS)
     for (int i = 0; i < NGPUS; i++) {
         cudaSetDevice(i);

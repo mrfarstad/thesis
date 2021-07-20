@@ -43,7 +43,7 @@ __device__ __inline__ void smem_unrolled_stencil(
     float u = 0.0f;
     if (s>0)          accumulate_smem_i_prev(&u, smem, sidx);
     else              accumulate_hybrid_i_prev(&u, smem, d_u1, sidx, idx);
-    if (s+1<UNROLL_X) accumulate_smem_i_next(&u, smem, sidx);
+    if (s+1<COARSEN_X) accumulate_smem_i_next(&u, smem, sidx);
     else              accumulate_hybrid_i_next(&u, smem, d_u1, sidx, idx);
     accumulate_hybrid_j_prev(&u, smem, d_u1, sidx, idx);
     accumulate_hybrid_j_next(&u, smem, d_u1, sidx, idx);
@@ -79,7 +79,7 @@ __device__ __inline__ void smem_register_stencil(float* smem, float* d_u2, float
 #endif
     accumulate_register_prev(&u, yval);
     accumulate_register_next(&u, yval);
-    d_u2[idx] = u / STENCIL_COEFF - yval[STENCIL_DEPTH];
+    d_u2[idx] = u / STENCIL_COEFF - yval[RADIUS];
 }
 
 #endif // STENCILS_CU
